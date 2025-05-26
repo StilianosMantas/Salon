@@ -9,7 +9,7 @@
     "vscode": {
       "extensions": [
         "bradlc.vscode-tailwindcss",
-        "prisma.prisma",                 // optional
+        "prisma.prisma",
         "supabase.supabase-vscode",
         "ms-vscode.vscode-typescript-next"
       ]

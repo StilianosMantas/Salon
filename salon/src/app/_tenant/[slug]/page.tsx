@@ -1,8 +1,8 @@
 import BookingWidget from '@/components/BookingWidget'
-import { createSupabaseServerClient } from '@/lib/supabase'
+import { supabaseServer } from '@/lib/supabaseServer'
 
 export default async function Tenant({ params }: { params: { slug: string } }) {
-  const supabase    = createSupabaseServerClient()
+  const supabase    = supabaseServer()
   const { data }    = await supabase
     .from('business')
     .select('name, description')

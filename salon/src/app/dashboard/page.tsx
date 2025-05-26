@@ -1,8 +1,8 @@
-import { createSupabaseServerClient } from '@/lib/supabase'
+import { supabaseServer } from '@/lib/supabaseServer'
 import Link from 'next/link'
 
 export default async function Dashboard() {
-  const supabase = createSupabaseServerClient()
+  const supabase = supabaseServer()
 
   const { data } = await supabase
     .from('business_member')
