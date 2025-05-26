@@ -2,8 +2,9 @@
   "name": "salon",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:20-bookworm",
   "features": {
+    "ghcr.io/devcontainers-contrib/features/supabase-cli:1": {},
     "ghcr.io/devcontainers/features/pnpm:2": {}
-  },
+  }, 
   "postCreateCommand": "pnpm install",
   "customizations": {
     "vscode": {
