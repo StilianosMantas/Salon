@@ -1,0 +1,31 @@
+{
+  "name": "salon",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "latest",
+    "@stripe/stripe-js": "latest",
+    "@supabase/auth-helpers-nextjs": "latest",
+    "@supabase/supabase-js": "latest",
+    "clsx": "latest",
+    "date-fns": "latest",
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "autoprefixer": "latest",
+    "nodeÂ": "link:@types/nodeÂ",
+    "postcss": "latest",
+    "supabase": "^2.23.4",
+    "tailwindcss": "latest",
+    "typescript": "latest"
+  }
+}
