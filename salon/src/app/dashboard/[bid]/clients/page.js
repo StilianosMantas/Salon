@@ -1,4 +1,5 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useParams } from 'next/navigation'
@@ -12,15 +13,24 @@ export default function ClientsPage() {
   const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
 
   useEffect(() => {
-    if (bid) {
-      fetchClients()
-    }
-  }, [bid])
+    if (!bid) return
 
-  async function fetchClients() {
-    const { data } = await supabase.from('client').select('*').eq('business_id', bid)
-    setClients(data)
-  }
+    async function fetchClients() {
+      const { data, error } = await supabase
+        .from('client')
+        .select('*')
+        .eq('business_id', bid)
+
+      if (error) {
+        console.error('Error loading clients:', error)
+        setClients([])
+      } else {
+        setClients(data || [])
+      }
+    }
+
+    fetchClients()
+  }, [bid])
 
   function isFormDirty(current, initial) {
     return (
@@ -37,12 +47,32 @@ export default function ClientsPage() {
     if (form.mobile && !/^[\d\-\s\+]+$/.test(form.mobile)) return alert('Invalid mobile number')
 
     if (editing) {
-      await supabase.from('client').update({ name: form.name, email: form.email, mobile: form.mobile }).eq('id', form.id)
+      await supabase
+        .from('client')
+        .update({ name: form.name, email: form.email, mobile: form.mobile })
+        .eq('id', form.id)
     } else {
-      await supabase.from('client').insert({ business_id: bid, name: form.name, email: form.email, mobile: form.mobile })
+      await supabase
+        .from('client')
+        .insert({ business_id: bid, name: form.name, email: form.email, mobile: form.mobile })
     }
+
     closeForm(true)
-    fetchClients()
+
+    // Refresh list after submit
+    async function fetchClientsAgain() {
+      const { data, error } = await supabase
+        .from('client')
+        .select('*')
+        .eq('business_id', bid)
+      if (error) {
+        console.error('Error reloading clients:', error)
+        setClients([])
+      } else {
+        setClients(data || [])
+      }
+    }
+    fetchClientsAgain()
   }
 
   function handleEdit(client) {
@@ -56,8 +86,20 @@ export default function ClientsPage() {
   async function deleteClient(id) {
     const confirmDelete = window.confirm('Are you sure you want to delete this client?')
     if (!confirmDelete) return
+
     await supabase.from('client').delete().eq('id', id)
-    fetchClients()
+
+    // Refresh list after deletion
+    const { data, error } = await supabase
+      .from('client')
+      .select('*')
+      .eq('business_id', bid)
+    if (error) {
+      console.error('Error reloading clients after delete:', error)
+      setClients([])
+    } else {
+      setClients(data || [])
+    }
   }
 
   function closeForm(force = false) {
@@ -75,13 +117,16 @@ export default function ClientsPage() {
     <div className="container py-5 px-4">
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-5">
         <h1 className="title is-4">Clients</h1>
-        <button className="button is-link" onClick={() => {
-          setEditing(false)
-          const empty = { name: '', email: '', mobile: '', id: null }
-          setForm({ ...empty })
-          setInitialForm({ ...empty })
-          setFormVisible(true)
-        }}>
+        <button
+          className="button is-link"
+          onClick={() => {
+            setEditing(false)
+            const empty = { name: '', email: '', mobile: '', id: null }
+            setForm({ ...empty })
+            setInitialForm({ ...empty })
+            setFormVisible(true)
+          }}
+        >
           + Add Client
         </button>
       </div>
@@ -117,24 +162,47 @@ export default function ClientsPage() {
                 <div className="field">
                   <label className="label">Name</label>
                   <div className="control">
-                    <input className="input" type="text" placeholder="Client Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                    <input
+                      className="input"
+                      type="text"
+                      placeholder="Client Name"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="field">
                   <label className="label">Email</label>
                   <div className="control">
-                    <input className="input" type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                    <input
+                      className="input"
+                      type="email"
+                      placeholder="Email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    />
                   </div>
                 </div>
                 <div className="field">
                   <label className="label">Mobile</label>
                   <div className="control">
-                    <input className="input" type="text" placeholder="Mobile" value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} />
+                    <input
+                      className="input"
+                      type="text"
+                      placeholder="Mobile"
+                      value={form.mobile}
+                      onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                    />
                   </div>
                 </div>
                 <footer className="modal-card-foot">
-                  <button className="button is-success" type="submit">{editing ? 'Update' : 'Add'}</button>
-                  <button className="button" type="button" onClick={() => closeForm()}>Cancel</button>
+                  <button className="button is-success" type="submit">
+                    {editing ? 'Update' : 'Add'}
+                  </button>
+                  <button className="button" type="button" onClick={() => closeForm()}>
+                    Cancel
+                  </button>
                 </footer>
               </form>
             </section>
