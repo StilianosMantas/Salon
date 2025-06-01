@@ -1,36 +1,40 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import dayjs from 'dayjs'
 
 export default function SelectSlotPage() {
   const { bid } = useParams()
   const router = useRouter()
-  const searchParams = useSearchParams()
 
-  const serviceId = searchParams.get('service')
-  const [service, setService] = useState(null)
+  const [services, setServices] = useState([])
+  const [selectedServices, setSelectedServices] = useState([])
   const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [availableSlots, setAvailableSlots] = useState([])
   const [selectedSlotId, setSelectedSlotId] = useState('')
 
   useEffect(() => {
-    if (bid && serviceId) {
-      loadService()
+    if (bid) {
+      loadServices()
     }
-  }, [bid, serviceId])
+  }, [bid])
 
   useEffect(() => {
-    if (service) {
-      loadAvailableSlots(service.duration)
+    if (selectedServices.length > 0) {
+      const totalDuration = services
+        .filter(s => selectedServices.includes(s.id))
+        .reduce((sum, s) => sum + s.duration, 0)
+      loadAvailableSlots(totalDuration)
+    } else {
+      setAvailableSlots([])
     }
-  }, [date, service])
+  }, [date, selectedServices])
 
-  async function loadService() {
-    const { data } = await supabase.from('service').select('*').eq('id', serviceId).single()
-    setService(data)
+  async function loadServices() {
+    const { data } = await supabase.from('service').select('*').eq('business_id', bid)
+    setServices(data)
   }
 
   async function loadAvailableSlots(duration) {
@@ -70,14 +74,40 @@ export default function SelectSlotPage() {
   }
 
   function handleNext() {
-    if (selectedSlotId) {
-      router.push(`/book/${bid}/confirm?slot=${selectedSlotId}&service=${serviceId}`)
+    if (selectedSlotId && selectedServices.length > 0) {
+      const query = new URLSearchParams()
+      query.set('slot', selectedSlotId)
+      selectedServices.forEach(id => query.append('service', id))
+      router.push(`/book/${bid}/confirm?${query.toString()}`)
     }
+  }
+
+  function handleServiceToggle(id) {
+    setSelectedServices(prev =>
+      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+    )
   }
 
   return (
     <div className="container">
-      <h1 className="title is-3">Choose a Time Slot</h1>
+      <h1 className="title is-3">Choose a Time Slot-</h1>
+
+      <div className="field">
+        <label className="label">Select Services</label>
+        <div className="box">
+          {services.map(service => (
+            <label key={service.id} className="checkbox is-block">
+              <input
+                type="checkbox"
+                checked={selectedServices.includes(service.id)}
+                onChange={() => handleServiceToggle(service.id)}
+              />
+              <span className="ml-2">{service.name} ({service.duration} mins)</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div className="field is-flex is-justify-content-space-between is-align-items-end">
         <div className="control">
           <label className="label">Date</label>
@@ -88,7 +118,12 @@ export default function SelectSlotPage() {
             onChange={e => setDate(e.target.value)} />
         </div>
         <div className="control">
-          <button className="button is-link" onClick={() => loadAvailableSlots(service?.duration)}>
+          <button className="button is-link" onClick={() => {
+            const totalDuration = services
+              .filter(s => selectedServices.includes(s.id))
+              .reduce((sum, s) => sum + s.duration, 0)
+            loadAvailableSlots(totalDuration)
+          }}>
             Refresh Slots
           </button>
         </div>
@@ -114,7 +149,7 @@ export default function SelectSlotPage() {
       <button
         className="button is-primary mt-4"
         onClick={handleNext}
-        disabled={!selectedSlotId}>
+        disabled={!selectedSlotId || selectedServices.length === 0}>
         Continue
       </button>
     </div>

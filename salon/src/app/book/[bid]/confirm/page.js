@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -17,6 +17,20 @@ export default function ConfirmBookingPage() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser(user)
+        setEmail(user.email)
+      }
+    })
+  }, [])
+
+  async function signInWithGoogle() {
+    await supabase.auth.signInWithOAuth({ provider: 'google' })
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -32,7 +46,6 @@ export default function ConfirmBookingPage() {
           mobile: phone,
           business_id: bid
         }, { onConflict: ['email', 'business_id'] })
-
         .select('id')
         .single()
 
@@ -45,6 +58,12 @@ export default function ConfirmBookingPage() {
 
       if (slotError) throw slotError
 
+      const { error: serviceLinkError } = await supabase
+        .from('slot_service')
+        .upsert({ slot_id: slotId, service_id: serviceId })
+
+      if (serviceLinkError) throw serviceLinkError
+
       router.push(`/book/${bid}/success`)
     } catch (err) {
       setError(err.message)
@@ -56,6 +75,13 @@ export default function ConfirmBookingPage() {
   return (
     <div className="container">
       <h1 className="title is-3">Confirm Your Booking</h1>
+      {!user && (
+        <div className="box mb-4">
+          <p className="mb-2">You can sign in to autofill your details:</p>
+          <button className="button is-info" onClick={signInWithGoogle}>Sign in with Google</button>
+          <p className="mt-2">Or continue as guest below.</p>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="box">
         <div className="field">
           <label className="label">Full Name</label>
