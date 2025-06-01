@@ -27,15 +27,22 @@ export async function middleware(request) {
     }
   )
 
-  // Refresh session if expired - but don't redirect, let pages handle auth
-  await supabase.auth.getUser()
+  // Check authentication for dashboard routes
+  const { data: { user }, error } = await supabase.auth.getUser()
+  
+  // Only redirect if accessing dashboard without authentication
+  if (request.nextUrl.pathname.startsWith('/dashboard') && (!user || error)) {
+    console.log('Redirecting unauthenticated user to login')
+    const redirectUrl = new URL('/login', request.url)
+    return NextResponse.redirect(redirectUrl)
+  }
 
   return supabaseResponse
 }
 
 export const config = {
   matcher: [
-    // Disable middleware completely for now
-    // '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Temporarily disable to prevent loops
+    // '/dashboard/:path*',
   ],
 }

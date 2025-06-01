@@ -48,6 +48,12 @@ export default function LoginPage() {
   async function redirectToSalon(userId) {
     console.log('Redirecting user to dashboard/3:', userId)
     
+    // Check if we're already on a dashboard page to prevent loops
+    if (window.location.pathname.startsWith('/dashboard')) {
+      console.log('Already on dashboard, skipping redirect')
+      return
+    }
+    
     // Simple redirect without database lookup for now
     window.location.href = '/dashboard/3'
   }
