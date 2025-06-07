@@ -8,17 +8,38 @@ export default function PublicBookingEntry() {
   const { bid } = useParams()
   const router = useRouter()
   const [business, setBusiness] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     if (!bid) return
 
     async function fetchBusiness() {
-      const { data } = await supabase
-        .from('business')
-        .select('*')
-        .eq('id', bid)
-        .single()
-      setBusiness(data)
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const { data, error: fetchError } = await supabase
+          .from('business')
+          .select('*')
+          .eq('id', bid)
+          .single()
+          
+        if (fetchError) {
+          if (fetchError.code === 'PGRST116') {
+            setError('Salon not found. Please check the booking link.')
+          } else {
+            setError('Unable to load salon information. Please try again.')
+          }
+          return
+        }
+        
+        setBusiness(data)
+      } catch (err) {
+        setError('Something went wrong. Please try again later.')
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchBusiness()
@@ -26,6 +47,34 @@ export default function PublicBookingEntry() {
 
   function handleStartBooking() {
     router.push(`/book/${bid}/select`)
+  }
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="has-text-centered py-6">
+          <progress className="progress is-primary" max="100">Loading...</progress>
+          <p className="mt-3">Loading salon information...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div className="notification is-danger">
+          <h2 className="title is-4">Unable to Load Salon</h2>
+          <p>{error}</p>
+          <button 
+            className="button is-light mt-3"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -8,15 +8,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [redirecting, setRedirecting] = useState(false)
+  const [lookingUpSalon, setLookingUpSalon] = useState(false)
 
   useEffect(() => {
     let mounted = true
     
     // Handle authentication state changes (including magic link callbacks)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', { event, user: session?.user?.id })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Auth state change:', { event, hasUser: !!session?.user })
+      }
       if (event === 'SIGNED_IN' && session?.user && !redirecting && mounted) {
-        console.log('User signed in, attempting redirect')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('User signed in, attempting redirect')
+        }
         setRedirecting(true)
         setLoading(true)
         await redirectToSalon(session.user.id)
@@ -26,11 +31,17 @@ export default function LoginPage() {
     // Check if user is already logged in
     const checkInitialUser = async () => {
       if (redirecting || !mounted) return
-      console.log('Checking if user is already logged in...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Checking if user is already logged in...')
+      }
       const { data: { user } } = await supabase.auth.getUser()
-      console.log('Current user:', user?.id)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Current user:', !!user)
+      }
       if (user && mounted) {
-        console.log('User already logged in, redirecting...')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('User already logged in, redirecting...')
+        }
         setRedirecting(true)
         await redirectToSalon(user.id)
       }
@@ -46,16 +57,54 @@ export default function LoginPage() {
 
 
   async function redirectToSalon(userId) {
-    console.log('Redirecting user to dashboard/3:', userId)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Redirecting user to salon')
+    }
     
     // Check if we're already on a dashboard page to prevent loops
     if (window.location.pathname.startsWith('/dashboard')) {
-      console.log('Already on dashboard, skipping redirect')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Already on dashboard, skipping redirect')
+      }
       return
     }
     
-    // Simple redirect without database lookup for now
-    window.location.href = '/dashboard/3'
+    try {
+      setLookingUpSalon(true)
+      // Look up user's salon memberships
+      const { data: memberships, error } = await supabase
+        .from('business_member')
+        .select('business_id, business(id, name)')
+        .eq('user_id', userId)
+      
+      if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching user memberships:', error)
+        }
+        setMessage('Error accessing your salon. Please contact support.')
+        return
+      }
+      
+      if (!memberships || memberships.length === 0) {
+        setMessage('No salon access found. Please contact your salon administrator.')
+        return
+      }
+      
+      // If user has access to only one salon, redirect directly
+      if (memberships.length === 1) {
+        window.location.href = `/dashboard/${memberships[0].business_id}`
+      } else {
+        // If multiple salons, redirect to selection page
+        window.location.href = '/dashboard'
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Unexpected error during redirect:', error)
+      }
+      setMessage('Something went wrong. Please try again.')
+    } finally {
+      setLookingUpSalon(false)
+    }
   }
 
   async function handleLogin(e) {
@@ -86,17 +135,20 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  if (redirecting) {
+  if (redirecting || lookingUpSalon) {
     return (
       <div className="container py-5">
         <div className="columns is-centered">
           <div className="column is-half">
             <div className="box has-text-centered">
-              <div className="is-loading-custom">
-                <div className="notification is-info">
-                  <h2 className="title is-4">Redirecting to Dashboard...</h2>
-                  <p>Please wait while we redirect you.</p>
-                </div>
+              <div className="notification is-info">
+                <h2 className="title is-4">
+                  {lookingUpSalon ? 'Finding Your Salon...' : 'Redirecting to Dashboard...'}
+                </h2>
+                <p>
+                  {lookingUpSalon ? 'Please wait while we look up your salon access.' : 'Please wait while we redirect you.'}
+                </p>
+                <progress className="progress is-small is-primary mt-3" max="100">15%</progress>
               </div>
             </div>
           </div>

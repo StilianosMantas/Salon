@@ -8,7 +8,9 @@ export default function LogoutButton({ className = "" }) {
   const router = useRouter()
 
   const handleLogout = async () => {
-    console.log('Logout button clicked')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Logout button clicked')
+    }
     setLoading(true)
     
     try {
@@ -16,15 +18,30 @@ export default function LogoutButton({ className = "" }) {
       const { error } = await supabase.auth.signOut({ scope: 'global' })
       
       if (error) {
-        console.error('Error logging out:', error.message)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error logging out:', error.message)
+        }
       }
       
       // Clear all cookies manually (this is the key part!)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      let projectRef = 'default'
+      
+      try {
+        if (supabaseUrl && typeof window !== 'undefined') {
+          projectRef = new URL(supabaseUrl).hostname.split('.')[0]
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Could not extract project ref from Supabase URL:', error)
+        }
+      }
+      
       const cookiesToClear = [
-        'sb-xwbvyxgsjorwgidgwrvm-auth-token',
-        'sb-xwbvyxgsjorwgidgwrvm-auth-token.0',
-        'sb-xwbvyxgsjorwgidgwrvm-auth-token.1',
-        'sb-xwbvyxgsjorwgidgwrvm-auth-token.2',
+        `sb-${projectRef}-auth-token`,
+        `sb-${projectRef}-auth-token.0`,
+        `sb-${projectRef}-auth-token.1`,
+        `sb-${projectRef}-auth-token.2`,
         'sb-access-token',
         'sb-refresh-token'
       ]
@@ -43,13 +60,17 @@ export default function LogoutButton({ className = "" }) {
       localStorage.clear()
       sessionStorage.clear()
       
-      console.log('Cookies and storage cleared')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Cookies and storage cleared')
+      }
       
       // Force complete page reload to login page to ensure everything is cleared
       window.location.replace('/login')
       
     } catch (error) {
-      console.error('Unexpected error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Unexpected error:', error)
+      }
       // Even if there's an error, try to clear everything
       localStorage.clear()
       sessionStorage.clear()

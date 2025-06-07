@@ -7,11 +7,17 @@ export default async function DashboardSelectPage() {
     data: { user }
   } = await supabase.auth.getUser()
 
-  // Get user's salon memberships if user exists
+  // Get user's salon memberships with business names if user exists
   const { data: memberships, error: membershipError } = user
     ? await supabase
         .from('business_member')
-        .select('business_id')
+        .select(`
+          business_id,
+          business:business_id (
+            name,
+            description
+          )
+        `)
         .eq('user_id', user.id)
     : { data: null, error: null }
 
@@ -20,10 +26,10 @@ export default async function DashboardSelectPage() {
       <div className="container py-5">
         <div className="notification is-warning">
           <h1 className="title">Welcome to Your Salon Dashboard</h1>
-          <p>Loading your salon information...</p>
-          <Link href="/dashboard/3">
+          <p>You don&apos;t have access to any salons yet. Please contact your salon administrator to get access.</p>
+          <Link href="/login">
             <button className="button is-primary mt-3">
-              Access Default Dashboard
+              Back to Login
             </button>
           </Link>
         </div>
@@ -42,8 +48,11 @@ export default async function DashboardSelectPage() {
               <div className="card-content">
                 <div className="content">
                   <h2 className="subtitle">
-                    Salon {memberships[0].business_id}
+                    {memberships[0].business?.name || `Salon ${memberships[0].business_id}`}
                   </h2>
+                  {memberships[0].business?.description && (
+                    <p className="content">{memberships[0].business.description}</p>
+                  )}
                   <Link href={`/dashboard/${memberships[0].business_id}`}>
                     <button className="button is-primary">
                       Access Dashboard
@@ -69,8 +78,11 @@ export default async function DashboardSelectPage() {
               <div className="card-content">
                 <div className="content">
                   <h2 className="subtitle">
-                    Salon {membership.business_id}
+                    {membership.business?.name || `Salon ${membership.business_id}`}
                   </h2>
+                  {membership.business?.description && (
+                    <p className="content">{membership.business.description}</p>
+                  )}
                   <Link href={`/dashboard/${membership.business_id}`}>
                     <button className="button is-primary">
                       Access Dashboard

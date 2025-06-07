@@ -14,22 +14,39 @@ export default function SelectSlotPage() {
   const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [availableSlots, setAvailableSlots] = useState([])
   const [selectedSlotId, setSelectedSlotId] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [slotsLoading, setSlotsLoading] = useState(false)
 
   // 1) Load all services for this salon
   useEffect(() => {
     if (!bid) return
 
     async function fetchServices() {
-      const { data, error } = await supabase
-        .from('service')
-        .select('*')
-        .eq('business_id', bid)
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const { data, error: fetchError } = await supabase
+          .from('service')
+          .select('*')
+          .eq('business_id', bid)
 
-      if (error) {
-        console.error('Error loading services:', error)
+        if (fetchError) {
+          throw new Error('Failed to load services')
+        }
+        
+        if (!data || data.length === 0) {
+          setError('No services available for booking at this time.')
+          return
+        }
+        
+        setServices(data)
+      } catch (err) {
+        setError('Unable to load services. Please try again.')
         setServices([])
-      } else {
-        setServices(data || [])
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -49,54 +66,61 @@ export default function SelectSlotPage() {
       .reduce((sum, s) => sum + s.duration, 0)
 
     async function fetchSlots() {
-      const { data, error } = await supabase
-        .from('slot')
-        .select('id, start_time, end_time, duration')
-        .eq('business_id', bid)
-        .eq('slotdate', date)
-        .is('client_id', null)
-        .order('start_time')
+      try {
+        setSlotsLoading(true)
+        
+        const { data, error: fetchError } = await supabase
+          .from('slot')
+          .select('id, start_time, end_time, duration')
+          .eq('business_id', bid)
+          .eq('slotdate', date)
+          .is('client_id', null)
+          .order('start_time')
 
-      if (error) {
-        console.error('Error fetching slots:', error)
-        setAvailableSlots([])
-        return
-      }
+        if (fetchError) {
+          throw new Error('Failed to load available slots')
+        }
 
-      if (!Array.isArray(data) || data.length === 0) {
-        setAvailableSlots([])
-        return
-      }
+        if (!Array.isArray(data) || data.length === 0) {
+          setAvailableSlots([])
+          return
+        }
 
-      const result = []
-      let i = 0
+        const result = []
+        let i = 0
 
-      while (i < data.length) {
-        let total = data[i].duration
-        let j = i + 1
+        while (i < data.length) {
+          let total = data[i].duration
+          let j = i + 1
 
-        while (total < totalDuration && j < data.length) {
-          const prev = data[j - 1]
-          const next = data[j]
-          if (prev.end_time === next.start_time) {
-            total += next.duration
-            j++
-          } else {
-            break
+          while (total < totalDuration && j < data.length) {
+            const prev = data[j - 1]
+            const next = data[j]
+            if (prev.end_time === next.start_time) {
+              total += next.duration
+              j++
+            } else {
+              break
+            }
           }
+
+          if (total >= totalDuration) {
+            result.push({
+              id: data[i].id,
+              start_time: data[i].start_time,
+              end_time: data[j - 1].end_time
+            })
+          }
+          i++
         }
 
-        if (total >= totalDuration) {
-          result.push({
-            id: data[i].id,
-            start_time: data[i].start_time,
-            end_time: data[j - 1].end_time
-          })
-        }
-        i++
+        setAvailableSlots(result)
+      } catch (err) {
+        // Don't show error for slot fetching, just show no slots available
+        setAvailableSlots([])
+      } finally {
+        setSlotsLoading(false)
       }
-
-      setAvailableSlots(result)
     }
 
     fetchSlots()
@@ -178,9 +202,71 @@ export default function SelectSlotPage() {
     setAvailableSlots(result)
   }
 
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="has-text-centered py-6">
+          <progress className="progress is-primary" max="100">Loading...</progress>
+          <p className="mt-3">Loading services...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div className="notification is-danger">
+          <h2 className="title is-4">Unable to Load Services</h2>
+          <p className="mb-3">{error}</p>
+          <div className="content">
+            <p><strong>What you can try:</strong></p>
+            <ul>
+              <li>Check your internet connection</li>
+              <li>Make sure you&apos;re using the correct booking link</li>
+              <li>Try refreshing the page using the button below</li>
+              <li>Contact the salon directly if the problem persists</li>
+            </ul>
+          </div>
+          <div className="buttons">
+            <button 
+              className="button is-primary"
+              onClick={() => window.location.reload()}
+            >
+              <span className="icon">
+                <i className="fas fa-redo"></i>
+              </span>
+              <span>Try Again</span>
+            </button>
+            <button 
+              className="button is-light"
+              onClick={() => router.push(`/book/${bid}`)}
+            >
+              <span className="icon">
+                <i className="fas fa-arrow-left"></i>
+              </span>
+              <span>Go Back</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container">
-      <h1 className="title is-3">Choose a Time Slot</h1>
+      <div className="is-flex is-align-items-center mb-4">
+        <button 
+          className="button is-ghost mr-3"
+          onClick={() => router.push(`/book/${bid}`)}
+        >
+          <span className="icon">
+            <i className="fas fa-arrow-left"></i>
+          </span>
+          <span>Back</span>
+        </button>
+        <h1 className="title is-3 mb-0">Choose a Time Slot</h1>
+      </div>
 
       <div className="field">
         <label className="label">Select Services</label>
@@ -193,11 +279,37 @@ export default function SelectSlotPage() {
                 onChange={() => handleServiceToggle(service.id)}
               />
               <span className="ml-2">
-                {service.name} ({service.duration} mins)
+                <strong>{service.name}</strong> ({service.duration} mins)
+                {service.cost && <span className="has-text-grey"> - €{service.cost}</span>}
               </span>
+              {service.description && (
+                <p className="is-size-7 has-text-grey ml-5 mt-1">{service.description}</p>
+              )}
             </label>
           ))}
         </div>
+        
+        {/* Selected Services Summary */}
+        {selectedServices.length > 0 && (
+          <div className="notification is-info">
+            <h4 className="title is-6">Selected Services</h4>
+            {services
+              .filter(s => selectedServices.includes(s.id))
+              .map(service => (
+                <div key={service.id} className="is-flex is-justify-content-space-between">
+                  <span>{service.name} ({service.duration} mins)</span>
+                  {service.cost && <span>€{service.cost}</span>}
+                </div>
+              ))}
+            <hr className="my-2" />
+            <div className="is-flex is-justify-content-space-between has-text-weight-bold">
+              <span>Total Duration: {services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.duration, 0)} minutes</span>
+              <span>
+                Total Cost: €{services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + (parseFloat(s.cost) || 0), 0).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="field is-flex is-justify-content-space-between is-align-items-end">
@@ -207,6 +319,8 @@ export default function SelectSlotPage() {
             type="date"
             className="input"
             value={date}
+            min={dayjs().format('YYYY-MM-DD')}
+            max={dayjs().add(3, 'month').format('YYYY-MM-DD')}
             onChange={(e) => setDate(e.target.value)}
           />
         </div>
@@ -217,10 +331,16 @@ export default function SelectSlotPage() {
         </div>
       </div>
 
-      {availableSlots.length > 0 ? (
+      {slotsLoading ? (
+        <div className="box has-text-centered">
+          <progress className="progress is-small is-primary" max="100">Loading slots...</progress>
+          <p className="mt-2">Finding available time slots...</p>
+        </div>
+      ) : availableSlots.length > 0 ? (
         <div className="box">
+          <h4 className="title is-6 mb-3">Available Time Slots</h4>
           {availableSlots.map((slot) => (
-            <label key={slot.id} className="radio is-block">
+            <label key={slot.id} className={`radio is-block p-3 mb-2 ${selectedSlotId === slot.id ? 'has-background-link-light' : 'has-background-light'}`} style={{ borderRadius: '6px', border: selectedSlotId === slot.id ? '2px solid #3273dc' : '1px solid #dbdbdb' }}>
               <input
                 type="radio"
                 name="slot"
@@ -228,24 +348,52 @@ export default function SelectSlotPage() {
                 checked={selectedSlotId === slot.id}
                 onChange={() => setSelectedSlotId(slot.id)}
               />
-              <span className="ml-2">
-                {slot.start_time.substring(0, 5)} -{' '}
-                {slot.end_time.substring(0, 5)}
+              <span className="ml-2 is-flex is-justify-content-space-between is-align-items-center">
+                <span>
+                  <strong>{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</strong>
+                  <br />
+                  <small className="has-text-grey">
+                    Duration: {services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.duration, 0)} minutes
+                  </small>
+                </span>
+                {selectedServices.length > 0 && (
+                  <span className="tag is-primary">
+                    €{services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + (parseFloat(s.cost) || 0), 0).toFixed(2)}
+                  </span>
+                )}
               </span>
             </label>
           ))}
         </div>
+      ) : selectedServices.length > 0 ? (
+        <div className="notification is-warning">
+          <p>No available slots for the selected date and services. Please try a different date or fewer services.</p>
+        </div>
       ) : (
-        <p>No available slots on this day.</p>
+        <div className="notification is-info">
+          <p>Please select services to see available time slots.</p>
+        </div>
       )}
 
-      <button
-        className="button is-primary mt-4"
-        onClick={handleNext}
-        disabled={!selectedSlotId || selectedServices.length === 0}
-      >
-        Continue
-      </button>
+      <div className="field mt-4">
+        <div className="control">
+          <button
+            className={`button is-primary is-fullwidth ${(!selectedSlotId || selectedServices.length === 0) ? 'is-loading' : ''}`}
+            onClick={handleNext}
+            disabled={!selectedSlotId || selectedServices.length === 0}
+          >
+            {selectedServices.length === 0 ? 'Select Services to Continue' : 
+             !selectedSlotId ? 'Select a Time Slot to Continue' : 
+             'Continue to Booking Details'}
+          </button>
+        </div>
+        {(selectedServices.length === 0 || !selectedSlotId) && (
+          <p className="help has-text-grey">
+            {selectedServices.length === 0 ? 'Please select at least one service.' : 
+             'Please choose an available time slot.'}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

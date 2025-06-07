@@ -1,36 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useClients, useClientMutations } from '@/hooks/useSupabaseData'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import toast from 'react-hot-toast'
 
 export default function ClientsPage() {
   const { bid } = useParams()
-  const [clients, setClients] = useState([])
+  const { data: clients, error, isLoading } = useClients(bid)
+  const { createClient, updateClient, deleteClient, loading: mutationLoading } = useClientMutations(bid)
+  
   const [formVisible, setFormVisible] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', mobile: '', id: null })
   const [editing, setEditing] = useState(false)
   const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
-
-  useEffect(() => {
-    if (!bid) return
-
-    async function fetchClients() {
-      const { data, error } = await supabase
-        .from('client')
-        .select('*')
-        .eq('business_id', bid)
-
-      if (error) {
-        console.error('Error loading clients:', error)
-        setClients([])
-      } else {
-        setClients(data || [])
-      }
-    }
-
-    fetchClients()
-  }, [bid])
 
   function isFormDirty(current, initial) {
     return (
@@ -42,37 +26,20 @@ export default function ClientsPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.name.trim()) return alert('Name is required')
-    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return alert('Invalid email')
-    if (form.mobile && !/^[\d\-\s\+]+$/.test(form.mobile)) return alert('Invalid mobile number')
+    if (!form.name.trim()) return toast.error('Name is required')
+    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return toast.error('Invalid email')
+    if (form.mobile && !/^[\d\-\s\+]+$/.test(form.mobile)) return toast.error('Invalid mobile number')
 
-    if (editing) {
-      await supabase
-        .from('client')
-        .update({ name: form.name, email: form.email, mobile: form.mobile })
-        .eq('id', form.id)
-    } else {
-      await supabase
-        .from('client')
-        .insert({ business_id: bid, name: form.name, email: form.email, mobile: form.mobile })
-    }
-
-    closeForm(true)
-
-    // Refresh list after submit
-    async function fetchClientsAgain() {
-      const { data, error } = await supabase
-        .from('client')
-        .select('*')
-        .eq('business_id', bid)
-      if (error) {
-        console.error('Error reloading clients:', error)
-        setClients([])
+    try {
+      if (editing) {
+        await updateClient({ id: form.id, name: form.name, email: form.email, mobile: form.mobile })
       } else {
-        setClients(data || [])
+        await createClient({ name: form.name, email: form.email, mobile: form.mobile })
       }
+      closeForm(true)
+    } catch (error) {
+      // Error handling is done in the mutation hooks
     }
-    fetchClientsAgain()
   }
 
   function handleEdit(client) {
@@ -83,22 +50,14 @@ export default function ClientsPage() {
     setFormVisible(true)
   }
 
-  async function deleteClient(id) {
+  async function handleDelete(id) {
     const confirmDelete = window.confirm('Are you sure you want to delete this client?')
     if (!confirmDelete) return
 
-    await supabase.from('client').delete().eq('id', id)
-
-    // Refresh list after deletion
-    const { data, error } = await supabase
-      .from('client')
-      .select('*')
-      .eq('business_id', bid)
-    if (error) {
-      console.error('Error reloading clients after delete:', error)
-      setClients([])
-    } else {
-      setClients(data || [])
+    try {
+      await deleteClient(id)
+    } catch (error) {
+      // Error handling is done in the mutation hooks
     }
   }
 
@@ -111,6 +70,35 @@ export default function ClientsPage() {
     setInitialForm({ name: '', email: '', mobile: '', id: null })
     setEditing(false)
     setFormVisible(false)
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner message="Loading clients..." />
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5 px-4">
+        <div className="notification is-danger">
+          <h2 className="title is-4">Unable to Load Clients</h2>
+          <p className="mb-3">We couldn&apos;t load your client list. This might be due to a connection issue or temporary server problem.</p>
+          <div className="content">
+            <p><strong>What you can try:</strong></p>
+            <ul>
+              <li>Check your internet connection</li>
+              <li>Refresh the page using the button below</li>
+              <li>If the problem persists, please contact support</li>
+            </ul>
+          </div>
+          <button className="button is-primary mt-3" onClick={() => window.location.reload()}>
+            <span className="icon">
+              <i className="fas fa-redo"></i>
+            </span>
+            <span>Refresh Page</span>
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -126,12 +114,13 @@ export default function ClientsPage() {
             setInitialForm({ ...empty })
             setFormVisible(true)
           }}
+          disabled={mutationLoading}
         >
           + Add Client
         </button>
       </div>
       <div className="box">
-        {clients.map((c, index) => (
+        {clients && clients.length > 0 ? clients.map((c, index) => (
           <div key={c.id}>
             <div className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3">
               <div>
@@ -140,13 +129,29 @@ export default function ClientsPage() {
                 <small>{c.mobile}</small>
               </div>
               <div>
-                <button className="button is-small is-info mr-2" onClick={() => handleEdit(c)}>Edit</button>
-                <button className="button is-small is-danger" onClick={() => deleteClient(c.id)}>Delete</button>
+                <button 
+                  className="button is-small is-info mr-2" 
+                  onClick={() => handleEdit(c)}
+                  disabled={mutationLoading}
+                >
+                  Edit
+                </button>
+                <button 
+                  className="button is-small is-danger" 
+                  onClick={() => handleDelete(c.id)}
+                  disabled={mutationLoading}
+                >
+                  Delete
+                </button>
               </div>
             </div>
             {index < clients.length - 1 && <hr className="my-2" />}
           </div>
-        ))}
+        )) : (
+          <div className="has-text-centered py-4">
+            <p className="has-text-grey">No clients found. Add your first client to get started.</p>
+          </div>
+        )}
       </div>
 
       {formVisible && (
@@ -197,10 +202,19 @@ export default function ClientsPage() {
                   </div>
                 </div>
                 <footer className="modal-card-foot">
-                  <button className="button is-success" type="submit">
+                  <button 
+                    className={`button is-success ${mutationLoading ? 'is-loading' : ''}`} 
+                    type="submit"
+                    disabled={mutationLoading}
+                  >
                     {editing ? 'Update' : 'Add'}
                   </button>
-                  <button className="button" type="button" onClick={() => closeForm()}>
+                  <button 
+                    className="button" 
+                    type="button" 
+                    onClick={() => closeForm()}
+                    disabled={mutationLoading}
+                  >
                     Cancel
                   </button>
                 </footer>

@@ -10,15 +10,19 @@ export default async function DashboardPage({ params }) {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-6">Welcome to Your Salon</h1>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 border rounded bg-white shadow-sm">
-          <h2 className="text-lg font-semibold">Staff Members</h2>
-          <p className="text-3xl">{staff?.length || 0}</p>
+      <h1 className="title is-4 mb-5">Welcome to Your Salon</h1>
+      <div className="columns">
+        <div className="column is-half">
+          <div className="box has-text-centered">
+            <h2 className="subtitle is-5">Staff Members</h2>
+            <p className="title is-2 has-text-primary">{staff?.length || 0}</p>
+          </div>
         </div>
-        <div className="p-4 border rounded bg-white shadow-sm">
-          <h2 className="text-lg font-semibold">Clients</h2>
-          <p className="text-3xl">{clients?.length || 0}</p>
+        <div className="column is-half">
+          <div className="box has-text-centered">
+            <h2 className="subtitle is-5">Clients</h2>
+            <p className="title is-2 has-text-info">{clients?.length || 0}</p>
+          </div>
         </div>
       </div>
     </div>

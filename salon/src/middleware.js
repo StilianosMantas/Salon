@@ -32,7 +32,9 @@ export async function middleware(request) {
   
   // Only redirect if accessing dashboard without authentication
   if (request.nextUrl.pathname.startsWith('/dashboard') && (!user || error)) {
-    console.log('Redirecting unauthenticated user to login')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Redirecting unauthenticated user to login')
+    }
     const redirectUrl = new URL('/login', request.url)
     return NextResponse.redirect(redirectUrl)
   }
@@ -42,7 +44,6 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    // Temporarily disable to prevent loops
-    // '/dashboard/:path*',
+    '/dashboard/:path*',
   ],
 }

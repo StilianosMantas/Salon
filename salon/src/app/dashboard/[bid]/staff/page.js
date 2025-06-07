@@ -1,25 +1,19 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useStaff, useStaffMutations } from '@/hooks/useSupabaseData'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import toast from 'react-hot-toast'
 
 export default function StaffPage() {
   const { bid } = useParams()
-  const [staff, setStaff] = useState([])
+  const { data: staff, error, isLoading } = useStaff(bid)
+  const { createStaff, updateStaff, deleteStaff, loading: mutationLoading } = useStaffMutations(bid)
+  
   const [formVisible, setFormVisible] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', id: null })
   const [editing, setEditing] = useState(false)
   const [initialForm, setInitialForm] = useState({ name: '', email: '', id: null })
-
-  useEffect(() => {
-    if (!bid) return
-    fetchStaff()
-  }, [bid])
-
-  async function fetchStaff() {
-    const { data } = await supabase.from('staff').select('*').eq('business_id', bid)
-    setStaff(data)
-  }
 
   function isFormDirty(current, initial) {
     return (
@@ -30,16 +24,19 @@ export default function StaffPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.name.trim()) return alert('Name is required')
-    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return alert('Invalid email')
+    if (!form.name.trim()) return toast.error('Name is required')
+    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return toast.error('Invalid email')
 
-    if (editing) {
-      await supabase.from('staff').update({ name: form.name, email: form.email }).eq('id', form.id)
-    } else {
-      await supabase.from('staff').insert({ business_id: bid, name: form.name, email: form.email })
+    try {
+      if (editing) {
+        await updateStaff({ id: form.id, name: form.name, email: form.email })
+      } else {
+        await createStaff({ name: form.name, email: form.email })
+      }
+      closeForm(true)
+    } catch (error) {
+      // Error handling is done in the mutation hooks
     }
-    closeForm(true)
-    fetchStaff()
   }
 
   function handleEdit(member) {
@@ -50,11 +47,15 @@ export default function StaffPage() {
     setFormVisible(true)
   }
 
-  async function deleteStaff(id) {
+  async function handleDelete(id) {
     const confirmDelete = window.confirm('Are you sure you want to delete this staff member?')
     if (!confirmDelete) return
-    await supabase.from('staff').delete().eq('id', id)
-    fetchStaff()
+    
+    try {
+      await deleteStaff(id)
+    } catch (error) {
+      // Error handling is done in the mutation hooks
+    }
   }
 
   function closeForm(force = false) {
@@ -68,22 +69,55 @@ export default function StaffPage() {
     setFormVisible(false)
   }
 
+  if (isLoading) {
+    return <LoadingSpinner message="Loading staff..." />
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5 px-4">
+        <div className="notification is-danger">
+          <h2 className="title is-4">Unable to Load Staff</h2>
+          <p className="mb-3">We couldn&apos;t load your staff list. This might be due to a connection issue or temporary server problem.</p>
+          <div className="content">
+            <p><strong>What you can try:</strong></p>
+            <ul>
+              <li>Check your internet connection</li>
+              <li>Refresh the page using the button below</li>
+              <li>If the problem persists, please contact support</li>
+            </ul>
+          </div>
+          <button className="button is-primary mt-3" onClick={() => window.location.reload()}>
+            <span className="icon">
+              <i className="fas fa-redo"></i>
+            </span>
+            <span>Refresh Page</span>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container py-5 px-4">
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-5">
         <h1 className="title is-4">Staff</h1>
-        <button className="button is-link" onClick={() => {
-          setEditing(false)
-          const empty = { name: '', email: '', id: null }
-          setForm({ ...empty })
-          setInitialForm({ ...empty })
-          setFormVisible(true)
-        }}>
+        <button 
+          className="button is-link" 
+          onClick={() => {
+            setEditing(false)
+            const empty = { name: '', email: '', id: null }
+            setForm({ ...empty })
+            setInitialForm({ ...empty })
+            setFormVisible(true)
+          }}
+          disabled={mutationLoading}
+        >
           + Add Staff
         </button>
       </div>
       <div className="box">
-        {staff.map((s, index) => (
+        {staff && staff.length > 0 ? staff.map((s, index) => (
           <div key={s.id}>
             <div className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3">
               <div>
@@ -91,13 +125,29 @@ export default function StaffPage() {
                 <small>{s.email}</small>
               </div>
               <div>
-                <button className="button is-small is-info mr-2" onClick={() => handleEdit(s)}>Edit</button>
-                <button className="button is-small is-danger" onClick={() => deleteStaff(s.id)}>Delete</button>
+                <button 
+                  className="button is-small is-info mr-2" 
+                  onClick={() => handleEdit(s)}
+                  disabled={mutationLoading}
+                >
+                  Edit
+                </button>
+                <button 
+                  className="button is-small is-danger" 
+                  onClick={() => handleDelete(s.id)}
+                  disabled={mutationLoading}
+                >
+                  Delete
+                </button>
               </div>
             </div>
             {index < staff.length - 1 && <hr className="my-2" />}
           </div>
-        ))}
+        )) : (
+          <div className="has-text-centered py-4">
+            <p className="has-text-grey">No staff members found. Add your first staff member to get started.</p>
+          </div>
+        )}
       </div>
 
       {formVisible && (
@@ -123,8 +173,21 @@ export default function StaffPage() {
                   </div>
                 </div>
                 <footer className="modal-card-foot">
-                  <button className="button is-success" type="submit">{editing ? 'Update' : 'Add'}</button>
-                  <button className="button" type="button" onClick={() => closeForm()}>Cancel</button>
+                  <button 
+                    className={`button is-success ${mutationLoading ? 'is-loading' : ''}`} 
+                    type="submit"
+                    disabled={mutationLoading}
+                  >
+                    {editing ? 'Update' : 'Add'}
+                  </button>
+                  <button 
+                    className="button" 
+                    type="button" 
+                    onClick={() => closeForm()}
+                    disabled={mutationLoading}
+                  >
+                    Cancel
+                  </button>
                 </footer>
               </form>
             </section>
