@@ -7,14 +7,22 @@ export default function SWRProvider({ children }) {
     <SWRConfig 
       value={{
         revalidateOnFocus: false,
-        dedupingInterval: 2000,
-        errorRetryCount: 3,
-        errorRetryInterval: 5000,
+        revalidateOnReconnect: true,
+        dedupingInterval: 5000,
+        focusThrottleInterval: 10000,
+        errorRetryCount: 2,
+        errorRetryInterval: 3000,
+        refreshInterval: 0,
+        refreshWhenHidden: false,
+        refreshWhenOffline: false,
         onError: (error) => {
           // Don't retry on auth errors
           if (error?.status === 401 || error?.status === 403) {
             console.error('Authentication error:', error)
           }
+        },
+        onLoadingSlow: () => {
+          console.warn('SWR request is taking longer than expected')
         },
       }}
     >

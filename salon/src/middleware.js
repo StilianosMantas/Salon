@@ -27,16 +27,31 @@ export async function middleware(request) {
     }
   )
 
-  // Check authentication for dashboard routes
-  const { data: { user }, error } = await supabase.auth.getUser()
+  // Only check auth on the main dashboard route, let client-side handle sub-routes
+  const pathname = request.nextUrl.pathname
+  const isMainDashboard = pathname === '/dashboard'
+  const isDashboardSubroute = pathname.startsWith('/dashboard/') && pathname !== '/dashboard'
   
-  // Only redirect if accessing dashboard without authentication
-  if (request.nextUrl.pathname.startsWith('/dashboard') && (!user || error)) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Redirecting unauthenticated user to login')
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Middleware:', { pathname, isMainDashboard, isDashboardSubroute })
+  }
+
+  // For dashboard sub-routes, just ensure cookies are properly set but don't redirect
+  if (isDashboardSubroute) {
+    return supabaseResponse
+  }
+
+  // Only check authentication for the main dashboard route
+  if (isMainDashboard) {
+    const { data: { user }, error } = await supabase.auth.getUser()
+    
+    if (!user || error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('No user on main dashboard, redirecting to login')
+      }
+      const redirectUrl = new URL('/login', request.url)
+      return NextResponse.redirect(redirectUrl)
     }
-    const redirectUrl = new URL('/login', request.url)
-    return NextResponse.redirect(redirectUrl)
   }
 
   return supabaseResponse

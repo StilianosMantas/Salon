@@ -128,3 +128,45 @@ body {
         overflow-y: auto;
     }
 }
+
+/* Homepage enhancements */
+.hero.is-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.hero .box {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero .box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth button animations */
+.button {
+    transition: all 0.3s ease;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+}
+
+/* Icon animations */
+.icon {
+    transition: transform 0.3s ease;
+}
+
+.box:hover .icon {
+    transform: scale(1.1);
+}

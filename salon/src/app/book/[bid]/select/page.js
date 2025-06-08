@@ -27,23 +27,29 @@ export default function SelectSlotPage() {
         setLoading(true)
         setError(null)
         
+        console.log('Fetching services for business_id:', bid)
+        
         const { data, error: fetchError } = await supabase
           .from('service')
           .select('*')
           .eq('business_id', bid)
 
+        console.log('Services fetch result:', { data, error: fetchError })
+
         if (fetchError) {
-          throw new Error('Failed to load services')
+          console.error('Supabase error:', fetchError)
+          throw new Error(`Failed to load services: ${fetchError.message}`)
         }
         
         if (!data || data.length === 0) {
-          setError('No services available for booking at this time.')
+          setError('No services available for booking at this time. The salon may not have configured any services yet.')
           return
         }
         
         setServices(data)
       } catch (err) {
-        setError('Unable to load services. Please try again.')
+        console.error('Error fetching services:', err)
+        setError(`Unable to load services: ${err.message}`)
         setServices([])
       } finally {
         setLoading(false)

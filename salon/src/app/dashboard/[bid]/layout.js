@@ -11,6 +11,7 @@ export default function Layout({ children, params }) {
   const [loading, setLoading] = useState(true)
   const [bid, setBid] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -27,10 +28,18 @@ export default function Layout({ children, params }) {
     
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Dashboard auth state change:', { event, hasUser: !!session?.user })
+      }
+      
+      if (event === 'SIGNED_OUT') {
         setUser(null)
-        // Don't redirect here to avoid loops, just clear user state
+        window.location.replace('/login')
       } else if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user)
+        setLoading(false)
+        setAuthChecked(true)
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         setUser(session.user)
       }
     })
@@ -40,10 +49,44 @@ export default function Layout({ children, params }) {
     }
   }, [])
 
+  // Handle authentication timeout
+  useEffect(() => {
+    if (!loading && !user && authChecked) {
+      // If we've checked auth and there's no user, redirect after a brief delay
+      const timeout = setTimeout(() => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('No user found after auth check, redirecting to login')
+        }
+        window.location.replace('/login')
+      }, 1000)
+      
+      return () => clearTimeout(timeout)
+    }
+  }, [loading, user, authChecked])
+
   async function checkAuth() {
-    const { data: { user } } = await supabase.auth.getUser()
-    setUser(user)
-    setLoading(false)
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Dashboard auth check:', { hasUser: !!user, error: !!error, pathname })
+      }
+      
+      if (error) {
+        console.error('Auth error in dashboard:', error)
+        setUser(null)
+      } else {
+        setUser(user)
+      }
+      
+      setAuthChecked(true)
+    } catch (err) {
+      console.error('Failed to check auth:', err)
+      setUser(null)
+      setAuthChecked(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (loading) {
@@ -51,17 +94,8 @@ export default function Layout({ children, params }) {
   }
 
   if (!user) {
-    return (
-      <div className="container py-5">
-        <div className="notification is-warning">
-          <h2 className="title is-4">Access Denied</h2>
-          <p>You need to be logged in to access this page.</p>
-          <a href="/login" className="button is-primary mt-3">
-            Go to Login
-          </a>
-        </div>
-      </div>
-    )
+    // Show loading while we're still checking auth or waiting for redirect
+    return <LoadingSpinner message="Checking authentication..." />
   }
 
   const base = `/dashboard/${bid}`

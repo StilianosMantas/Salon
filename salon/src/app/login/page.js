@@ -24,7 +24,10 @@ export default function LoginPage() {
         }
         setRedirecting(true)
         setLoading(true)
-        await redirectToSalon(session.user.id)
+        // Add a small delay to ensure session is fully established
+        setTimeout(async () => {
+          await redirectToSalon(session.user.id)
+        }, 500)
       }
     })
 
@@ -43,7 +46,10 @@ export default function LoginPage() {
           console.log('User already logged in, redirecting...')
         }
         setRedirecting(true)
-        await redirectToSalon(user.id)
+        // Add small delay for consistency
+        setTimeout(async () => {
+          await redirectToSalon(user.id)
+        }, 300)
       }
     }
     
@@ -92,10 +98,11 @@ export default function LoginPage() {
       
       // If user has access to only one salon, redirect directly
       if (memberships.length === 1) {
-        window.location.href = `/dashboard/${memberships[0].business_id}`
+        // Use location.replace to avoid back button issues
+        window.location.replace(`/dashboard/${memberships[0].business_id}`)
       } else {
         // If multiple salons, redirect to selection page
-        window.location.href = '/dashboard'
+        window.location.replace('/dashboard')
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {

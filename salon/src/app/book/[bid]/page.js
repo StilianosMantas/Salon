@@ -19,24 +19,30 @@ export default function PublicBookingEntry() {
         setLoading(true)
         setError(null)
         
+        console.log('Fetching business with id:', bid)
+        
         const { data, error: fetchError } = await supabase
           .from('business')
           .select('*')
           .eq('id', bid)
           .single()
           
+        console.log('Business fetch result:', { data, error: fetchError })
+          
         if (fetchError) {
+          console.error('Supabase error:', fetchError)
           if (fetchError.code === 'PGRST116') {
             setError('Salon not found. Please check the booking link.')
           } else {
-            setError('Unable to load salon information. Please try again.')
+            setError(`Unable to load salon information: ${fetchError.message}`)
           }
           return
         }
         
         setBusiness(data)
       } catch (err) {
-        setError('Something went wrong. Please try again later.')
+        console.error('Error fetching business:', err)
+        setError(`Something went wrong: ${err.message}`)
       } finally {
         setLoading(false)
       }
@@ -84,11 +90,6 @@ export default function PublicBookingEntry() {
         Welcome to our online booking system. You can schedule your next appointment in just a few steps.
       </p>
 
-      {business?.description && (
-        <div className="content mb-4">
-          <p>{business.description}</p>
-        </div>
-      )}
 
       <button className="button is-primary" onClick={handleStartBooking}>
         Start Booking
