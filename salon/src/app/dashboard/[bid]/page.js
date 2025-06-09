@@ -22,7 +22,7 @@ export default function DashboardPage({ params }) {
   }
 
   return (
-    <div>
+    <div className="container py-5 px-4">
       <h1 className="title is-4 mb-5">Welcome to Your Salon</h1>
       <div className="columns">
         <div className="column is-half">

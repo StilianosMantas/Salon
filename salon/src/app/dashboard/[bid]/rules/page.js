@@ -155,15 +155,17 @@ export default function RulesPage() {
     <div className="container py-5 px-4">
       <h1 className="title is-4 mb-4">Business Open Hours</h1>
 
-      <div className="columns mb-5">
-        <div className="column is-3">
+      <div className="columns is-multiline mb-5">
+        <div className="column is-half-tablet is-full-mobile">
+          <label className="label">Start Date</label>
           <input className="input" type="date" value={rangeStart} onChange={e => setRangeStart(e.target.value)} />
         </div>
-        <div className="column is-3">
+        <div className="column is-half-tablet is-full-mobile">
+          <label className="label">End Date</label>
           <input className="input" type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)} />
         </div>
-        <div className="column is-narrow">
-          <button className="button is-info" onClick={generateSlots}>Generate Slots</button>
+        <div className="column is-full">
+          <button className="button is-info is-fullwidth-mobile" onClick={generateSlots}>Generate Slots</button>
         </div>
       </div>
 
@@ -173,27 +175,36 @@ export default function RulesPage() {
           <div key={i} className="mb-5">
             <div className="mb-2 has-text-weight-semibold">{day}</div>
             {(rules.filter(r => r.weekday === i)).map(rule => (
-              <div key={rule.id} className="columns is-vcentered mb-2">
-                <div className="column is-2">
-                  <input className="input is-small" style={{ maxWidth: '120px' }} type="time" value={rule.start_time || ''} readOnly />
-                </div>
-                <div className="column is-2">
-                  <input className="input is-small" style={{ maxWidth: '120px' }} type="time" value={rule.end_time || ''} readOnly />
-                </div>
-                <div className="column is-narrow">
-                  <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>Delete</button>
+              <div key={rule.id} className="box p-3 mb-2">
+                <div className="columns is-multiline is-vcentered is-mobile">
+                  <div className="column is-half-mobile is-one-third-tablet">
+                    <label className="label is-size-7">Start Time</label>
+                    <input className="input is-small" type="time" value={rule.start_time || ''} readOnly />
+                  </div>
+                  <div className="column is-half-mobile is-one-third-tablet">
+                    <label className="label is-size-7">End Time</label>
+                    <input className="input is-small" type="time" value={rule.end_time || ''} readOnly />
+                  </div>
+                  <div className="column is-full-mobile is-one-third-tablet">
+                    <button className="button is-small is-danger is-light is-fullwidth-mobile" onClick={() => deleteRule(rule.id)}>Delete</button>
+                  </div>
                 </div>
               </div>
             ))}
-            <div className="columns is-vcentered mb-2">
-              <div className="column is-2">
-                <input className="input is-small" style={{ maxWidth: '120px' }} type="time" value={newRanges[i]?.start_time || ''} onChange={e => handleNewRangeChange(i, 'start_time', e.target.value)} />
-              </div>
-              <div className="column is-2">
-                <input className="input is-small" style={{ maxWidth: '120px' }} type="time" value={newRanges[i]?.end_time || ''} onChange={e => handleNewRangeChange(i, 'end_time', e.target.value)} />
-              </div>
-              <div className="column is-narrow">
-                <button className="button is-small is-success" onClick={() => addRange(i)}>Add</button>
+            <div className="box p-3 has-background-light">
+              <p className="is-size-7 has-text-weight-semibold mb-2">Add New Time Range</p>
+              <div className="columns is-multiline is-vcentered is-mobile">
+                <div className="column is-half-mobile is-one-third-tablet">
+                  <label className="label is-size-7">Start Time</label>
+                  <input className="input is-small" type="time" value={newRanges[i]?.start_time || ''} onChange={e => handleNewRangeChange(i, 'start_time', e.target.value)} />
+                </div>
+                <div className="column is-half-mobile is-one-third-tablet">
+                  <label className="label is-size-7">End Time</label>
+                  <input className="input is-small" type="time" value={newRanges[i]?.end_time || ''} onChange={e => handleNewRangeChange(i, 'end_time', e.target.value)} />
+                </div>
+                <div className="column is-full-mobile is-one-third-tablet">
+                  <button className="button is-small is-success is-fullwidth-mobile" onClick={() => addRange(i)}>Add Range</button>
+                </div>
               </div>
             </div>
           </div>
@@ -203,33 +214,49 @@ export default function RulesPage() {
       <div className="box">
         <h2 className="subtitle is-6 mb-3">Date Overrides</h2>
         <div className="columns is-multiline is-vcentered mb-4">
-          <div className="column is-3">
+          <div className="column is-half-tablet is-full-mobile">
+            <label className="label">Override Date</label>
             <input className="input" type="date" value={dateOverride.slotdate} onChange={e => setDateOverride({ ...dateOverride, slotdate: e.target.value })} />
           </div>
-          <div className="column is-2">
+          <div className="column is-half-tablet is-half-mobile">
+            <label className="label">Start Time</label>
             <input className="input" type="time" value={dateOverride.start_time} onChange={e => setDateOverride({ ...dateOverride, start_time: e.target.value })} />
           </div>
-          <div className="column is-2">
+          <div className="column is-half-tablet is-half-mobile">
+            <label className="label">End Time</label>
             <input className="input" type="time" value={dateOverride.end_time} onChange={e => setDateOverride({ ...dateOverride, end_time: e.target.value })} />
           </div>
-          <div className="column is-narrow">
+          <div className="column is-half-tablet is-full-mobile">
             <label className="checkbox">
-              <input type="checkbox" checked={dateOverride.is_closed} onChange={e => setDateOverride({ ...dateOverride, is_closed: e.target.checked })} /> Closed
+              <input type="checkbox" checked={dateOverride.is_closed} onChange={e => setDateOverride({ ...dateOverride, is_closed: e.target.checked })} /> Mark as Closed Day
             </label>
           </div>
-          <div className="column is-narrow">
-            <button className="button is-success" onClick={saveOverride}>Save</button>
+          <div className="column is-half-tablet is-full-mobile">
+            <button className="button is-success is-fullwidth-mobile" onClick={saveOverride}>Save Override</button>
           </div>
         </div>
-        <ul>
-          {overrides.map(o => (
-            <li key={o.id} className="mb-2">
-              <strong>{o.slotdate}</strong>: {o.is_closed ? 'Closed' : `${o.start_time}–${o.end_time}`} 
-              <button className="button is-small is-danger is-light ml-3" onClick={() => deleteOverride(o.id)}>Delete</button>
-              {generatedDates.includes(o.slotdate) && <span className="tag is-info ml-2">Slots Generated</span>}
-            </li>
-          ))}
-        </ul>
+        <div className="content">
+          {overrides.length === 0 ? (
+            <p className="has-text-grey">No date overrides configured</p>
+          ) : (
+            overrides.map(o => (
+              <div key={o.id} className="box p-3 mb-3">
+                <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet is-justify-content-space-between is-align-items-start is-align-items-center-tablet">
+                  <div className="mb-2 mb-0-tablet">
+                    <div className="has-text-weight-semibold">{o.slotdate}</div>
+                    <div className="is-size-7 has-text-grey">
+                      {o.is_closed ? 'Closed' : `${o.start_time} – ${o.end_time}`}
+                    </div>
+                    {generatedDates.includes(o.slotdate) && (
+                      <span className="tag is-info is-size-7 mt-1">Slots Generated</span>
+                    )}
+                  </div>
+                  <button className="button is-small is-danger is-light is-fullwidth-mobile" onClick={() => deleteOverride(o.id)}>Delete</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   )

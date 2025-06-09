@@ -111,11 +111,12 @@ export default function Layout({ children, params }) {
     <div>
       {/* Mobile header */}
       <nav className="navbar is-hidden-tablet" style={{ padding: '1rem' }}>
-        <div className="navbar-brand">
+        <div className="navbar-brand is-flex is-justify-content-space-between is-align-items-center" style={{ width: '100%' }}>
           <h2 className="title is-5 mb-0">Salon Dashboard</h2>
           <button 
             className="button is-ghost"
             onClick={() => setSidebarOpen(true)}
+            style={{ marginLeft: 'auto' }}
           >
             <span className="icon">
               <i className="fas fa-bars"></i>
@@ -134,7 +135,7 @@ export default function Layout({ children, params }) {
 
       <div className="columns is-gapless" style={{ minHeight: '100vh' }}>
         {/* Mobile sidebar */}
-        <aside className={`column is-narrow has-background-light p-5 mobile-sidebar ${sidebarOpen ? 'is-active' : ''} is-hidden-tablet`} style={{ borderRight: '1px solid #dbdbdb' }}>
+        <aside className={`column is-narrow has-background-light p-5 mobile-sidebar ${sidebarOpen ? 'is-active' : ''} is-hidden-tablet`} style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh' }}>
           <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-tablet">
             <h2 className="title is-5 mb-0">Salon Dashboard</h2>
             <button 
@@ -145,14 +146,8 @@ export default function Layout({ children, params }) {
           
           <h2 className="title is-4 mb-5 is-hidden-mobile">Salon Dashboard</h2>
           
-          <div className="menu">
-            <div className="is-flex is-align-items-center mb-4">
-              <span className="is-size-7 has-text-grey mr-3">
-                Welcome
-              </span>
-              <LogoutButton />
-            </div>
-            <ul className="menu-list">
+          <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <ul className="menu-list" style={{ flex: 1 }}>
               <li><Link href={base} onClick={() => setSidebarOpen(false)} className={isActiveRoute(base) ? 'is-active' : ''}>Overview</Link></li>
               <li><Link href={`${base}/staff`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>Staff</Link></li>
               <li><Link href={`${base}/clients`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>Clients</Link></li>
@@ -160,20 +155,22 @@ export default function Layout({ children, params }) {
               <li><Link href={`${base}/slots`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>Appointments</Link></li>
               <li><Link href={`${base}/rules`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>Rules</Link></li>
             </ul>
+            <div className="mt-auto pt-4 border-top">
+              <div className="is-flex is-flex-direction-column is-align-items-start">
+                <span className="is-size-7 has-text-grey mb-2">
+                  Welcome
+                </span>
+                <LogoutButton />
+              </div>
+            </div>
           </div>
         </aside>
 
         {/* Desktop sidebar */}
-        <aside className="column is-narrow has-background-light p-5 is-hidden-touch" style={{ borderRight: '1px solid #dbdbdb' }}>
+        <aside className="column is-narrow has-background-light p-5 is-hidden-touch" style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh' }}>
           <h2 className="title is-4 mb-5">Salon Dashboard</h2>
-          <div className="menu">
-            <div className="is-flex is-align-items-center mb-4">
-              <span className="is-size-7 has-text-grey mr-3">
-                Welcome
-              </span>
-              <LogoutButton />
-            </div>
-            <ul className="menu-list">
+          <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <ul className="menu-list" style={{ flex: 1 }}>
               <li><Link href={base} className={isActiveRoute(base) ? 'is-active' : ''}>Overview</Link></li>
               <li><Link href={`${base}/staff`} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>Staff</Link></li>
               <li><Link href={`${base}/clients`} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>Clients</Link></li>
@@ -181,6 +178,14 @@ export default function Layout({ children, params }) {
               <li><Link href={`${base}/slots`} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>Appointments</Link></li>
               <li><Link href={`${base}/rules`} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>Rules</Link></li>
             </ul>
+            <div className="mt-auto pt-4" style={{ borderTop: '1px solid #dbdbdb' }}>
+              <div className="is-flex is-flex-direction-column is-align-items-start">
+                <span className="is-size-7 has-text-grey mb-2">
+                  Welcome
+                </span>
+                <LogoutButton />
+              </div>
+            </div>
           </div>
         </aside>
 

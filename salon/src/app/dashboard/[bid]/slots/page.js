@@ -357,7 +357,7 @@ export default function SlotManagementPage() {
 
       {/* Date & Staff Filter */}
       <div className="columns is-multiline mb-4">
-        <div className="column is-one-quarter">
+        <div className="column is-half-tablet is-full-mobile">
           <label className="label">Select Date</label>
           <input
             className="input"
@@ -366,7 +366,7 @@ export default function SlotManagementPage() {
             onChange={(e) => setSelectedDate(e.target.value)}
           />
         </div>
-        <div className="column is-one-quarter">
+        <div className="column is-half-tablet is-full-mobile">
           <label className="label">Filter by Staff</label>
           <div className="select is-fullwidth">
             <select
@@ -387,15 +387,15 @@ export default function SlotManagementPage() {
       {/* Slot List */}
       {slots.length > 0 ? (
         <div className="box">
-          <div className="buttons mb-4">
+          <div className="buttons mb-4 is-flex-wrap-wrap">
             <button
-              className="button is-warning is-light"
+              className="button is-warning is-light is-fullwidth-mobile mb-2"
               onClick={clearSelectedClients}
             >
               Clear Clients
             </button>
             <button
-              className="button is-danger is-light"
+              className="button is-danger is-light is-fullwidth-mobile mb-2"
               onClick={deleteSelectedSlots}
             >
               Delete Slots
@@ -404,36 +404,48 @@ export default function SlotManagementPage() {
           {slots.map((s) => (
             <div
               key={s.id}
-              className="is-flex is-align-items-center is-justify-content-space-between mb-2"
+              className="box p-3 mb-3 is-clickable"
+              style={{ cursor: 'pointer', border: '1px solid #dbdbdb' }}
+              onClick={() => editSlot(s)}
             >
-              <label className="checkbox mr-3">
-                <input
-                  type="checkbox"
-                  checked={selectedSlotIds.includes(s.id)}
-                  onChange={() => toggleSelection(s.id)}
-                />
-              </label>
-              <div className="is-flex-grow-1" onClick={() => editSlot(s)}>
-                <span>
-                  {formatTime(s.start_time)} – {formatTime(s.end_time)}
-                  {s.staff_id && staff.find((st) => st.id === s.staff_id)?.name && (
-                    <span className={`ml-2 ${staffColor(s.staff_id)}`}>
-                      {staff.find((st) => st.id === s.staff_id).name}
-                    </span>
-                  )}
-                  {s.client && (
-                    <span className="ml-2">
-                      · {s.client.name} ({s.client.mobile})
-                    </span>
-                  )}
-                </span>
+              <div className="is-flex is-align-items-start is-justify-content-space-between">
+                <label 
+                  className="checkbox mr-3" 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedSlotIds.includes(s.id)}
+                    onChange={() => toggleSelection(s.id)}
+                  />
+                </label>
+                <div className="is-flex-grow-1">
+                  <div className="is-flex is-flex-direction-column">
+                    <div className="has-text-weight-semibold mb-1">
+                      {formatTime(s.start_time)} – {formatTime(s.end_time)}
+                    </div>
+                    {s.staff_id && staff.find((st) => st.id === s.staff_id)?.name && (
+                      <div className={`is-size-7 mb-1 ${staffColor(s.staff_id)}`}>
+                        Staff: {staff.find((st) => st.id === s.staff_id).name}
+                      </div>
+                    )}
+                    {s.client && (
+                      <div className="is-size-7 has-text-grey-dark">
+                        Client: {s.client.name} ({s.client.mobile})
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  className="button is-small is-warning is-light"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    clearClient(s.id)
+                  }}
+                >
+                  Clear
+                </button>
               </div>
-              <button
-                className="button is-small is-warning is-light"
-                onClick={() => clearClient(s.id)}
-              >
-                Clear
-              </button>
             </div>
           ))}
         </div>
@@ -443,20 +455,45 @@ export default function SlotManagementPage() {
 
       {/* Edit Slot Drawer */}
       {editingSlot && (
-        <div
-          className="box is-pulled-right"
-          style={{
-            width: '360px',
-            position: 'fixed',
-            top: '80px',
-            right: '0',
-            height: 'calc(100% - 80px)',
-            overflowY: 'auto',
-            background: 'white',
-            boxShadow: '-4px 0 8px rgba(0,0,0,0.1)'
-          }}
-        >
-          <h2 className="title is-5">Edit Slot</h2>
+        <>
+          {/* Mobile backdrop */}
+          <div 
+            className="is-hidden-tablet"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              zIndex: 40
+            }}
+            onClick={() => setEditingSlot(null)}
+          ></div>
+          
+          <div
+            className="box"
+            style={{
+              width: '100%',
+              maxWidth: '360px',
+              position: 'fixed',
+              top: '0',
+              right: '0',
+              height: '100vh',
+              overflowY: 'auto',
+              background: 'white',
+              boxShadow: '-4px 0 8px rgba(0,0,0,0.1)',
+              zIndex: 50,
+              padding: '1.5rem'
+            }}
+          >
+          <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
+            <h2 className="title is-5 mb-0">Edit Slot</h2>
+            <button 
+              className="delete is-large is-hidden-tablet"
+              onClick={() => setEditingSlot(null)}
+            ></button>
+          </div>
           <div className="field">
             <label className="label">Start Time</label>
             <input
@@ -570,6 +607,7 @@ export default function SlotManagementPage() {
             </button>
           </div>
         </div>
+        </>
       )}
 
       {/* Modal for Duration Mismatch */}
