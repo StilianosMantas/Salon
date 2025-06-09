@@ -1,17 +1,25 @@
-import { createClient } from '@/lib/supabaseServer'
+'use client'
+import { useClients, useStaff } from '@/hooks/useSupabaseData'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import { useEffect, useState } from 'react'
 
-export default async function DashboardPage({ params }) {
-  const { bid } = await params
-  const supabase = await createClient()
+export default function DashboardPage({ params }) {
+  const [bid, setBid] = useState(null)
+  
+  useEffect(() => {
+    const getBid = async () => {
+      const resolvedParams = await params
+      setBid(resolvedParams.bid)
+    }
+    getBid()
+  }, [params])
 
-  // Parallel queries for better performance
-  const [
-    { data: staff },
-    { data: clients }
-  ] = await Promise.all([
-    supabase.from('staff').select('id').eq('business_id', bid),
-    supabase.from('client').select('id').eq('business_id', bid)
-  ])
+  const { data: staff, isLoading: staffLoading } = useStaff(bid)
+  const { data: clients, isLoading: clientsLoading } = useClients(bid)
+  
+  if (staffLoading || clientsLoading || !bid) {
+    return <LoadingSpinner message="Loading dashboard..." />
+  }
 
   return (
     <div>
