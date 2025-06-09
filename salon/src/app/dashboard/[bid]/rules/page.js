@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useParams } from 'next/navigation'
 const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -15,12 +15,7 @@ export default function RulesPage() {
   const [slotLength, setSlotLength] = useState(15)
   const [generatedDates, setGeneratedDates] = useState([])
 
-  useEffect(() => {
-    if (!bid) return
-    fetchData()
-  }, [bid])
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     const { data: rulesData } = await supabase.from('business_rules').select('*').eq('business_id', bid).order('weekday')
     const { data: overridesData } = await supabase.from('business_overrides').select('*').eq('business_id', bid).order('slotdate')
     const { data: businessData } = await supabase.from('business').select('slot_length').eq('id', bid).single()
@@ -30,7 +25,12 @@ export default function RulesPage() {
     setOverrides(overridesData || [])
     setSlotLength(businessData?.slot_length || 15)
     setGeneratedDates(datesSet)
-  }
+  }, [bid])
+
+  useEffect(() => {
+    if (!bid) return
+    fetchData()
+  }, [bid, fetchData])
 
   async function saveRule(day, range) {
     const overlap = rules.some(r => r.weekday === day &&

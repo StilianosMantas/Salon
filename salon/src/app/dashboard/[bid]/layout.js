@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -22,6 +22,31 @@ export default function Layout({ children, params }) {
     }
     getBid()
   }, [params])
+
+  const checkAuth = useCallback(async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Dashboard auth check:', { hasUser: !!user, error: !!error, pathname })
+      }
+      
+      if (error) {
+        console.error('Auth error in dashboard:', error)
+        setUser(null)
+      } else {
+        setUser(user)
+      }
+      
+      setAuthChecked(true)
+    } catch (err) {
+      console.error('Failed to check auth:', err)
+      setUser(null)
+      setAuthChecked(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [pathname])
 
   useEffect(() => {
     checkAuth()
@@ -47,7 +72,7 @@ export default function Layout({ children, params }) {
     return () => {
       authListener.subscription.unsubscribe()
     }
-  }, [])
+  }, [checkAuth])
 
   // Handle authentication timeout
   useEffect(() => {
@@ -63,31 +88,6 @@ export default function Layout({ children, params }) {
       return () => clearTimeout(timeout)
     }
   }, [loading, user, authChecked])
-
-  async function checkAuth() {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Dashboard auth check:', { hasUser: !!user, error: !!error, pathname })
-      }
-      
-      if (error) {
-        console.error('Auth error in dashboard:', error)
-        setUser(null)
-      } else {
-        setUser(user)
-      }
-      
-      setAuthChecked(true)
-    } catch (err) {
-      console.error('Failed to check auth:', err)
-      setUser(null)
-      setAuthChecked(true)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   if (loading) {
     return <LoadingSpinner message="Loading dashboard..." />

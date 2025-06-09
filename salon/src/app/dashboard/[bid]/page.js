@@ -4,9 +4,14 @@ export default async function DashboardPage({ params }) {
   const { bid } = await params
   const supabase = await createClient()
 
-  // Example: Fetch number of staff and clients (will handle auth errors gracefully)
-  const { data: staff } = await supabase.from('staff').select('*').eq('business_id', bid)
-  const { data: clients } = await supabase.from('client').select('*').eq('business_id', bid)
+  // Parallel queries for better performance
+  const [
+    { data: staff },
+    { data: clients }
+  ] = await Promise.all([
+    supabase.from('staff').select('id').eq('business_id', bid),
+    supabase.from('client').select('id').eq('business_id', bid)
+  ])
 
   return (
     <div>

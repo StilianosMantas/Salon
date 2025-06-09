@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -9,6 +9,58 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [redirecting, setRedirecting] = useState(false)
   const [lookingUpSalon, setLookingUpSalon] = useState(false)
+
+  const redirectToSalon = useCallback(async (userId) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Redirecting user to salon')
+    }
+    
+    // Check if we're already on a dashboard page to prevent loops
+    if (window.location.pathname.startsWith('/dashboard')) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Already on dashboard, skipping redirect')
+      }
+      return
+    }
+    
+    try {
+      setLookingUpSalon(true)
+      // Look up user's salon memberships
+      const { data: memberships, error } = await supabase
+        .from('business_member')
+        .select('business_id, business(id, name)')
+        .eq('user_id', userId)
+      
+      if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching user memberships:', error)
+        }
+        setMessage('Error accessing your salon. Please contact support.')
+        return
+      }
+      
+      if (!memberships || memberships.length === 0) {
+        setMessage('No salon access found. Please contact your salon administrator.')
+        return
+      }
+      
+      // If user has access to only one salon, redirect directly
+      if (memberships.length === 1) {
+        // Use location.replace to avoid back button issues
+        window.location.replace(`/dashboard/${memberships[0].business_id}`)
+      } else {
+        // If multiple salons, redirect to selection page
+        window.location.replace('/dashboard')
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Unexpected error during redirect:', error)
+      }
+      setMessage('Something went wrong. Please try again.')
+    } finally {
+      setLookingUpSalon(false)
+    }
+  }, [])
 
   useEffect(() => {
     let mounted = true
@@ -59,60 +111,7 @@ export default function LoginPage() {
       mounted = false
       authListener.subscription.unsubscribe()
     }
-  }, [])
-
-
-  async function redirectToSalon(userId) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Redirecting user to salon')
-    }
-    
-    // Check if we're already on a dashboard page to prevent loops
-    if (window.location.pathname.startsWith('/dashboard')) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Already on dashboard, skipping redirect')
-      }
-      return
-    }
-    
-    try {
-      setLookingUpSalon(true)
-      // Look up user's salon memberships
-      const { data: memberships, error } = await supabase
-        .from('business_member')
-        .select('business_id, business(id, name)')
-        .eq('user_id', userId)
-      
-      if (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching user memberships:', error)
-        }
-        setMessage('Error accessing your salon. Please contact support.')
-        return
-      }
-      
-      if (!memberships || memberships.length === 0) {
-        setMessage('No salon access found. Please contact your salon administrator.')
-        return
-      }
-      
-      // If user has access to only one salon, redirect directly
-      if (memberships.length === 1) {
-        // Use location.replace to avoid back button issues
-        window.location.replace(`/dashboard/${memberships[0].business_id}`)
-      } else {
-        // If multiple salons, redirect to selection page
-        window.location.replace('/dashboard')
-      }
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Unexpected error during redirect:', error)
-      }
-      setMessage('Something went wrong. Please try again.')
-    } finally {
-      setLookingUpSalon(false)
-    }
-  }
+  }, [redirectToSalon, redirecting])
 
   async function handleLogin(e) {
     e.preventDefault()

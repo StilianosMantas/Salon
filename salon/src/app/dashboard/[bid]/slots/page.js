@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useParams } from 'next/navigation'
 
@@ -24,46 +24,34 @@ export default function SlotManagementPage() {
   })
   const [showModal, setShowModal] = useState(false)
 
-  useEffect(() => {
-    if (bid) {
-      fetchStaff()
-      fetchClients()
-      fetchServices()
-    }
-  }, [bid])
-
-  useEffect(() => {
-    if (bid && selectedDate) fetchSlots()
-  }, [bid, selectedDate, filterStaffId])
-
-  async function fetchStaff() {
+  const fetchStaff = useCallback(async () => {
     const { data } = await supabase
       .from('staff')
       .select('id, name')
       .eq('business_id', bid)
       .order('name')
     setStaff(data || [])
-  }
+  }, [bid])
 
-  async function fetchClients() {
+  const fetchClients = useCallback(async () => {
     const { data } = await supabase
       .from('client')
       .select('id, name, mobile')
       .eq('business_id', bid)
       .order('name')
     setClients(data || [])
-  }
+  }, [bid])
 
-  async function fetchServices() {
+  const fetchServices = useCallback(async () => {
     const { data } = await supabase
       .from('service')
       .select('id, name, duration')
       .eq('business_id', bid)
       .order('name')
     setServices(data || [])
-  }
+  }, [bid])
 
-  async function fetchSlots() {
+  const fetchSlots = useCallback(async () => {
     let query = supabase
       .from('slot')
       .select(
@@ -80,7 +68,19 @@ export default function SlotManagementPage() {
     const { data } = await query
     setSlots(data || [])
     setSelectedSlotIds([])
-  }
+  }, [bid, selectedDate, filterStaffId])
+
+  useEffect(() => {
+    if (bid) {
+      fetchStaff()
+      fetchClients()
+      fetchServices()
+    }
+  }, [bid, fetchStaff, fetchClients, fetchServices])
+
+  useEffect(() => {
+    if (bid && selectedDate) fetchSlots()
+  }, [bid, selectedDate, filterStaffId, fetchSlots])
 
   async function saveSlot() {
     let client_id = form.client_id
