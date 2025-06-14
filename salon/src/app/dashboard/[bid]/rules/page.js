@@ -19,6 +19,9 @@ export default function RulesPage() {
   const [currentDay, setCurrentDay] = useState(null)
   const [form, setForm] = useState({ start_time: '', end_time: '' })
   const [isClosing, setIsClosing] = useState(false)
+  const [showOverrideForm, setShowOverrideForm] = useState(false)
+  const [overrideForm, setOverrideForm] = useState({ slotdate: '', start_time: '', end_time: '', is_closed: false })
+  const [isOverrideClosing, setIsOverrideClosing] = useState(false)
 
   const fetchData = useCallback(async () => {
     const { data: rulesData } = await supabase.from('business_rules').select('*').eq('business_id', bid).order('weekday')
@@ -118,6 +121,38 @@ export default function RulesPage() {
     
     await saveRule(currentDay, form)
     closeForm()
+  }
+
+  function openOverrideForm() {
+    setOverrideForm({ slotdate: '', start_time: '', end_time: '', is_closed: false })
+    setShowOverrideForm(true)
+  }
+
+  function closeOverrideForm() {
+    setIsOverrideClosing(true)
+    setTimeout(() => {
+      setOverrideForm({ slotdate: '', start_time: '', end_time: '', is_closed: false })
+      setShowOverrideForm(false)
+      setIsOverrideClosing(false)
+    }, 300)
+  }
+
+  async function handleOverrideSubmit(e) {
+    e.preventDefault()
+    if (!overrideForm.slotdate) return alert('Please select a date')
+    if (!overrideForm.is_closed && (!overrideForm.start_time || !overrideForm.end_time)) {
+      return alert('Please fill start and end times or mark as closed')
+    }
+    
+    await supabase.from('business_overrides').upsert({
+      business_id: bid,
+      slotdate: overrideForm.slotdate,
+      start_time: overrideForm.start_time,
+      end_time: overrideForm.end_time,
+      is_closed: overrideForm.is_closed
+    })
+    closeOverrideForm()
+    fetchData()
   }
 
   async function generateSlots() {

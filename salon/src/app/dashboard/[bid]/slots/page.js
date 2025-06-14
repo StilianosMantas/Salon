@@ -415,20 +415,36 @@ export default function SlotManagementPage() {
             <div key={s.id}>
               <div
                 className=" p-2 mb-1 is-clickable"
-                style={{ cursor: 'pointer', border: '1px solid #dbdbdb' }}
+                style={{ cursor: 'pointer' }}
                 onClick={() => editSlot(s)}
               >
               <div className="is-flex is-align-items-start is-justify-content-space-between">
-                <label 
-                  className="checkbox mr-3" 
-                  onClick={(e) => e.stopPropagation()}
+                <div 
+                  className="mr-3" 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleSelection(s.id)
+                  }}
+                  style={{ cursor: 'pointer' }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedSlotIds.includes(s.id)}
-                    onChange={() => toggleSelection(s.id)}
-                  />
-                </label>
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      border: selectedSlotIds.includes(s.id) ? '2px solid #48c774' : '2px solid #dbdbdb',
+                      backgroundColor: selectedSlotIds.includes(s.id) ? '#48c774' : 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {selectedSlotIds.includes(s.id) && (
+                      <i className="fas fa-check" style={{ color: 'white', fontSize: '12px' }}></i>
+                    )}
+                  </div>
+                </div>
                 <div className="is-flex-grow-1">
                   <div className="is-flex is-flex-direction-column">
                     <div className="has-text-weight-semibold mb-1">
@@ -446,15 +462,17 @@ export default function SlotManagementPage() {
                     )}
                   </div>
                 </div>
-                <button
-                  className="button is-small is-warning is-light"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    clearClient(s.id)
-                  }}
-                >
-                  Clear
-                </button>
+                {(s.client_id || s.staff_id) && (
+                  <button
+                    className="button is-small is-warning is-light"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      clearClient(s.id)
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
               </div>
               {index < slots.length - 1 && (
