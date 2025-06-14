@@ -6,7 +6,10 @@ import { useParams } from 'next/navigation'
 export default function SlotManagementPage() {
   const { bid } = useParams()
   const [slots, setSlots] = useState([])
-  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  })
   const [selectedSlotIds, setSelectedSlotIds] = useState([])
   const [staff, setStaff] = useState([])
   const [clients, setClients] = useState([])
@@ -81,6 +84,13 @@ export default function SlotManagementPage() {
   useEffect(() => {
     if (bid && selectedDate) fetchSlots()
   }, [bid, selectedDate, filterStaffId, fetchSlots])
+
+  // Auto-fetch slots when component mounts with today's date
+  useEffect(() => {
+    if (bid) {
+      fetchSlots()
+    }
+  }, [bid, fetchSlots])
 
   async function saveSlot() {
     let client_id = form.client_id
@@ -401,13 +411,13 @@ export default function SlotManagementPage() {
               Delete Slots
             </button>
           </div>
-          {slots.map((s) => (
-            <div
-              key={s.id}
-              className="box p-3 mb-3 is-clickable"
-              style={{ cursor: 'pointer', border: '1px solid #dbdbdb' }}
-              onClick={() => editSlot(s)}
-            >
+          {slots.map((s, index) => (
+            <div key={s.id}>
+              <div
+                className=" p-2 mb-1 is-clickable"
+                style={{ cursor: 'pointer', border: '1px solid #dbdbdb' }}
+                onClick={() => editSlot(s)}
+              >
               <div className="is-flex is-align-items-start is-justify-content-space-between">
                 <label 
                   className="checkbox mr-3" 
@@ -446,6 +456,10 @@ export default function SlotManagementPage() {
                   Clear
                 </button>
               </div>
+              </div>
+              {index < slots.length - 1 && (
+                <hr className="my-2" style={{ margin: '8px 0', borderColor: '#e5e5e5' }} />
+              )}
             </div>
           ))}
         </div>

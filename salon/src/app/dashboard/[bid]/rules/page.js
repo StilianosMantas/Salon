@@ -220,9 +220,9 @@ export default function RulesPage() {
           <button className="button is-info is-fullwidth-mobile" onClick={generateSlots}>Generate Slots</button>
         </div>
       </div>
-
+        <h2 className="label is-6 mb-3">Weekly Schedule</h2>
       <div className="box mb-5">
-        <h2 className="subtitle is-6 mb-3">Weekly Schedule</h2>
+        
         {weekdays.map((day, i) => {
           const dayRules = rules.filter(r => r.weekday === i)
           return (
@@ -244,10 +244,10 @@ export default function RulesPage() {
                 <div key={rule.id} className="box p-3 mb-2">
                   <div className="is-flex is-justify-content-space-between is-align-items-center">
                     <div className="is-hidden-mobile">
-                      <span className="has-text-weight-semibold">{rule.start_time} - {rule.end_time}</span>
+                      <span className="has-text-weight-semibold">{rule.start_time.slice(0,5)} - {rule.end_time.slice(0,5)}</span>
                     </div>
                     <div className="is-hidden-tablet is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
-                      <span className="has-text-weight-semibold" style={{ fontSize: '0.875rem' }}>{rule.start_time} - {rule.end_time}</span>
+                      <span className="has-text-weight-semibold" style={{ fontSize: '0.875rem' }}>{rule.start_time.slice(0,5)} - {rule.end_time.slice(0,5)}</span>
                       <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>
                         <span className="icon is-small">
                           <i className="fas fa-trash"></i>
@@ -270,9 +270,9 @@ export default function RulesPage() {
           )
         })}
       </div>
-
+        <h2 className="label is-6 mb-3">Date Overrides</h2>
       <div className="box">
-        <h2 className="subtitle is-6 mb-3">Date Overrides</h2>
+        
         <div className="columns is-multiline is-vcentered mb-4">
           <div className="column is-half-tablet is-full-mobile">
             <label className="label">Override Date</label>
@@ -305,7 +305,7 @@ export default function RulesPage() {
                   <div className="mb-2 mb-0-tablet">
                     <div className="has-text-weight-semibold">{o.slotdate}</div>
                     <div className="is-size-7 has-text-grey">
-                      {o.is_closed ? 'Closed' : `${o.start_time} – ${o.end_time}`}
+                      {o.is_closed ? 'Closed' : `${o.start_time?.slice(0,5)} – ${o.end_time?.slice(0,5)}`}
                     </div>
                     {generatedDates.includes(o.slotdate) && (
                       <span className="tag is-info is-size-7 mt-1">Slots Generated</span>
@@ -366,6 +366,90 @@ export default function RulesPage() {
                 <div className="field">
                   <div className="control">
                     <button className="button is-fullwidth" type="button" onClick={() => closeForm()}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </section>
+          </div>
+        </div>
+      )}
+
+      {showOverrideForm && (
+        <div className="modal is-active">
+          <div className="modal-background" onClick={() => closeOverrideForm()}></div>
+          <div className="modal-card" style={{ 
+            animation: isOverrideClosing ? 'slideOutToRight 0.3s ease-in' : 'slideInFromRight 0.3s ease-out', 
+            transformOrigin: 'center right' 
+          }}>
+            <header className="modal-card-head">
+              <p className="modal-card-title">Add Date Override</p>
+              <button className="delete" aria-label="close" onClick={() => closeOverrideForm()}></button>
+            </header>
+            <section className="modal-card-body">
+              <form onSubmit={handleOverrideSubmit}>
+                <div className="field">
+                  <label className="label">Override Date</label>
+                  <div className="control">
+                    <input 
+                      className="input" 
+                      type="date" 
+                      value={overrideForm.slotdate} 
+                      onChange={e => setOverrideForm({ ...overrideForm, slotdate: e.target.value })} 
+                      required 
+                    />
+                  </div>
+                </div>
+                <div className="field">
+                  <div className="control">
+                    <label className="checkbox">
+                      <input 
+                        type="checkbox" 
+                        checked={overrideForm.is_closed} 
+                        onChange={e => setOverrideForm({ ...overrideForm, is_closed: e.target.checked })} 
+                      /> Mark as Closed Day
+                    </label>
+                  </div>
+                </div>
+                {!overrideForm.is_closed && (
+                  <>
+                    <div className="field">
+                      <label className="label">Start Time</label>
+                      <div className="control">
+                        <input 
+                          className="input" 
+                          type="time" 
+                          value={overrideForm.start_time} 
+                          onChange={e => setOverrideForm({ ...overrideForm, start_time: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                    </div>
+                    <div className="field">
+                      <label className="label">End Time</label>
+                      <div className="control">
+                        <input 
+                          className="input" 
+                          type="time" 
+                          value={overrideForm.end_time} 
+                          onChange={e => setOverrideForm({ ...overrideForm, end_time: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+                <div className="field">
+                  <div className="control">
+                    <button className="button is-success is-fullwidth" type="submit">
+                      Add Override
+                    </button>
+                  </div>
+                </div>
+                <div className="field">
+                  <div className="control">
+                    <button className="button is-fullwidth" type="button" onClick={() => closeOverrideForm()}>
                       Cancel
                     </button>
                   </div>
