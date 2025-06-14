@@ -21,8 +21,8 @@ export default function ServicesPage() {
     const placeholder = document.getElementById('mobile-add-button-placeholder')
     if (placeholder) {
       placeholder.innerHTML = `
-        <button class="button is-small is-link" onclick="document.querySelector('[data-add-service]').click()">
-          <span class="icon is-small">
+        <button class="button is-rounded is-ghost" onclick="document.querySelector('[data-add-service]').click()" style="width: 40px; height: 40px; padding: 0;">
+          <span class="icon">
             <i class="fas fa-plus"></i>
           </span>
         </button>
@@ -190,38 +190,34 @@ export default function ServicesPage() {
                     <input className="input" type="text" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} />
                   </div>
                 </div>
-                <footer className="modal-card-foot" style={{ backgroundColor: 'transparent', display: 'block' }}>
-                  <div className="field is-grouped is-grouped-multiline is-grouped-right-tablet">
-                    <div className="control is-expanded-mobile">
-                      <button 
-                        className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
-                        type="submit"
-                        disabled={mutationLoading}
-                      >
-                        {editing ? 'Update' : 'Add'}
-                      </button>
-                    </div>
-                    <div className="control is-expanded-mobile">
-                      <button 
-                        className="button is-fullwidth" 
-                        type="button" 
-                        onClick={() => closeForm()}
-                        disabled={mutationLoading}
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                <footer className="modal-card-foot" style={{ backgroundColor: 'transparent', display: 'block', padding: '1.5rem' }}>
+                  <div className="buttons is-flex is-flex-direction-column is-flex-direction-row-tablet">
+                    <button 
+                      className={`button is-success is-fullwidth-mobile ${mutationLoading ? 'is-loading' : ''}`} 
+                      type="submit"
+                      disabled={mutationLoading}
+                      style={{ marginBottom: '0.75rem' }}
+                    >
+                      {editing ? 'Update' : 'Add'}
+                    </button>
+                    <button 
+                      className="button is-fullwidth-mobile" 
+                      type="button" 
+                      onClick={() => closeForm()}
+                      disabled={mutationLoading}
+                      style={{ marginBottom: editing ? '0.75rem' : '0' }}
+                    >
+                      Cancel
+                    </button>
                     {editing && (
-                      <div className="control is-expanded-mobile">
-                        <button 
-                          className="button is-danger is-fullwidth" 
-                          type="button" 
-                          onClick={() => handleDelete(form.id)}
-                          disabled={mutationLoading}
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      <button 
+                        className="button is-danger is-fullwidth-mobile" 
+                        type="button" 
+                        onClick={() => handleDelete(form.id)}
+                        disabled={mutationLoading}
+                      >
+                        Delete
+                      </button>
                     )}
                   </div>
                 </footer>
