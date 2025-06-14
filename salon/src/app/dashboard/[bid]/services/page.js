@@ -112,27 +112,20 @@ export default function ServicesPage() {
       <div className="box">
         {services && services.length > 0 ? services.map((s, index) => (
           <div key={s.id}>
-            <div className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3">
+            <div 
+              className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3 is-clickable" 
+              onClick={() => handleEdit(s)}
+              style={{ cursor: 'pointer' }}
+            >
               <div>
                 <strong>{s.name}</strong><br />
                 <small>{s.description}</small><br />
                 <span>{s.duration} min - {s.cost ? `${s.cost}€` : 'Free'}</span>
               </div>
               <div>
-                <button 
-                  className="button is-small is-info mr-2" 
-                  onClick={() => handleEdit(s)}
-                  disabled={mutationLoading}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="button is-small is-danger" 
-                  onClick={() => handleDelete(s.id)}
-                  disabled={mutationLoading}
-                >
-                  Delete
-                </button>
+                <span className="icon">
+                  <i className="fas fa-chevron-right"></i>
+                </span>
               </div>
             </div>
             {index < services.length - 1 && <hr className="my-2" />}
@@ -179,21 +172,35 @@ export default function ServicesPage() {
                   </div>
                 </div>
                 <footer className="modal-card-foot">
-                  <button 
-                    className={`button is-success ${mutationLoading ? 'is-loading' : ''}`} 
-                    type="submit"
-                    disabled={mutationLoading}
-                  >
-                    {editing ? 'Update' : 'Add'}
-                  </button>
-                  <button 
-                    className="button" 
-                    type="button" 
-                    onClick={() => closeForm()}
-                    disabled={mutationLoading}
-                  >
-                    Cancel
-                  </button>
+                  <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet">
+                    <div className="is-flex mb-3 mb-0-tablet">
+                      <button 
+                        className={`button is-success mr-2 ${mutationLoading ? 'is-loading' : ''}`} 
+                        type="submit"
+                        disabled={mutationLoading}
+                      >
+                        {editing ? 'Update' : 'Add'}
+                      </button>
+                      <button 
+                        className="button" 
+                        type="button" 
+                        onClick={() => closeForm()}
+                        disabled={mutationLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {editing && (
+                      <button 
+                        className="button is-danger ml-auto-tablet" 
+                        type="button" 
+                        onClick={() => handleDelete(form.id)}
+                        disabled={mutationLoading}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </footer>
               </form>
             </section>

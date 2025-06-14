@@ -122,27 +122,20 @@ export default function ClientsPage() {
       <div className="box">
         {clients && clients.length > 0 ? clients.map((c, index) => (
           <div key={c.id}>
-            <div className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3">
+            <div 
+              className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3 is-clickable" 
+              onClick={() => handleEdit(c)}
+              style={{ cursor: 'pointer' }}
+            >
               <div>
                 <strong>{c.name}</strong><br />
                 <small>{c.email}</small><br />
                 <small>{c.mobile}</small>
               </div>
               <div>
-                <button 
-                  className="button is-small is-info mr-2" 
-                  onClick={() => handleEdit(c)}
-                  disabled={mutationLoading}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="button is-small is-danger" 
-                  onClick={() => handleDelete(c.id)}
-                  disabled={mutationLoading}
-                >
-                  Delete
-                </button>
+                <span className="icon">
+                  <i className="fas fa-chevron-right"></i>
+                </span>
               </div>
             </div>
             {index < clients.length - 1 && <hr className="my-2" />}
@@ -179,7 +172,7 @@ export default function ClientsPage() {
                 </div>
                 <div className="field">
                   <label className="label">Email</label>
-                  <div className="control">
+                  <div className="control has-icons-right">
                     <input
                       className="input"
                       type="email"
@@ -187,11 +180,18 @@ export default function ClientsPage() {
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
                     />
+                    {form.email && (
+                      <span className="icon is-small is-right">
+                        <a href={`mailto:${form.email}`} className="has-text-info">
+                          <i className="fas fa-envelope"></i>
+                        </a>
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="field">
                   <label className="label">Mobile</label>
-                  <div className="control">
+                  <div className="control has-icons-right">
                     <input
                       className="input"
                       type="text"
@@ -199,24 +199,45 @@ export default function ClientsPage() {
                       value={form.mobile}
                       onChange={(e) => setForm({ ...form, mobile: e.target.value })}
                     />
+                    {form.mobile && (
+                      <span className="icon is-small is-right">
+                        <a href={`tel:${form.mobile}`} className="has-text-info">
+                          <i className="fas fa-phone"></i>
+                        </a>
+                      </span>
+                    )}
                   </div>
                 </div>
                 <footer className="modal-card-foot">
-                  <button 
-                    className={`button is-success ${mutationLoading ? 'is-loading' : ''}`} 
-                    type="submit"
-                    disabled={mutationLoading}
-                  >
-                    {editing ? 'Update' : 'Add'}
-                  </button>
-                  <button 
-                    className="button" 
-                    type="button" 
-                    onClick={() => closeForm()}
-                    disabled={mutationLoading}
-                  >
-                    Cancel
-                  </button>
+                  <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet">
+                    <div className="is-flex mb-3 mb-0-tablet">
+                      <button 
+                        className={`button is-success mr-2 ${mutationLoading ? 'is-loading' : ''}`} 
+                        type="submit"
+                        disabled={mutationLoading}
+                      >
+                        {editing ? 'Update' : 'Add'}
+                      </button>
+                      <button 
+                        className="button" 
+                        type="button" 
+                        onClick={() => closeForm()}
+                        disabled={mutationLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {editing && (
+                      <button 
+                        className="button is-danger ml-auto-tablet" 
+                        type="button" 
+                        onClick={() => handleDelete(form.id)}
+                        disabled={mutationLoading}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </footer>
               </form>
             </section>

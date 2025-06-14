@@ -11,14 +11,15 @@ export default function StaffPage() {
   const { createStaff, updateStaff, deleteStaff, loading: mutationLoading } = useStaffMutations(bid)
   
   const [formVisible, setFormVisible] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', id: null })
+  const [form, setForm] = useState({ name: '', email: '', mobile: '', id: null })
   const [editing, setEditing] = useState(false)
-  const [initialForm, setInitialForm] = useState({ name: '', email: '', id: null })
+  const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
 
   function isFormDirty(current, initial) {
     return (
       current.name.trim() !== initial.name.trim() ||
-      (current.email || '').trim() !== (initial.email || '').trim()
+      (current.email || '').trim() !== (initial.email || '').trim() ||
+      (current.mobile || '').trim() !== (initial.mobile || '').trim()
     )
   }
 
@@ -26,12 +27,13 @@ export default function StaffPage() {
     e.preventDefault()
     if (!form.name.trim()) return toast.error('Name is required')
     if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return toast.error('Invalid email')
+    if (form.mobile && !/^[\d\-\s\+]+$/.test(form.mobile)) return toast.error('Invalid mobile number')
 
     try {
       if (editing) {
-        await updateStaff({ id: form.id, name: form.name, email: form.email })
+        await updateStaff({ id: form.id, name: form.name, email: form.email, mobile: form.mobile })
       } else {
-        await createStaff({ name: form.name, email: form.email })
+        await createStaff({ name: form.name, email: form.email, mobile: form.mobile })
       }
       closeForm(true)
     } catch (error) {
@@ -63,8 +65,8 @@ export default function StaffPage() {
       const confirmDiscard = window.confirm('You have unsaved changes. Discard them?')
       if (!confirmDiscard) return
     }
-    setForm({ name: '', email: '', id: null })
-    setInitialForm({ name: '', email: '', id: null })
+    setForm({ name: '', email: '', mobile: '', id: null })
+    setInitialForm({ name: '', email: '', mobile: '', id: null })
     setEditing(false)
     setFormVisible(false)
   }
@@ -106,7 +108,7 @@ export default function StaffPage() {
           className="button is-link" 
           onClick={() => {
             setEditing(false)
-            const empty = { name: '', email: '', id: null }
+            const empty = { name: '', email: '', mobile: '', id: null }
             setForm({ ...empty })
             setInitialForm({ ...empty })
             setFormVisible(true)
@@ -119,26 +121,19 @@ export default function StaffPage() {
       <div className="box">
         {staff && staff.length > 0 ? staff.map((s, index) => (
           <div key={s.id}>
-            <div className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3">
+            <div 
+              className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3 is-clickable" 
+              onClick={() => handleEdit(s)}
+              style={{ cursor: 'pointer' }}
+            >
               <div>
                 <strong>{s.name}</strong><br />
-                <small>{s.email}</small>
+                <small>{s.mobile}</small>
               </div>
               <div>
-                <button 
-                  className="button is-small is-info mr-2" 
-                  onClick={() => handleEdit(s)}
-                  disabled={mutationLoading}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="button is-small is-danger" 
-                  onClick={() => handleDelete(s.id)}
-                  disabled={mutationLoading}
-                >
-                  Delete
-                </button>
+                <span className="icon">
+                  <i className="fas fa-chevron-right"></i>
+                </span>
               </div>
             </div>
             {index < staff.length - 1 && <hr className="my-2" />}
@@ -168,26 +163,60 @@ export default function StaffPage() {
                 </div>
                 <div className="field">
                   <label className="label">Email</label>
-                  <div className="control">
+                  <div className="control has-icons-right">
                     <input className="input" type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                    {form.email && (
+                      <span className="icon is-small is-right">
+                        <a href={`mailto:${form.email}`} className="has-text-info">
+                          <i className="fas fa-envelope"></i>
+                        </a>
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="field">
+                  <label className="label">Mobile</label>
+                  <div className="control has-icons-right">
+                    <input className="input" type="text" placeholder="Mobile" value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} />
+                    {form.mobile && (
+                      <span className="icon is-small is-right">
+                        <a href={`tel:${form.mobile}`} className="has-text-info">
+                          <i className="fas fa-phone"></i>
+                        </a>
+                      </span>
+                    )}
                   </div>
                 </div>
                 <footer className="modal-card-foot">
-                  <button 
-                    className={`button is-success ${mutationLoading ? 'is-loading' : ''}`} 
-                    type="submit"
-                    disabled={mutationLoading}
-                  >
-                    {editing ? 'Update' : 'Add'}
-                  </button>
-                  <button 
-                    className="button" 
-                    type="button" 
-                    onClick={() => closeForm()}
-                    disabled={mutationLoading}
-                  >
-                    Cancel
-                  </button>
+                  <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet">
+                    <div className="is-flex mb-3 mb-0-tablet">
+                      <button 
+                        className={`button is-success mr-2 ${mutationLoading ? 'is-loading' : ''}`} 
+                        type="submit"
+                        disabled={mutationLoading}
+                      >
+                        {editing ? 'Update' : 'Add'}
+                      </button>
+                      <button 
+                        className="button" 
+                        type="button" 
+                        onClick={() => closeForm()}
+                        disabled={mutationLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {editing && (
+                      <button 
+                        className="button is-danger ml-auto-tablet" 
+                        type="button" 
+                        onClick={() => handleDelete(form.id)}
+                        disabled={mutationLoading}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </footer>
               </form>
             </section>
