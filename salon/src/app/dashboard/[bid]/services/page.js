@@ -157,7 +157,7 @@ export default function ServicesPage() {
           + Add Service
         </button>
       </div>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em' }}>
+      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px' }}>
         {services && services.length > 0 ? services.map((s, index) => (
           <div key={s.id}>
             <div 

@@ -226,7 +226,7 @@ export default function StaffPage() {
           + Add Staff
         </button>
       </div>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em' }}>
+      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px' }}>
         {filteredStaff && filteredStaff.length > 0 ? filteredStaff.map((s, index) => (
           <div key={s.id}>
             <div 

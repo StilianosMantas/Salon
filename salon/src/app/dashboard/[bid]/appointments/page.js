@@ -403,7 +403,10 @@ export default function AppointmentManagementPage() {
 
   async function addNewClient() {
     const input = form.client_search.trim()
-    if (!input) return
+    if (!input) {
+      console.log('No input provided for new client')
+      return
+    }
     
     // Simple validation - if it looks like a phone number, put it in mobile field
     const mobileRegex = /^[\d\-\s\+\(\)]+$/
@@ -416,6 +419,8 @@ export default function AppointmentManagementPage() {
       business_id: bid
     }
     
+    console.log('Creating new client with data:', newClientData)
+    
     try {
       const { data: newClient, error } = await supabase
         .from('client')
@@ -423,13 +428,16 @@ export default function AppointmentManagementPage() {
         .select()
         .single()
       
+      console.log('Supabase response:', { newClient, error })
+      
       if (error) {
-        console.error('Error creating client:', error)
-        alert('Failed to create new client. Please try again.')
+        console.error('Supabase error:', error)
+        // Use console.error instead of alert for debugging
         return
       }
       
       if (newClient) {
+        console.log('Client created successfully:', newClient)
         // Update the clients list immediately
         setClients(prev => [...prev, newClient])
         // Select the new client
@@ -438,8 +446,7 @@ export default function AppointmentManagementPage() {
         await fetchClients()
       }
     } catch (error) {
-      console.error('Error creating client:', error)
-      alert('Failed to create new client. Please try again.')
+      console.error('Catch error:', error)
     }
   }
 
@@ -520,13 +527,13 @@ export default function AppointmentManagementPage() {
 
       {/* Appointment List */}
       {appointments.length > 0 ? (
-        <div className="box extended-card">
+        <div className="box extended-card" style={{ marginBottom: '20px' }}>
           <div className="is-flex is-justify-content-space-between is-align-items-center mb-3">
             <p className="has-text-weight-semibold">
               {selectedAppointmentIds.length > 0 ? `${selectedAppointmentIds.length} selected` : 'Appointments'}
             </p>
             {selectedAppointmentIds.length > 0 && (
-              <div className="dropdown is-right" style={{ position: 'relative' }}>
+              <div className="dropdown is-right is-active" style={{ position: 'relative' }}>
                 <div className="dropdown-trigger">
                   <button 
                     className="button is-small" 
@@ -549,33 +556,33 @@ export default function AppointmentManagementPage() {
                     minWidth: '160px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                   }}>
-                    <div className="dropdown-content">
-                      <button
-                        className="dropdown-item button is-ghost is-fullwidth has-text-left"
+                    <div className="dropdown-content" style={{ padding: 0 }}>
+                      <a
+                        className="dropdown-item"
                         onClick={() => {
                           clearSelectedClients()
-                          setSelectedAppointmentIds([])
                           setShowActionsDropdown(false)
                         }}
+                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem 1rem' }}
                       >
-                        <span className="icon">
+                        <span className="icon mr-2">
                           <i className="fas fa-user-times"></i>
                         </span>
                         <span>Clear Clients</span>
-                      </button>
-                      <button
-                        className="dropdown-item button is-ghost is-fullwidth has-text-left has-text-danger"
+                      </a>
+                      <a
+                        className="dropdown-item has-text-danger"
                         onClick={() => {
                           deleteSelectedAppointments()
-                          setSelectedAppointmentIds([])
                           setShowActionsDropdown(false)
                         }}
+                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem 1rem' }}
                       >
-                        <span className="icon">
+                        <span className="icon mr-2">
                           <i className="fas fa-trash"></i>
                         </span>
                         <span>Delete Appointments</span>
-                      </button>
+                      </a>
                     </div>
                   </div>
                 )}
@@ -589,14 +596,14 @@ export default function AppointmentManagementPage() {
                 style={{ cursor: 'pointer' }}
                 onClick={() => editAppointment(s)}
               >
-              <div className="is-flex is-align-items-center is-justify-content-space-between">
+              <div className="is-flex is-align-items-start is-justify-content-space-between">
                 <div 
                   className="mr-3" 
                   onClick={(e) => {
                     e.stopPropagation()
                     toggleSelection(s.id)
                   }}
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', paddingTop: '2px' }}
                 >
                   <div
                     style={{
@@ -661,7 +668,7 @@ export default function AppointmentManagementPage() {
           ))}
         </div>
       ) : (
-        <div className="box extended-card">
+        <div className="box extended-card" style={{ marginBottom: '20px' }}>
           <div className="has-text-centered py-4">
             <p className="has-text-grey">No appointments for selected date. Select a date with scheduled appointments.</p>
           </div>
@@ -724,7 +731,7 @@ export default function AppointmentManagementPage() {
                 </div>
                 <div className="field">
                   <label className="label">Client</label>
-                  <div className="control">
+                  <div className="control has-icons-right">
                     <input
                       className="input"
                       type="text"
@@ -741,6 +748,15 @@ export default function AppointmentManagementPage() {
                         setTimeout(() => setShowClientDropdown(false), 200)
                       }}
                     />
+                    {form.client_search && (
+                      <span 
+                        className="icon is-small is-right is-clickable" 
+                        onClick={() => setForm({ ...form, client_search: '', client_id: '' })}
+                        style={{ cursor: 'pointer', pointerEvents: 'all' }}
+                      >
+                        <i className="fas fa-times has-text-grey"></i>
+                      </span>
+                    )}
                   </div>
                   {showClientDropdown && (
                     <div className="dropdown-content" style={{ 

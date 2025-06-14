@@ -121,7 +121,7 @@ export default function Layout({ children, params }) {
   return (
     <div>
       {/* Mobile header */}
-      <nav className="navbar is-hidden-tablet" style={{ padding: '0.75rem 1.25rem', position: 'sticky', top: 0, zIndex: 30, backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <nav className="navbar is-hidden-tablet" style={{ padding: '0.5rem 1.25rem', position: 'sticky', top: 0, zIndex: 30, backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', height: '44pt' }}>
         <div className="navbar-brand" style={{ width: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
           <button 
             className="button is-ghost" 
@@ -333,13 +333,13 @@ export default function Layout({ children, params }) {
           </div>
         </aside>
 
-        <main className="column responsive-container" style={{ paddingBottom: '80px' }}>
+        <main className="column responsive-container" style={{ paddingBottom: '70pt' }}>
           {children}
         </main>
       </div>
 
       {/* Mobile bottom navigation */}
-      <nav className="navbar is-fixed-bottom is-hidden-tablet" style={{ backgroundColor: 'white', borderTop: '1px solid #dbdbdb', height: '60px', zIndex: 30 }}>
+      <nav className="navbar is-fixed-bottom is-hidden-tablet" style={{ backgroundColor: 'white', borderTop: '1px solid #dbdbdb', height: '50pt', zIndex: 30 }}>
         <div className="navbar-menu" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', margin: 0 }}>
           <Link href={base} className={`navbar-item has-text-centered ${isActiveRoute(base) ? 'has-text-link' : 'has-text-grey'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0.5rem', minHeight: 'auto' }}>
             <span className="icon">

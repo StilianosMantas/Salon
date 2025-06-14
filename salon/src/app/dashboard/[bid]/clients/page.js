@@ -12,9 +12,9 @@ export default function ClientsPage() {
   const { createClient, updateClient, deleteClient, loading: mutationLoading } = useClientMutations(bid)
   
   const [formVisible, setFormVisible] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', mobile: '', id: null })
+  const [form, setForm] = useState({ name: '', email: '', mobile: '', notes: '', id: null })
   const [editing, setEditing] = useState(false)
-  const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
+  const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', notes: '', id: null })
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredClients, setFilteredClients] = useState([])
   const [isClosing, setIsClosing] = useState(false)
@@ -77,7 +77,8 @@ export default function ClientsPage() {
     return (
       current.name.trim() !== initial.name.trim() ||
       (current.email || '').trim() !== (initial.email || '').trim() ||
-      (current.mobile || '').trim() !== (initial.mobile || '').trim()
+      (current.mobile || '').trim() !== (initial.mobile || '').trim() ||
+      (current.notes || '').trim() !== (initial.notes || '').trim()
     )
   }
 
@@ -89,9 +90,9 @@ export default function ClientsPage() {
 
     try {
       if (editing) {
-        await updateClient({ id: form.id, name: form.name, email: form.email, mobile: form.mobile })
+        await updateClient({ id: form.id, name: form.name, email: form.email, mobile: form.mobile, notes: form.notes })
       } else {
-        await createClient({ name: form.name, email: form.email, mobile: form.mobile })
+        await createClient({ name: form.name, email: form.email, mobile: form.mobile, notes: form.notes })
       }
       closeForm(true)
     } catch (error) {
@@ -126,8 +127,8 @@ export default function ClientsPage() {
     
     setIsClosing(true)
     setTimeout(() => {
-      setForm({ name: '', email: '', mobile: '', id: null })
-      setInitialForm({ name: '', email: '', mobile: '', id: null })
+      setForm({ name: '', email: '', mobile: '', notes: '', id: null })
+      setInitialForm({ name: '', email: '', mobile: '', notes: '', id: null })
       setEditing(false)
       setFormVisible(false)
       setIsClosing(false)
@@ -217,7 +218,7 @@ export default function ClientsPage() {
           data-add-client
           onClick={() => {
             setEditing(false)
-            const empty = { name: '', email: '', mobile: '', id: null }
+            const empty = { name: '', email: '', mobile: '', notes: '', id: null }
             setForm({ ...empty })
             setInitialForm({ ...empty })
             setFormVisible(true)
@@ -227,7 +228,7 @@ export default function ClientsPage() {
           + Add Client
         </button>
       </div>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em' }}>
+      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px' }}>
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div 
@@ -317,6 +318,18 @@ export default function ClientsPage() {
                         </a>
                       </span>
                     )}
+                  </div>
+                </div>
+                <div className="field">
+                  <label className="label">Notes</label>
+                  <div className="control">
+                    <textarea
+                      className="textarea"
+                      placeholder="Additional notes about the client..."
+                      value={form.notes}
+                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                      rows="3"
+                    />
                   </div>
                 </div>
                 <div className="field">
