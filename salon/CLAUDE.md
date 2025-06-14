@@ -1,1 +1,2 @@
+- when commit always sync. the version should increase and be part of the commit message
 - when commit always use the next version. current version is v.0.2.4

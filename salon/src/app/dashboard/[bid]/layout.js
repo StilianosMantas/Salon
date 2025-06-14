@@ -164,16 +164,13 @@ export default function Layout({ children, params }) {
       <div className="columns is-gapless" style={{ minHeight: '100vh' }}>
         {/* Mobile sidebar */}
         <aside className={`column is-narrow has-background-light mobile-sidebar ${sidebarOpen ? 'is-active' : ''} is-hidden-tablet`} style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh', padding: '1.5rem', width: '280px', maxWidth: '80vw' }}>
-          <div className="is-flex is-justify-content-center is-align-items-center mb-4 is-hidden-tablet">
+          <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-tablet">
             <h2 className="title is-5 mb-0">Salon</h2>
             <button 
-              className="button is-rounded is-ghost"
+              className="delete"
               onClick={() => setSidebarOpen(false)}
-              style={{ width: '32px', height: '32px', padding: '0' }}
+              aria-label="close"
             >
-              <span className="icon is-small">
-                <i className="fas fa-times"></i>
-              </span>
             </button>
           </div>
           
@@ -245,16 +242,14 @@ export default function Layout({ children, params }) {
                     <span>Rules</span>
                   </span>
                 </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li>
+                <div style={{ padding: '0.5rem 0.75rem' }}>
+                  <LogoutButton />
+                </div>
               </li>
             </ul>
-            <div className="mt-4 pt-3" style={{ borderTop: '2px solid #dbdbdb' }}>
-              <div className="is-flex is-flex-direction-column is-align-items-start">
-                <span className="is-size-7 has-text-grey mb-2">
-                  Welcome
-                </span>
-                <LogoutButton />
-              </div>
-            </div>
           </div>
         </aside>
 
@@ -327,16 +322,14 @@ export default function Layout({ children, params }) {
                     <span>Rules</span>
                   </span>
                 </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li>
+                <div style={{ padding: '0.5rem 0.75rem' }}>
+                  <LogoutButton />
+                </div>
               </li>
             </ul>
-            <div className="mt-4 pt-3" style={{ borderTop: '2px solid #dbdbdb' }}>
-              <div className="is-flex is-flex-direction-column is-align-items-start">
-                <span className="is-size-7 has-text-grey mb-2">
-                  Welcome
-                </span>
-                <LogoutButton />
-              </div>
-            </div>
           </div>
         </aside>
 
@@ -348,29 +341,25 @@ export default function Layout({ children, params }) {
       {/* Mobile bottom navigation */}
       <nav className="navbar is-fixed-bottom is-hidden-tablet" style={{ backgroundColor: 'white', borderTop: '1px solid #dbdbdb', height: '60px', zIndex: 30 }}>
         <div className="navbar-menu" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', margin: 0 }}>
-          <Link href={base} className={`navbar-item has-text-centered ${isActiveRoute(base) ? 'has-text-link' : 'has-text-grey'}`} style={{ flexDirection: 'column', padding: '0.5rem', minHeight: 'auto' }}>
-            <span className="icon" style={{ marginBottom: '2px' }}>
+          <Link href={base} className={`navbar-item has-text-centered ${isActiveRoute(base) ? 'has-text-link' : 'has-text-grey'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0.5rem', minHeight: 'auto' }}>
+            <span className="icon">
               <i className="fas fa-chart-bar"></i>
             </span>
-            <span className="is-size-7">Overview</span>
           </Link>
-          <Link href={`${base}/slots`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/slots`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flexDirection: 'column', padding: '0.5rem', minHeight: 'auto' }}>
-            <span className="icon" style={{ marginBottom: '2px' }}>
+          <Link href={`${base}/slots`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/slots`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0.5rem', minHeight: 'auto' }}>
+            <span className="icon">
               <i className="fas fa-calendar-alt"></i>
             </span>
-            <span className="is-size-7">Appointments</span>
           </Link>
-          <Link href={`${base}/clients`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/clients`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flexDirection: 'column', padding: '0.5rem', minHeight: 'auto' }}>
-            <span className="icon" style={{ marginBottom: '2px' }}>
+          <Link href={`${base}/clients`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/clients`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0.5rem', minHeight: 'auto' }}>
+            <span className="icon">
               <i className="fas fa-user-friends"></i>
             </span>
-            <span className="is-size-7">Clients</span>
           </Link>
-          <Link href={`${base}/staff`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/staff`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flexDirection: 'column', padding: '0.5rem', minHeight: 'auto' }}>
-            <span className="icon" style={{ marginBottom: '2px' }}>
+          <Link href={`${base}/staff`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/staff`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0.5rem', minHeight: 'auto' }}>
+            <span className="icon">
               <i className="fas fa-users"></i>
             </span>
-            <span className="is-size-7">Staff</span>
           </Link>
         </div>
       </nav>

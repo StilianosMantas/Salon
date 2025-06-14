@@ -14,6 +14,11 @@ export default function RulesPage() {
   const [rangeEnd, setRangeEnd] = useState('')
   const [slotLength, setSlotLength] = useState(15)
   const [generatedDates, setGeneratedDates] = useState([])
+  const [showAddForm, setShowAddForm] = useState({})
+  const [formVisible, setFormVisible] = useState(false)
+  const [currentDay, setCurrentDay] = useState(null)
+  const [form, setForm] = useState({ start_time: '', end_time: '' })
+  const [isClosing, setIsClosing] = useState(false)
 
   const fetchData = useCallback(async () => {
     const { data: rulesData } = await supabase.from('business_rules').select('*').eq('business_id', bid).order('weekday')
@@ -91,6 +96,30 @@ export default function RulesPage() {
     }
   }
 
+  function openAddForm(day) {
+    setCurrentDay(day)
+    setForm({ start_time: '', end_time: '' })
+    setFormVisible(true)
+  }
+
+  function closeForm() {
+    setIsClosing(true)
+    setTimeout(() => {
+      setForm({ start_time: '', end_time: '' })
+      setCurrentDay(null)
+      setFormVisible(false)
+      setIsClosing(false)
+    }, 300)
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!form.start_time || !form.end_time) return alert('Please fill all fields')
+    
+    await saveRule(currentDay, form)
+    closeForm()
+  }
+
   async function generateSlots() {
     if (!rangeStart || !rangeEnd) return alert('Please provide a valid date range')
 
@@ -152,6 +181,29 @@ export default function RulesPage() {
   }
 
   return (
+    <>
+      <style jsx>{`
+        @keyframes slideInFromRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes slideOutToRight {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+      `}</style>
     <div className="container py-5 px-4">
       <h1 className="title is-4 mb-4">Business Open Hours</h1>
 
@@ -171,44 +223,52 @@ export default function RulesPage() {
 
       <div className="box mb-5">
         <h2 className="subtitle is-6 mb-3">Weekly Schedule</h2>
-        {weekdays.map((day, i) => (
-          <div key={i} className="mb-5">
-            <div className="mb-2 has-text-weight-semibold">{day}</div>
-            {(rules.filter(r => r.weekday === i)).map(rule => (
-              <div key={rule.id} className="box p-3 mb-2">
-                <div className="columns is-multiline is-vcentered is-mobile">
-                  <div className="column is-half-mobile is-one-third-tablet">
-                    <label className="label is-size-7">Start Time</label>
-                    <input className="input is-small" type="time" value={rule.start_time || ''} readOnly />
-                  </div>
-                  <div className="column is-half-mobile is-one-third-tablet">
-                    <label className="label is-size-7">End Time</label>
-                    <input className="input is-small" type="time" value={rule.end_time || ''} readOnly />
-                  </div>
-                  <div className="column is-full-mobile is-one-third-tablet">
-                    <button className="button is-small is-danger is-light is-fullwidth-mobile" onClick={() => deleteRule(rule.id)}>Delete</button>
-                  </div>
-                </div>
+        {weekdays.map((day, i) => {
+          const dayRules = rules.filter(r => r.weekday === i)
+          return (
+            <div key={i} className="mb-5">
+              <div className="is-flex is-justify-content-space-between is-align-items-center mb-2">
+                <div className="has-text-weight-semibold">{day}</div>
+                <button 
+                  className="button is-small is-rounded is-ghost"
+                  onClick={() => openAddForm(i)}
+                  style={{ width: '32px', height: '32px', padding: '0' }}
+                >
+                  <span className="icon is-small">
+                    <i className="fas fa-plus"></i>
+                  </span>
+                </button>
               </div>
-            ))}
-            <div className="box p-3 has-background-light">
-              <p className="is-size-7 has-text-weight-semibold mb-2">Add New Time Range</p>
-              <div className="columns is-multiline is-vcentered is-mobile">
-                <div className="column is-half-mobile is-one-third-tablet">
-                  <label className="label is-size-7">Start Time</label>
-                  <input className="input is-small" type="time" value={newRanges[i]?.start_time || ''} onChange={e => handleNewRangeChange(i, 'start_time', e.target.value)} />
+              
+              {dayRules.length > 0 ? dayRules.map(rule => (
+                <div key={rule.id} className="box p-3 mb-2">
+                  <div className="is-flex is-justify-content-space-between is-align-items-center">
+                    <div className="is-hidden-mobile">
+                      <span className="has-text-weight-semibold">{rule.start_time} - {rule.end_time}</span>
+                    </div>
+                    <div className="is-hidden-tablet is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
+                      <span className="has-text-weight-semibold" style={{ fontSize: '0.875rem' }}>{rule.start_time} - {rule.end_time}</span>
+                      <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>
+                        <span className="icon is-small">
+                          <i className="fas fa-trash"></i>
+                        </span>
+                      </button>
+                    </div>
+                    <div className="is-hidden-mobile">
+                      <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>Delete</button>
+                    </div>
+                  </div>
                 </div>
-                <div className="column is-half-mobile is-one-third-tablet">
-                  <label className="label is-size-7">End Time</label>
-                  <input className="input is-small" type="time" value={newRanges[i]?.end_time || ''} onChange={e => handleNewRangeChange(i, 'end_time', e.target.value)} />
+              )) : (
+                <div className="box p-3 mb-2 has-background-light">
+                  <div className="is-flex is-justify-content-space-between is-align-items-center">
+                    <span className="has-text-grey">No hours set - click + to add</span>
+                  </div>
                 </div>
-                <div className="column is-full-mobile is-one-third-tablet">
-                  <button className="button is-small is-success is-fullwidth-mobile" onClick={() => addRange(i)}>Add Range</button>
-                </div>
-              </div>
+              )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="box">
@@ -258,6 +318,64 @@ export default function RulesPage() {
           )}
         </div>
       </div>
+
+      {formVisible && (
+        <div className="modal is-active">
+          <div className="modal-background" onClick={() => closeForm()}></div>
+          <div className="modal-card" style={{ 
+            animation: isClosing ? 'slideOutToRight 0.3s ease-in' : 'slideInFromRight 0.3s ease-out', 
+            transformOrigin: 'center right' 
+          }}>
+            <header className="modal-card-head">
+              <p className="modal-card-title">Add Time Range for {weekdays[currentDay]}</p>
+              <button className="delete" aria-label="close" onClick={() => closeForm()}></button>
+            </header>
+            <section className="modal-card-body">
+              <form onSubmit={handleSubmit}>
+                <div className="field">
+                  <label className="label">Start Time</label>
+                  <div className="control">
+                    <input 
+                      className="input" 
+                      type="time" 
+                      value={form.start_time} 
+                      onChange={e => setForm({ ...form, start_time: e.target.value })} 
+                      required 
+                    />
+                  </div>
+                </div>
+                <div className="field">
+                  <label className="label">End Time</label>
+                  <div className="control">
+                    <input 
+                      className="input" 
+                      type="time" 
+                      value={form.end_time} 
+                      onChange={e => setForm({ ...form, end_time: e.target.value })} 
+                      required 
+                    />
+                  </div>
+                </div>
+                <div className="field">
+                  <div className="control">
+                    <button className="button is-success is-fullwidth" type="submit">
+                      Add Range
+                    </button>
+                  </div>
+                </div>
+                <div className="field">
+                  <div className="control">
+                    <button className="button is-fullwidth" type="button" onClick={() => closeForm()}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </section>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   )
 }
