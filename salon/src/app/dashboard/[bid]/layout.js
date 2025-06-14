@@ -135,6 +135,22 @@ export default function Layout({ children, params }) {
           <h2 className="title is-5 mb-0" style={{ width: '100%', textAlign: 'center', padding: '0 3.5rem' }}>{getPageTitle()}</h2>
           <div id="mobile-add-button-placeholder" style={{ position: 'absolute', right: '0', zIndex: 10 }}></div>
         </div>
+        {/* Mobile search bar for clients page */}
+        {pathname.includes('/clients') && (
+          <div className="field has-addons" style={{ margin: '0.5rem 0 0 0' }}>
+            <div className="control has-icons-left is-expanded">
+              <input
+                id="mobile-search-input"
+                className="input is-small"
+                type="text"
+                placeholder="Search clients..."
+              />
+              <span className="icon is-small is-left">
+                <i className="fas fa-search"></i>
+              </span>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Mobile overlay */}
@@ -167,37 +183,67 @@ export default function Layout({ children, params }) {
             <ul className="menu-list" style={{ flex: 1 }}>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={base} onClick={() => setSidebarOpen(false)} className={isActiveRoute(base) ? 'is-active' : ''}>
-                  Overview
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-chart-bar"></i>
+                    </span>
+                    <span>Overview</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/staff`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>
-                  Staff
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-users"></i>
+                    </span>
+                    <span>Staff</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/clients`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>
-                  Clients
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-user-friends"></i>
+                    </span>
+                    <span>Clients</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/services`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/services`) ? 'is-active' : ''}>
-                  Services
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-scissors"></i>
+                    </span>
+                    <span>Services</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/slots`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>
-                  Appointments
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-calendar-alt"></i>
+                    </span>
+                    <span>Appointments</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/rules`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>
-                  Rules
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-cog"></i>
+                    </span>
+                    <span>Rules</span>
+                  </span>
                 </Link>
               </li>
             </ul>
@@ -219,37 +265,67 @@ export default function Layout({ children, params }) {
             <ul className="menu-list" style={{ flex: 1 }}>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={base} className={isActiveRoute(base) ? 'is-active' : ''}>
-                  Overview
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-chart-bar"></i>
+                    </span>
+                    <span>Overview</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/staff`} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>
-                  Staff
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-users"></i>
+                    </span>
+                    <span>Staff</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/clients`} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>
-                  Clients
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-user-friends"></i>
+                    </span>
+                    <span>Clients</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/services`} className={isActiveRoute(`${base}/services`) ? 'is-active' : ''}>
-                  Services
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-scissors"></i>
+                    </span>
+                    <span>Services</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/slots`} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>
-                  Appointments
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-calendar-alt"></i>
+                    </span>
+                    <span>Appointments</span>
+                  </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/rules`} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>
-                  Rules
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-cog"></i>
+                    </span>
+                    <span>Rules</span>
+                  </span>
                 </Link>
               </li>
             </ul>
@@ -264,10 +340,40 @@ export default function Layout({ children, params }) {
           </div>
         </aside>
 
-        <main className="column responsive-container">
+        <main className="column responsive-container" style={{ paddingBottom: '80px' }}>
           {children}
         </main>
       </div>
+
+      {/* Mobile bottom navigation */}
+      <nav className="navbar is-fixed-bottom is-hidden-tablet" style={{ backgroundColor: 'white', borderTop: '1px solid #dbdbdb', height: '60px', zIndex: 30 }}>
+        <div className="navbar-menu" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', margin: 0 }}>
+          <Link href={base} className={`navbar-item has-text-centered ${isActiveRoute(base) ? 'has-text-link' : 'has-text-grey'}`} style={{ flexDirection: 'column', padding: '0.5rem', minHeight: 'auto' }}>
+            <span className="icon" style={{ marginBottom: '2px' }}>
+              <i className="fas fa-chart-bar"></i>
+            </span>
+            <span className="is-size-7">Overview</span>
+          </Link>
+          <Link href={`${base}/slots`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/slots`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flexDirection: 'column', padding: '0.5rem', minHeight: 'auto' }}>
+            <span className="icon" style={{ marginBottom: '2px' }}>
+              <i className="fas fa-calendar-alt"></i>
+            </span>
+            <span className="is-size-7">Appointments</span>
+          </Link>
+          <Link href={`${base}/clients`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/clients`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flexDirection: 'column', padding: '0.5rem', minHeight: 'auto' }}>
+            <span className="icon" style={{ marginBottom: '2px' }}>
+              <i className="fas fa-user-friends"></i>
+            </span>
+            <span className="is-size-7">Clients</span>
+          </Link>
+          <Link href={`${base}/staff`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/staff`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flexDirection: 'column', padding: '0.5rem', minHeight: 'auto' }}>
+            <span className="icon" style={{ marginBottom: '2px' }}>
+              <i className="fas fa-users"></i>
+            </span>
+            <span className="is-size-7">Staff</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   )
 }

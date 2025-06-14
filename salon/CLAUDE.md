@@ -1,0 +1,1 @@
+- when commit always use the next version. current version is v.0.2.4

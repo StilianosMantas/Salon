@@ -39,7 +39,7 @@ export default function ClientsPage() {
     setFilteredClients(filtered)
   }, [clients, searchTerm])
   
-  // Add mobile header button
+  // Add mobile header button and sync search
   useEffect(() => {
     const placeholder = document.getElementById('mobile-add-button-placeholder')
     if (placeholder) {
@@ -51,12 +51,27 @@ export default function ClientsPage() {
         </button>
       `
     }
+
+    // Sync mobile search with state
+    const mobileSearchInput = document.getElementById('mobile-search-input')
+    if (mobileSearchInput) {
+      mobileSearchInput.value = searchTerm
+      mobileSearchInput.addEventListener('input', (e) => {
+        setSearchTerm(e.target.value)
+      })
+    }
+
     return () => {
       if (placeholder) {
         placeholder.innerHTML = ''
       }
+      if (mobileSearchInput) {
+        mobileSearchInput.removeEventListener('input', (e) => {
+          setSearchTerm(e.target.value)
+        })
+      }
     }
-  }, [])
+  }, [searchTerm])
 
   function isFormDirty(current, initial) {
     return (
@@ -173,22 +188,6 @@ export default function ClientsPage() {
         }
       `}</style>
     <div className="container py-5 px-4">
-      <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-tablet" style={{ position: 'sticky', top: '60px', zIndex: 25, backgroundColor: 'white', padding: '1rem 0', marginLeft: '-1rem', marginRight: '-1rem', paddingLeft: '1rem', paddingRight: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <div className="field has-addons is-flex-grow-1 mr-4">
-          <div className="control has-icons-left is-expanded">
-            <input
-              className="input"
-              type="text"
-              placeholder="Search clients..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="icon is-small is-left">
-              <i className="fas fa-search"></i>
-            </span>
-          </div>
-        </div>
-      </div>
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
           <div className="control has-icons-left is-expanded">
