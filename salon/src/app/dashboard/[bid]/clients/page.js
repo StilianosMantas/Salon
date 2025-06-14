@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useClients, useClientMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -15,6 +15,47 @@ export default function ClientsPage() {
   const [form, setForm] = useState({ name: '', email: '', mobile: '', id: null })
   const [editing, setEditing] = useState(false)
   const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filteredClients, setFilteredClients] = useState([])
+
+  // Filter clients based on search term
+  useEffect(() => {
+    if (!clients) {
+      setFilteredClients([])
+      return
+    }
+    
+    if (!searchTerm.trim()) {
+      setFilteredClients(clients)
+      return
+    }
+    
+    const filtered = clients.filter(client => 
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (client.mobile && client.mobile.includes(searchTerm))
+    )
+    setFilteredClients(filtered)
+  }, [clients, searchTerm])
+  
+  // Add mobile header button
+  useEffect(() => {
+    const placeholder = document.getElementById('mobile-add-button-placeholder')
+    if (placeholder) {
+      placeholder.innerHTML = `
+        <button class="button is-small is-link" onclick="document.querySelector('[data-add-client]').click()">
+          <span class="icon is-small">
+            <i class="fas fa-plus"></i>
+          </span>
+        </button>
+      `
+    }
+    return () => {
+      if (placeholder) {
+        placeholder.innerHTML = ''
+      }
+    }
+  }, [])
 
   function isFormDirty(current, initial) {
     return (
@@ -103,10 +144,24 @@ export default function ClientsPage() {
 
   return (
     <div className="container py-5 px-4">
-      <div className="is-flex is-justify-content-space-between is-align-items-center mb-5">
-        <h1 className="title is-4">Clients</h1>
+      <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
+        <div className="field has-addons is-flex-grow-1 mr-4">
+          <div className="control has-icons-left is-expanded">
+            <input
+              className="input"
+              type="text"
+              placeholder="Search clients..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <span className="icon is-small is-left">
+              <i className="fas fa-search"></i>
+            </span>
+          </div>
+        </div>
         <button
-          className="button is-link"
+          className="button is-link is-hidden-mobile"
+          data-add-client
           onClick={() => {
             setEditing(false)
             const empty = { name: '', email: '', mobile: '', id: null }
@@ -120,7 +175,7 @@ export default function ClientsPage() {
         </button>
       </div>
       <div className="box">
-        {clients && clients.length > 0 ? clients.map((c, index) => (
+        {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div 
               className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3 is-clickable" 
@@ -128,9 +183,9 @@ export default function ClientsPage() {
               style={{ cursor: 'pointer' }}
             >
               <div>
-                <strong>{c.name}</strong><br />
-                <small>{c.email}</small><br />
-                <small>{c.mobile}</small>
+                <strong className="is-block">{c.name}</strong>
+                {c.email && <small className="is-block has-text-grey">{c.email}</small>}
+                {c.mobile && <small className="is-block has-text-grey">{c.mobile}</small>}
               </div>
               <div>
                 <span className="icon">
@@ -138,11 +193,11 @@ export default function ClientsPage() {
                 </span>
               </div>
             </div>
-            {index < clients.length - 1 && <hr className="my-2" />}
+            {index < filteredClients.length - 1 && <hr className="my-2" />}
           </div>
         )) : (
           <div className="has-text-centered py-4">
-            <p className="has-text-grey">No clients found. Add your first client to get started.</p>
+            <p className="has-text-grey">{searchTerm ? 'No clients match your search.' : 'No clients found. Add your first client to get started.'}</p>
           </div>
         )}
       </div>
@@ -181,8 +236,8 @@ export default function ClientsPage() {
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
                     />
                     {form.email && (
-                      <span className="icon is-small is-right">
-                        <a href={`mailto:${form.email}`} className="has-text-info">
+                      <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
+                        <a href={`mailto:${form.email}`} className="has-text-info" style={{ pointerEvents: 'all' }}>
                           <i className="fas fa-envelope"></i>
                         </a>
                       </span>
@@ -200,26 +255,28 @@ export default function ClientsPage() {
                       onChange={(e) => setForm({ ...form, mobile: e.target.value })}
                     />
                     {form.mobile && (
-                      <span className="icon is-small is-right">
-                        <a href={`tel:${form.mobile}`} className="has-text-info">
+                      <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
+                        <a href={`tel:${form.mobile}`} className="has-text-info" style={{ pointerEvents: 'all' }}>
                           <i className="fas fa-phone"></i>
                         </a>
                       </span>
                     )}
                   </div>
                 </div>
-                <footer className="modal-card-foot">
-                  <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet">
-                    <div className="is-flex mb-3 mb-0-tablet">
+                <footer className="modal-card-foot" style={{ backgroundColor: 'transparent', display: 'block' }}>
+                  <div className="field is-grouped is-grouped-multiline is-grouped-right-tablet">
+                    <div className="control is-expanded-mobile">
                       <button 
-                        className={`button is-success mr-2 ${mutationLoading ? 'is-loading' : ''}`} 
+                        className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
                         type="submit"
                         disabled={mutationLoading}
                       >
                         {editing ? 'Update' : 'Add'}
                       </button>
+                    </div>
+                    <div className="control is-expanded-mobile">
                       <button 
-                        className="button" 
+                        className="button is-fullwidth" 
                         type="button" 
                         onClick={() => closeForm()}
                         disabled={mutationLoading}
@@ -228,14 +285,16 @@ export default function ClientsPage() {
                       </button>
                     </div>
                     {editing && (
-                      <button 
-                        className="button is-danger ml-auto-tablet" 
-                        type="button" 
-                        onClick={() => handleDelete(form.id)}
-                        disabled={mutationLoading}
-                      >
-                        Delete
-                      </button>
+                      <div className="control is-expanded-mobile">
+                        <button 
+                          className="button is-danger is-fullwidth" 
+                          type="button" 
+                          onClick={() => handleDelete(form.id)}
+                          disabled={mutationLoading}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
                 </footer>

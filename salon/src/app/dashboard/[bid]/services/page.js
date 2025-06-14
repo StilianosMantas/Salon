@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useServices, useServiceMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -15,6 +15,25 @@ export default function ServicesPage() {
   const [form, setForm] = useState({ name: '', description: '', duration: 15, cost: '', id: null })
   const [editing, setEditing] = useState(false)
   const [initialForm, setInitialForm] = useState({ name: '', description: '', duration: 15, cost: '', id: null })
+
+  // Add mobile header button
+  useEffect(() => {
+    const placeholder = document.getElementById('mobile-add-button-placeholder')
+    if (placeholder) {
+      placeholder.innerHTML = `
+        <button class="button is-small is-link" onclick="document.querySelector('[data-add-service]').click()">
+          <span class="icon is-small">
+            <i class="fas fa-plus"></i>
+          </span>
+        </button>
+      `
+    }
+    return () => {
+      if (placeholder) {
+        placeholder.innerHTML = ''
+      }
+    }
+  }, [])
 
   function isFormDirty(current, initial) {
     return (
@@ -93,10 +112,10 @@ export default function ServicesPage() {
 
   return (
     <div className="container py-5 px-4">
-      <div className="is-flex is-justify-content-space-between is-align-items-center mb-5">
-        <h1 className="title is-4">Services</h1>
+      <div className="is-flex is-justify-content-end mb-4">
         <button 
-          className="button is-link" 
+          className="button is-link is-hidden-mobile" 
+          data-add-service
           onClick={() => {
             setEditing(false)
             const empty = { name: '', description: '', duration: 15, cost: '', id: null }
@@ -118,9 +137,9 @@ export default function ServicesPage() {
               style={{ cursor: 'pointer' }}
             >
               <div>
-                <strong>{s.name}</strong><br />
-                <small>{s.description}</small><br />
-                <span>{s.duration} min - {s.cost ? `${s.cost}€` : 'Free'}</span>
+                <strong className="is-block">{s.name}</strong>
+                {s.description && <small className="is-block has-text-grey">{s.description}</small>}
+                <span className="is-block has-text-info">{s.duration} min - {s.cost ? `${s.cost}€` : 'Free'}</span>
               </div>
               <div>
                 <span className="icon">
@@ -171,18 +190,20 @@ export default function ServicesPage() {
                     <input className="input" type="text" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} />
                   </div>
                 </div>
-                <footer className="modal-card-foot">
-                  <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet">
-                    <div className="is-flex mb-3 mb-0-tablet">
+                <footer className="modal-card-foot" style={{ backgroundColor: 'transparent', display: 'block' }}>
+                  <div className="field is-grouped is-grouped-multiline is-grouped-right-tablet">
+                    <div className="control is-expanded-mobile">
                       <button 
-                        className={`button is-success mr-2 ${mutationLoading ? 'is-loading' : ''}`} 
+                        className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
                         type="submit"
                         disabled={mutationLoading}
                       >
                         {editing ? 'Update' : 'Add'}
                       </button>
+                    </div>
+                    <div className="control is-expanded-mobile">
                       <button 
-                        className="button" 
+                        className="button is-fullwidth" 
                         type="button" 
                         onClick={() => closeForm()}
                         disabled={mutationLoading}
@@ -191,14 +212,16 @@ export default function ServicesPage() {
                       </button>
                     </div>
                     {editing && (
-                      <button 
-                        className="button is-danger ml-auto-tablet" 
-                        type="button" 
-                        onClick={() => handleDelete(form.id)}
-                        disabled={mutationLoading}
-                      >
-                        Delete
-                      </button>
+                      <div className="control is-expanded-mobile">
+                        <button 
+                          className="button is-danger is-fullwidth" 
+                          type="button" 
+                          onClick={() => handleDelete(form.id)}
+                          disabled={mutationLoading}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
                 </footer>

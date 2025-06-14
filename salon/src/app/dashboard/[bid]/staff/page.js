@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useStaff, useStaffMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -14,6 +14,25 @@ export default function StaffPage() {
   const [form, setForm] = useState({ name: '', email: '', mobile: '', id: null })
   const [editing, setEditing] = useState(false)
   const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
+
+  // Add mobile header button
+  useEffect(() => {
+    const placeholder = document.getElementById('mobile-add-button-placeholder')
+    if (placeholder) {
+      placeholder.innerHTML = `
+        <button class="button is-small is-link" onclick="document.querySelector('[data-add-staff]').click()">
+          <span class="icon is-small">
+            <i class="fas fa-plus"></i>
+          </span>
+        </button>
+      `
+    }
+    return () => {
+      if (placeholder) {
+        placeholder.innerHTML = ''
+      }
+    }
+  }, [])
 
   function isFormDirty(current, initial) {
     return (
@@ -102,10 +121,10 @@ export default function StaffPage() {
 
   return (
     <div className="container py-5 px-4">
-      <div className="is-flex is-justify-content-space-between is-align-items-center mb-5">
-        <h1 className="title is-4">Staff</h1>
+      <div className="is-flex is-justify-content-end mb-4">
         <button 
-          className="button is-link" 
+          className="button is-link is-hidden-mobile" 
+          data-add-staff
           onClick={() => {
             setEditing(false)
             const empty = { name: '', email: '', mobile: '', id: null }
@@ -127,8 +146,8 @@ export default function StaffPage() {
               style={{ cursor: 'pointer' }}
             >
               <div>
-                <strong>{s.name}</strong><br />
-                <small>{s.mobile}</small>
+                <strong className="is-block">{s.name}</strong>
+                {s.mobile && <small className="is-block has-text-grey">{s.mobile}</small>}
               </div>
               <div>
                 <span className="icon">
@@ -166,8 +185,8 @@ export default function StaffPage() {
                   <div className="control has-icons-right">
                     <input className="input" type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
                     {form.email && (
-                      <span className="icon is-small is-right">
-                        <a href={`mailto:${form.email}`} className="has-text-info">
+                      <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
+                        <a href={`mailto:${form.email}`} className="has-text-info" style={{ pointerEvents: 'all' }}>
                           <i className="fas fa-envelope"></i>
                         </a>
                       </span>
@@ -179,26 +198,28 @@ export default function StaffPage() {
                   <div className="control has-icons-right">
                     <input className="input" type="text" placeholder="Mobile" value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} />
                     {form.mobile && (
-                      <span className="icon is-small is-right">
-                        <a href={`tel:${form.mobile}`} className="has-text-info">
+                      <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
+                        <a href={`tel:${form.mobile}`} className="has-text-info" style={{ pointerEvents: 'all' }}>
                           <i className="fas fa-phone"></i>
                         </a>
                       </span>
                     )}
                   </div>
                 </div>
-                <footer className="modal-card-foot">
-                  <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet">
-                    <div className="is-flex mb-3 mb-0-tablet">
+                <footer className="modal-card-foot" style={{ backgroundColor: 'transparent', display: 'block' }}>
+                  <div className="field is-grouped is-grouped-multiline is-grouped-right-tablet">
+                    <div className="control is-expanded-mobile">
                       <button 
-                        className={`button is-success mr-2 ${mutationLoading ? 'is-loading' : ''}`} 
+                        className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
                         type="submit"
                         disabled={mutationLoading}
                       >
                         {editing ? 'Update' : 'Add'}
                       </button>
+                    </div>
+                    <div className="control is-expanded-mobile">
                       <button 
-                        className="button" 
+                        className="button is-fullwidth" 
                         type="button" 
                         onClick={() => closeForm()}
                         disabled={mutationLoading}
@@ -207,14 +228,16 @@ export default function StaffPage() {
                       </button>
                     </div>
                     {editing && (
-                      <button 
-                        className="button is-danger ml-auto-tablet" 
-                        type="button" 
-                        onClick={() => handleDelete(form.id)}
-                        disabled={mutationLoading}
-                      >
-                        Delete
-                      </button>
+                      <div className="control is-expanded-mobile">
+                        <button 
+                          className="button is-danger is-fullwidth" 
+                          type="button" 
+                          onClick={() => handleDelete(form.id)}
+                          disabled={mutationLoading}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
                 </footer>
