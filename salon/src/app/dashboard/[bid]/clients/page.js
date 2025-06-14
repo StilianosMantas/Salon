@@ -190,7 +190,7 @@ export default function ClientsPage() {
     <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
-          <div className="control has-icons-left is-expanded">
+          <div className="control has-icons-left has-icons-right is-expanded">
             <input
               className="input"
               type="text"
@@ -201,6 +201,15 @@ export default function ClientsPage() {
             <span className="icon is-small is-left">
               <i className="fas fa-search"></i>
             </span>
+            {searchTerm && (
+              <span 
+                className="icon is-small is-right is-clickable" 
+                onClick={() => setSearchTerm('')}
+                style={{ cursor: 'pointer', pointerEvents: 'all' }}
+              >
+                <i className="fas fa-times has-text-grey"></i>
+              </span>
+            )}
           </div>
         </div>
         <button

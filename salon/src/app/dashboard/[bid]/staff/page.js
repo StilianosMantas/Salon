@@ -15,8 +15,30 @@ export default function StaffPage() {
   const [editing, setEditing] = useState(false)
   const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
   const [isClosing, setIsClosing] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filteredStaff, setFilteredStaff] = useState([])
 
-  // Add mobile header button
+  // Filter staff based on search term
+  useEffect(() => {
+    if (!staff) {
+      setFilteredStaff([])
+      return
+    }
+    
+    if (!searchTerm.trim()) {
+      setFilteredStaff(staff)
+      return
+    }
+    
+    const filtered = staff.filter(s => 
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.email && s.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (s.mobile && s.mobile.includes(searchTerm))
+    )
+    setFilteredStaff(filtered)
+  }, [staff, searchTerm])
+
+  // Add mobile header button and sync search
   useEffect(() => {
     const placeholder = document.getElementById('mobile-add-button-placeholder')
     if (placeholder) {
@@ -28,12 +50,27 @@ export default function StaffPage() {
         </button>
       `
     }
+
+    // Sync mobile search with state
+    const mobileSearchInput = document.getElementById('mobile-search-input')
+    if (mobileSearchInput) {
+      mobileSearchInput.value = searchTerm
+      mobileSearchInput.addEventListener('input', (e) => {
+        setSearchTerm(e.target.value)
+      })
+    }
+
     return () => {
       if (placeholder) {
         placeholder.innerHTML = ''
       }
+      if (mobileSearchInput) {
+        mobileSearchInput.removeEventListener('input', (e) => {
+          setSearchTerm(e.target.value)
+        })
+      }
     }
-  }, [])
+  }, [searchTerm])
 
   function isFormDirty(current, initial) {
     return (
@@ -150,9 +187,32 @@ export default function StaffPage() {
         }
       `}</style>
     <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
-      <div className="is-flex is-justify-content-end mb-4">
+      <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
+        <div className="field has-addons is-flex-grow-1 mr-4">
+          <div className="control has-icons-left has-icons-right is-expanded">
+            <input
+              className="input"
+              type="text"
+              placeholder="Search staff..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <span className="icon is-small is-left">
+              <i className="fas fa-search"></i>
+            </span>
+            {searchTerm && (
+              <span 
+                className="icon is-small is-right is-clickable" 
+                onClick={() => setSearchTerm('')}
+                style={{ cursor: 'pointer', pointerEvents: 'all' }}
+              >
+                <i className="fas fa-times has-text-grey"></i>
+              </span>
+            )}
+          </div>
+        </div>
         <button 
-          className="button is-link is-hidden-mobile" 
+          className="button is-link" 
           data-add-staff
           onClick={() => {
             setEditing(false)
@@ -167,7 +227,7 @@ export default function StaffPage() {
         </button>
       </div>
       <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em' }}>
-        {staff && staff.length > 0 ? staff.map((s, index) => (
+        {filteredStaff && filteredStaff.length > 0 ? filteredStaff.map((s, index) => (
           <div key={s.id}>
             <div 
               className="is-flex is-justify-content-space-between is-align-items-center p-3 is-clickable" 
@@ -185,11 +245,11 @@ export default function StaffPage() {
                 </span>
               </div>
             </div>
-            {index < staff.length - 1 && <hr className="my-2" style={{ margin: '8px 0', borderColor: '#e5e5e5' }} />}
+            {index < filteredStaff.length - 1 && <hr className="my-2" style={{ margin: '8px 0', borderColor: '#e5e5e5' }} />}
           </div>
         )) : (
           <div className="has-text-centered py-4">
-            <p className="has-text-grey">No staff members found. Add your first staff member to get started.</p>
+            <p className="has-text-grey">{searchTerm ? 'No staff match your search.' : 'No staff members found. Add your first staff member to get started.'}</p>
           </div>
         )}
       </div>

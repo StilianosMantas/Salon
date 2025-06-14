@@ -169,6 +169,8 @@ export default function AppointmentManagementPage() {
     }
 
     closeForm(true)
+    // Refresh the appointments list
+    fetchAppointments()
   }
 
   async function handleExtendChoice(choice) {
@@ -334,6 +336,7 @@ export default function AppointmentManagementPage() {
         .eq('id', slot.id)
     }
 
+    setSelectedAppointmentIds([])
     fetchAppointments()
   }
 
@@ -341,6 +344,7 @@ export default function AppointmentManagementPage() {
     if (!selectedAppointmentIds.length || !confirm('Delete selected appointments?')) return
     await supabase.from('slot').delete().in('id', selectedAppointmentIds)
     await supabase.from('slot_service').delete().in('slot_id', selectedAppointmentIds)
+    setSelectedAppointmentIds([])
     fetchAppointments()
   }
 
@@ -398,16 +402,16 @@ export default function AppointmentManagementPage() {
   }
 
   async function addNewClient() {
-    const name = form.client_search.trim()
-    if (!name) return
+    const input = form.client_search.trim()
+    if (!input) return
     
     // Simple validation - if it looks like a phone number, put it in mobile field
     const mobileRegex = /^[\d\-\s\+\(\)]+$/
-    const isMobile = mobileRegex.test(name)
+    const isMobile = mobileRegex.test(input)
     
     const newClientData = {
-      name: isMobile ? '' : name,
-      mobile: isMobile ? name : '',
+      name: isMobile ? `Customer ${input}` : input, // Always provide a name
+      mobile: isMobile ? input : '',
       email: '',
       business_id: bid
     }
@@ -421,19 +425,21 @@ export default function AppointmentManagementPage() {
       
       if (error) {
         console.error('Error creating client:', error)
+        alert('Failed to create new client. Please try again.')
         return
       }
       
       if (newClient) {
-        // Update the clients list
+        // Update the clients list immediately
         setClients(prev => [...prev, newClient])
         // Select the new client
         selectClient(newClient)
-        // Refresh the data
-        fetchClients()
+        // Refresh the clients data in background
+        await fetchClients()
       }
     } catch (error) {
       console.error('Error creating client:', error)
+      alert('Failed to create new client. Please try again.')
     }
   }
 
@@ -548,6 +554,7 @@ export default function AppointmentManagementPage() {
                         className="dropdown-item button is-ghost is-fullwidth has-text-left"
                         onClick={() => {
                           clearSelectedClients()
+                          setSelectedAppointmentIds([])
                           setShowActionsDropdown(false)
                         }}
                       >
@@ -560,6 +567,7 @@ export default function AppointmentManagementPage() {
                         className="dropdown-item button is-ghost is-fullwidth has-text-left has-text-danger"
                         onClick={() => {
                           deleteSelectedAppointments()
+                          setSelectedAppointmentIds([])
                           setShowActionsDropdown(false)
                         }}
                       >
@@ -581,7 +589,7 @@ export default function AppointmentManagementPage() {
                 style={{ cursor: 'pointer' }}
                 onClick={() => editAppointment(s)}
               >
-              <div className="is-flex is-align-items-start is-justify-content-space-between">
+              <div className="is-flex is-align-items-center is-justify-content-space-between">
                 <div 
                   className="mr-3" 
                   onClick={(e) => {
@@ -781,22 +789,36 @@ export default function AppointmentManagementPage() {
                   <label className="label">Services</label>
                   <div className="control">
                     {services.map((s) => (
-                      <div key={s.id} className="field">
-                        <div className="control">
-                          <label className="checkbox">
-                            <input
-                              type="checkbox"
-                              checked={form.service_ids.includes(s.id)}
-                              onChange={() => {
-                                const service_ids = form.service_ids.includes(s.id)
-                                  ? form.service_ids.filter((id) => id !== s.id)
-                                  : [...form.service_ids, s.id]
-                                setForm({ ...form, service_ids })
-                              }}
-                            />
-                            {s.name} ({s.duration}min)
-                          </label>
+                      <div 
+                        key={s.id} 
+                        className="is-flex is-align-items-center p-2 is-clickable mb-2"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          const service_ids = form.service_ids.includes(s.id)
+                            ? form.service_ids.filter((id) => id !== s.id)
+                            : [...form.service_ids, s.id]
+                          setForm({ ...form, service_ids })
+                        }}
+                      >
+                        <div
+                          className="mr-3"
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            border: form.service_ids.includes(s.id) ? '2px solid #48c774' : '2px solid #dbdbdb',
+                            backgroundColor: form.service_ids.includes(s.id) ? '#48c774' : 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {form.service_ids.includes(s.id) && (
+                            <i className="fas fa-check" style={{ color: 'white', fontSize: '12px' }}></i>
+                          )}
                         </div>
+                        <span>{s.name} ({s.duration}min)</span>
                       </div>
                     ))}
                   </div>

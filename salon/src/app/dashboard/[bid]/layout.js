@@ -135,15 +135,15 @@ export default function Layout({ children, params }) {
           <h2 className="title is-5 mb-0" style={{ width: '100%', textAlign: 'center', padding: '0 3.5rem' }}>{getPageTitle()}</h2>
           <div id="mobile-add-button-placeholder" style={{ position: 'absolute', right: '0', zIndex: 10 }}></div>
         </div>
-        {/* Mobile search bar for clients page */}
-        {pathname.includes('/clients') && (
+        {/* Mobile search bar for clients and staff pages */}
+        {(pathname.includes('/clients') || pathname.includes('/staff')) && (
           <div className="field has-addons" style={{ margin: '0.5rem 0 0 0' }}>
             <div className="control has-icons-left is-expanded">
               <input
                 id="mobile-search-input"
                 className="input is-small"
                 type="text"
-                placeholder="Search clients..."
+                placeholder={pathname.includes('/clients') ? 'Search clients...' : 'Search staff...'}
               />
               <span className="icon is-small is-left">
                 <i className="fas fa-search"></i>
