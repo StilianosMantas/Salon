@@ -147,16 +147,21 @@ export default function Layout({ children, params }) {
 
       <div className="columns is-gapless" style={{ minHeight: '100vh' }}>
         {/* Mobile sidebar */}
-        <aside className={`column is-narrow has-background-light mobile-sidebar ${sidebarOpen ? 'is-active' : ''} is-hidden-tablet`} style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh', padding: '1.5rem' }}>
-          <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-tablet" style={{ padding: '0 0.5rem' }}>
-            <h2 className="title is-5 mb-0" style={{ marginLeft: '0.5rem' }}>Shalon</h2>
+        <aside className={`column is-narrow has-background-light mobile-sidebar ${sidebarOpen ? 'is-active' : ''} is-hidden-tablet`} style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh', padding: '1.5rem', width: '280px', maxWidth: '80vw' }}>
+          <div className="is-flex is-justify-content-center is-align-items-center mb-4 is-hidden-tablet">
+            <h2 className="title is-5 mb-0">Salon</h2>
             <button 
-              className="delete is-large"
+              className="button is-rounded is-ghost"
               onClick={() => setSidebarOpen(false)}
-            ></button>
+              style={{ width: '32px', height: '32px', padding: '0' }}
+            >
+              <span className="icon is-small">
+                <i className="fas fa-times"></i>
+              </span>
+            </button>
           </div>
           
-          <h2 className="title is-4 mb-5 is-hidden-mobile" style={{ paddingLeft: '0.5rem' }}>Shalon</h2>
+          <h2 className="title is-4 mb-5 is-hidden-mobile" style={{ textAlign: 'center' }}>Salon</h2>
           
           <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <ul className="menu-list" style={{ flex: 1 }}>
@@ -196,7 +201,7 @@ export default function Layout({ children, params }) {
                 </Link>
               </li>
             </ul>
-            <div className="mt-auto pt-4" style={{ borderTop: '2px solid #dbdbdb' }}>
+            <div className="mt-4 pt-3" style={{ borderTop: '2px solid #dbdbdb' }}>
               <div className="is-flex is-flex-direction-column is-align-items-start">
                 <span className="is-size-7 has-text-grey mb-2">
                   Welcome
@@ -208,7 +213,7 @@ export default function Layout({ children, params }) {
         </aside>
 
         {/* Desktop sidebar */}
-        <aside className="column is-narrow has-background-light p-5 is-hidden-touch" style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <aside className="column is-narrow has-background-light p-5 is-hidden-touch" style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh', width: '280px' }}>
           <h2 className="title is-4 mb-5">Salon Dashboard</h2>
           <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <ul className="menu-list" style={{ flex: 1 }}>
@@ -248,7 +253,7 @@ export default function Layout({ children, params }) {
                 </Link>
               </li>
             </ul>
-            <div className="mt-auto pt-4" style={{ borderTop: '2px solid #dbdbdb' }}>
+            <div className="mt-4 pt-3" style={{ borderTop: '2px solid #dbdbdb' }}>
               <div className="is-flex is-flex-direction-column is-align-items-start">
                 <span className="is-size-7 has-text-grey mb-2">
                   Welcome
