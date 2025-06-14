@@ -113,7 +113,7 @@ export default function Layout({ children, params }) {
     if (pathname.includes('/staff')) return 'Staff'
     if (pathname.includes('/clients')) return 'Clients'
     if (pathname.includes('/services')) return 'Services'
-    if (pathname.includes('/slots')) return 'Appointments'
+    if (pathname.includes('/appointments')) return 'Appointments'
     if (pathname.includes('/rules')) return 'Rules'
     return 'Salon Dashboard'
   }
@@ -121,7 +121,7 @@ export default function Layout({ children, params }) {
   return (
     <div>
       {/* Mobile header */}
-      <nav className="navbar is-hidden-tablet" style={{ padding: '1rem 1.5rem', position: 'sticky', top: 0, zIndex: 30, backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <nav className="navbar is-hidden-tablet" style={{ padding: '0.75rem 1.25rem', position: 'sticky', top: 0, zIndex: 30, backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div className="navbar-brand" style={{ width: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
           <button 
             className="button is-ghost" 
@@ -223,7 +223,7 @@ export default function Layout({ children, params }) {
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/slots`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>
+                <Link href={`${base}/appointments`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/appointments`) ? 'is-active' : ''}>
                   <span className="icon-text">
                     <span className="icon">
                       <i className="fas fa-calendar-alt"></i>
@@ -303,7 +303,7 @@ export default function Layout({ children, params }) {
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/slots`} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>
+                <Link href={`${base}/appointments`} className={isActiveRoute(`${base}/appointments`) ? 'is-active' : ''}>
                   <span className="icon-text">
                     <span className="icon">
                       <i className="fas fa-calendar-alt"></i>
@@ -346,7 +346,7 @@ export default function Layout({ children, params }) {
               <i className="fas fa-chart-bar"></i>
             </span>
           </Link>
-          <Link href={`${base}/slots`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/slots`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0.5rem', minHeight: 'auto' }}>
+          <Link href={`${base}/appointments`} className={`navbar-item has-text-centered ${isActiveRoute(`${base}/appointments`) ? 'has-text-link' : 'has-text-grey'}`} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0.5rem', minHeight: 'auto' }}>
             <span className="icon">
               <i className="fas fa-calendar-alt"></i>
             </span>

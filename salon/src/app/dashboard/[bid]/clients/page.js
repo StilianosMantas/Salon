@@ -187,7 +187,7 @@ export default function ClientsPage() {
           }
         }
       `}</style>
-    <div className="container py-5 px-4">
+    <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
           <div className="control has-icons-left is-expanded">
@@ -218,26 +218,26 @@ export default function ClientsPage() {
           + Add Client
         </button>
       </div>
-      <div className="box">
+      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em' }}>
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div 
-              className="is-flex is-justify-content-space-between is-align-items-center py-1 px-2 is-clickable" 
+              className="is-flex is-justify-content-space-between is-align-items-center p-3 is-clickable" 
               onClick={() => handleEdit(c)}
               style={{ cursor: 'pointer' }}
             >
               <div>
-                <strong className="is-block">{c.name}</strong>
-                {c.email && <small className="is-block has-text-grey">{c.email}</small>}
-                {c.mobile && <small className="is-block has-text-grey">{c.mobile}</small>}
+                <strong className="is-block" style={{ fontSize: '1.1em' }}>{c.name}</strong>
+                {c.email && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{c.email}</small>}
+                {c.mobile && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{c.mobile}</small>}
               </div>
               <div>
-                <span className="icon">
+                <span className="icon has-text-grey-light">
                   <i className="fas fa-chevron-right"></i>
                 </span>
               </div>
             </div>
-            {index < filteredClients.length - 1 && <hr className="my-1" />}
+            {index < filteredClients.length - 1 && <hr className="my-2" style={{ margin: '8px 0', borderColor: '#e5e5e5' }} />}
           </div>
         )) : (
           <div className="has-text-centered py-4">

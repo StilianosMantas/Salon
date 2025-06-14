@@ -140,7 +140,7 @@ export default function ServicesPage() {
           }
         }
       `}</style>
-    <div className="container py-5 px-4">
+    <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
       <div className="is-flex is-justify-content-end mb-4">
         <button 
           className="button is-link is-hidden-mobile" 
@@ -157,26 +157,26 @@ export default function ServicesPage() {
           + Add Service
         </button>
       </div>
-      <div className="box">
+      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em' }}>
         {services && services.length > 0 ? services.map((s, index) => (
           <div key={s.id}>
             <div 
-              className="is-flex is-justify-content-space-between is-align-items-center py-1 px-2 is-clickable" 
+              className="is-flex is-justify-content-space-between is-align-items-center p-3 is-clickable" 
               onClick={() => handleEdit(s)}
               style={{ cursor: 'pointer' }}
             >
               <div>
-                <strong className="is-block">{s.name}</strong>
-                {s.description && <small className="is-block has-text-grey">{s.description}</small>}
-                <span className="is-block has-text-info">{s.duration} min - {s.cost ? `${s.cost}€` : 'Free'}</span>
+                <strong className="is-block" style={{ fontSize: '1.1em' }}>{s.name}</strong>
+                {s.description && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{s.description}</small>}
+                <span className="is-block has-text-info" style={{ fontSize: '0.9em' }}>{s.duration} min - {s.cost ? `${s.cost}€` : 'Free'}</span>
               </div>
               <div>
-                <span className="icon">
+                <span className="icon has-text-grey-light">
                   <i className="fas fa-chevron-right"></i>
                 </span>
               </div>
             </div>
-            {index < services.length - 1 && <hr className="my-1" />}
+            {index < services.length - 1 && <hr className="my-2" style={{ margin: '8px 0', borderColor: '#e5e5e5' }} />}
           </div>
         )) : (
           <div className="has-text-centered py-4">
