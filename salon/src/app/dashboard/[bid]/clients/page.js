@@ -17,6 +17,7 @@ export default function ClientsPage() {
   const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredClients, setFilteredClients] = useState([])
+  const [isClosing, setIsClosing] = useState(false)
 
   // Filter clients based on search term
   useEffect(() => {
@@ -107,10 +108,15 @@ export default function ClientsPage() {
       const confirmDiscard = window.confirm('You have unsaved changes. Discard them?')
       if (!confirmDiscard) return
     }
-    setForm({ name: '', email: '', mobile: '', id: null })
-    setInitialForm({ name: '', email: '', mobile: '', id: null })
-    setEditing(false)
-    setFormVisible(false)
+    
+    setIsClosing(true)
+    setTimeout(() => {
+      setForm({ name: '', email: '', mobile: '', id: null })
+      setInitialForm({ name: '', email: '', mobile: '', id: null })
+      setEditing(false)
+      setFormVisible(false)
+      setIsClosing(false)
+    }, 300)
   }
 
   if (isLoading) {
@@ -167,7 +173,23 @@ export default function ClientsPage() {
         }
       `}</style>
     <div className="container py-5 px-4">
-      <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
+      <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-tablet" style={{ position: 'sticky', top: '60px', zIndex: 25, backgroundColor: 'white', padding: '1rem 0', marginLeft: '-1rem', marginRight: '-1rem', paddingLeft: '1rem', paddingRight: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div className="field has-addons is-flex-grow-1 mr-4">
+          <div className="control has-icons-left is-expanded">
+            <input
+              className="input"
+              type="text"
+              placeholder="Search clients..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <span className="icon is-small is-left">
+              <i className="fas fa-search"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
           <div className="control has-icons-left is-expanded">
             <input
@@ -183,7 +205,7 @@ export default function ClientsPage() {
           </div>
         </div>
         <button
-          className="button is-link is-hidden-mobile"
+          className="button is-link"
           data-add-client
           onClick={() => {
             setEditing(false)
@@ -201,7 +223,7 @@ export default function ClientsPage() {
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div 
-              className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3 is-clickable" 
+              className="is-flex is-justify-content-space-between is-align-items-center py-1 px-2 is-clickable" 
               onClick={() => handleEdit(c)}
               style={{ cursor: 'pointer' }}
             >
@@ -216,7 +238,7 @@ export default function ClientsPage() {
                 </span>
               </div>
             </div>
-            {index < filteredClients.length - 1 && <hr className="my-2" />}
+            {index < filteredClients.length - 1 && <hr className="my-1" />}
           </div>
         )) : (
           <div className="has-text-centered py-4">
@@ -229,7 +251,7 @@ export default function ClientsPage() {
         <div className="modal is-active">
           <div className="modal-background" onClick={() => closeForm()}></div>
           <div className="modal-card" style={{ 
-            animation: 'slideInFromRight 0.3s ease-out', 
+            animation: isClosing ? 'slideOutToRight 0.3s ease-in' : 'slideInFromRight 0.3s ease-out', 
             transformOrigin: 'center right' 
           }}>
             <header className="modal-card-head">

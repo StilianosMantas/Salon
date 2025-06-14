@@ -15,6 +15,7 @@ export default function ServicesPage() {
   const [form, setForm] = useState({ name: '', description: '', duration: 15, cost: '', id: null })
   const [editing, setEditing] = useState(false)
   const [initialForm, setInitialForm] = useState({ name: '', description: '', duration: 15, cost: '', id: null })
+  const [isClosing, setIsClosing] = useState(false)
 
   // Add mobile header button
   useEffect(() => {
@@ -86,10 +87,15 @@ export default function ServicesPage() {
       const confirmDiscard = window.confirm('You have unsaved changes. Discard them?')
       if (!confirmDiscard) return
     }
-    setForm({ name: '', description: '', duration: 15, cost: '', id: null })
-    setInitialForm({ name: '', description: '', duration: 15, cost: '', id: null })
-    setEditing(false)
-    setFormVisible(false)
+    
+    setIsClosing(true)
+    setTimeout(() => {
+      setForm({ name: '', description: '', duration: 15, cost: '', id: null })
+      setInitialForm({ name: '', description: '', duration: 15, cost: '', id: null })
+      setEditing(false)
+      setFormVisible(false)
+      setIsClosing(false)
+    }, 300)
   }
 
   if (isLoading) {
@@ -123,6 +129,16 @@ export default function ServicesPage() {
             opacity: 1;
           }
         }
+        @keyframes slideOutToRight {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
       `}</style>
     <div className="container py-5 px-4">
       <div className="is-flex is-justify-content-end mb-4">
@@ -145,7 +161,7 @@ export default function ServicesPage() {
         {services && services.length > 0 ? services.map((s, index) => (
           <div key={s.id}>
             <div 
-              className="is-flex is-justify-content-space-between is-align-items-center py-2 px-3 is-clickable" 
+              className="is-flex is-justify-content-space-between is-align-items-center py-1 px-2 is-clickable" 
               onClick={() => handleEdit(s)}
               style={{ cursor: 'pointer' }}
             >
@@ -160,7 +176,7 @@ export default function ServicesPage() {
                 </span>
               </div>
             </div>
-            {index < services.length - 1 && <hr className="my-2" />}
+            {index < services.length - 1 && <hr className="my-1" />}
           </div>
         )) : (
           <div className="has-text-centered py-4">
@@ -173,7 +189,7 @@ export default function ServicesPage() {
         <div className="modal is-active">
           <div className="modal-background" onClick={() => closeForm()}></div>
           <div className="modal-card" style={{ 
-            animation: 'slideInFromRight 0.3s ease-out', 
+            animation: isClosing ? 'slideOutToRight 0.3s ease-in' : 'slideInFromRight 0.3s ease-out', 
             transformOrigin: 'center right' 
           }}>
             <header className="modal-card-head">

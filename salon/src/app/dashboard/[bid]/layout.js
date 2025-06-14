@@ -121,7 +121,7 @@ export default function Layout({ children, params }) {
   return (
     <div>
       {/* Mobile header */}
-      <nav className="navbar is-hidden-tablet" style={{ padding: '1rem 1.5rem' }}>
+      <nav className="navbar is-hidden-tablet" style={{ padding: '1rem 1.5rem', position: 'sticky', top: 0, zIndex: 30, backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div className="navbar-brand" style={{ width: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
           <button 
             className="button is-ghost" 
@@ -160,14 +160,43 @@ export default function Layout({ children, params }) {
           
           <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <ul className="menu-list" style={{ flex: 1 }}>
-              <li><Link href={base} onClick={() => setSidebarOpen(false)} className={isActiveRoute(base) ? 'is-active' : ''}>Overview</Link></li>
-              <li><Link href={`${base}/staff`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>Staff</Link></li>
-              <li><Link href={`${base}/clients`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>Clients</Link></li>
-              <li><Link href={`${base}/services`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/services`) ? 'is-active' : ''}>Services</Link></li>
-              <li><Link href={`${base}/slots`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>Appointments</Link></li>
-              <li><Link href={`${base}/rules`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>Rules</Link></li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={base} onClick={() => setSidebarOpen(false)} className={isActiveRoute(base) ? 'is-active' : ''}>
+                  Overview
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/staff`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>
+                  Staff
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/clients`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>
+                  Clients
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/services`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/services`) ? 'is-active' : ''}>
+                  Services
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/slots`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>
+                  Appointments
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/rules`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>
+                  Rules
+                </Link>
+              </li>
             </ul>
-            <div className="mt-auto pt-4 border-top">
+            <div className="mt-auto pt-4" style={{ borderTop: '2px solid #dbdbdb' }}>
               <div className="is-flex is-flex-direction-column is-align-items-start">
                 <span className="is-size-7 has-text-grey mb-2">
                   Welcome
@@ -183,14 +212,43 @@ export default function Layout({ children, params }) {
           <h2 className="title is-4 mb-5">Salon Dashboard</h2>
           <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <ul className="menu-list" style={{ flex: 1 }}>
-              <li><Link href={base} className={isActiveRoute(base) ? 'is-active' : ''}>Overview</Link></li>
-              <li><Link href={`${base}/staff`} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>Staff</Link></li>
-              <li><Link href={`${base}/clients`} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>Clients</Link></li>
-              <li><Link href={`${base}/services`} className={isActiveRoute(`${base}/services`) ? 'is-active' : ''}>Services</Link></li>
-              <li><Link href={`${base}/slots`} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>Appointments</Link></li>
-              <li><Link href={`${base}/rules`} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>Rules</Link></li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={base} className={isActiveRoute(base) ? 'is-active' : ''}>
+                  Overview
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/staff`} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>
+                  Staff
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/clients`} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>
+                  Clients
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/services`} className={isActiveRoute(`${base}/services`) ? 'is-active' : ''}>
+                  Services
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/slots`} className={isActiveRoute(`${base}/slots`) ? 'is-active' : ''}>
+                  Appointments
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/rules`} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>
+                  Rules
+                </Link>
+              </li>
             </ul>
-            <div className="mt-auto pt-4" style={{ borderTop: '1px solid #dbdbdb' }}>
+            <div className="mt-auto pt-4" style={{ borderTop: '2px solid #dbdbdb' }}>
               <div className="is-flex is-flex-direction-column is-align-items-start">
                 <span className="is-size-7 has-text-grey mb-2">
                   Welcome
