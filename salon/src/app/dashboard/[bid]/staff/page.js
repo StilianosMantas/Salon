@@ -230,7 +230,7 @@ export default function StaffPage() {
         {filteredStaff && filteredStaff.length > 0 ? filteredStaff.map((s, index) => (
           <div key={s.id}>
             <div 
-              className="is-flex is-justify-content-space-between is-align-items-center p-3 is-clickable" 
+              className="is-flex is-justify-content-space-between is-align-items-center p-1 is-clickable" 
               onClick={() => handleEdit(s)}
               style={{ cursor: 'pointer' }}
             >

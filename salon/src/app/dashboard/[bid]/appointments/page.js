@@ -521,7 +521,7 @@ export default function AppointmentManagementPage() {
       {/* Appointment List */}
       {appointments.length > 0 ? (
         <div className="box extended-card">
-          <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
+          <div className="is-flex is-justify-content-space-between is-align-items-center mb-3">
             <p className="has-text-weight-semibold">
               {selectedAppointmentIds.length > 0 ? `${selectedAppointmentIds.length} selected` : 'Appointments'}
             </p>

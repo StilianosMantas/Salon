@@ -187,7 +187,7 @@ export default function ClientsPage() {
           }
         }
       `}</style>
-    <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
+    <div className="container py-2 px-2" style={{ fontSize: '1.1em' }}>
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
           <div className="control has-icons-left has-icons-right is-expanded">
@@ -231,7 +231,7 @@ export default function ClientsPage() {
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div 
-              className="is-flex is-justify-content-space-between is-align-items-center p-3 is-clickable" 
+              className="is-flex is-justify-content-space-between is-align-items-center p-1 is-clickable" 
               onClick={() => handleEdit(c)}
               style={{ cursor: 'pointer' }}
             >
