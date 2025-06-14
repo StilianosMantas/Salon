@@ -121,19 +121,19 @@ export default function Layout({ children, params }) {
   return (
     <div>
       {/* Mobile header */}
-      <nav className="navbar is-hidden-tablet" style={{ padding: '1rem' }}>
-        <div className="navbar-brand" style={{ width: '100%', display: 'flex', alignItems: 'center' }}>
+      <nav className="navbar is-hidden-tablet" style={{ padding: '1rem 1.5rem' }}>
+        <div className="navbar-brand" style={{ width: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
           <button 
             className="button is-ghost" 
             onClick={() => setSidebarOpen(true)}
-            style={{ position: 'absolute', left: '1rem', zIndex: 10 }}
+            style={{ position: 'absolute', left: '0', zIndex: 10 }}
           >
             <span className="icon">
               <i className="fas fa-bars"></i>
             </span>
           </button>
-          <h2 className="title is-5 mb-0" style={{ width: '100%', textAlign: 'center' }}>{getPageTitle()}</h2>
-          <div id="mobile-add-button-placeholder" style={{ position: 'absolute', right: '1rem', zIndex: 10 }}></div>
+          <h2 className="title is-5 mb-0" style={{ width: '100%', textAlign: 'center', padding: '0 3.5rem' }}>{getPageTitle()}</h2>
+          <div id="mobile-add-button-placeholder" style={{ position: 'absolute', right: '0', zIndex: 10 }}></div>
         </div>
       </nav>
 
@@ -147,16 +147,16 @@ export default function Layout({ children, params }) {
 
       <div className="columns is-gapless" style={{ minHeight: '100vh' }}>
         {/* Mobile sidebar */}
-        <aside className={`column is-narrow has-background-light p-5 mobile-sidebar ${sidebarOpen ? 'is-active' : ''} is-hidden-tablet`} style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh' }}>
-          <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-tablet">
-            <h2 className="title is-5 mb-0">Shalon</h2>
+        <aside className={`column is-narrow has-background-light mobile-sidebar ${sidebarOpen ? 'is-active' : ''} is-hidden-tablet`} style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh', padding: '1.5rem' }}>
+          <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-tablet" style={{ padding: '0 0.5rem' }}>
+            <h2 className="title is-5 mb-0" style={{ marginLeft: '0.5rem' }}>Shalon</h2>
             <button 
               className="delete is-large"
               onClick={() => setSidebarOpen(false)}
             ></button>
           </div>
           
-          <h2 className="title is-4 mb-5 is-hidden-mobile">Shalon</h2>
+          <h2 className="title is-4 mb-5 is-hidden-mobile" style={{ paddingLeft: '0.5rem' }}>Shalon</h2>
           
           <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <ul className="menu-list" style={{ flex: 1 }}>

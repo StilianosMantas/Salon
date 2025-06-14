@@ -84,9 +84,18 @@ export default function LogoutButton({ className = "" }) {
     <button
       onClick={handleLogout}
       disabled={loading}
-      className={`button is-small is-danger ${loading ? 'is-loading' : ''} ${className}`}
+      className={`button is-small is-outlined is-danger ${loading ? 'is-loading' : ''} ${className}`}
+      style={{ 
+        borderRadius: '6px',
+        fontWeight: '500',
+        width: '100%',
+        justifyContent: 'center'
+      }}
     >
-      {loading ? 'Logging out...' : 'Logout'}
+      <span className="icon is-small">
+        <i className="fas fa-sign-out-alt"></i>
+      </span>
+      <span>{loading ? 'Logging out...' : 'Logout'}</span>
     </button>
   )
 }

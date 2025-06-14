@@ -111,6 +111,19 @@ export default function ServicesPage() {
   }
 
   return (
+    <>
+      <style jsx>{`
+        @keyframes slideInFromRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     <div className="container py-5 px-4">
       <div className="is-flex is-justify-content-end mb-4">
         <button 
@@ -159,7 +172,10 @@ export default function ServicesPage() {
       {formVisible && (
         <div className="modal is-active">
           <div className="modal-background" onClick={() => closeForm()}></div>
-          <div className="modal-card">
+          <div className="modal-card" style={{ 
+            animation: 'slideInFromRight 0.3s ease-out', 
+            transformOrigin: 'center right' 
+          }}>
             <header className="modal-card-head">
               <p className="modal-card-title">{editing ? 'Edit Service' : 'Add Service'}</p>
               <button className="delete" aria-label="close" onClick={() => closeForm()}></button>
@@ -190,42 +206,49 @@ export default function ServicesPage() {
                     <input className="input" type="text" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} />
                   </div>
                 </div>
-                <footer className="modal-card-foot" style={{ backgroundColor: 'transparent', display: 'block', padding: '1.5rem' }}>
-                  <div className="buttons is-flex is-flex-direction-column is-flex-direction-row-tablet">
+                <div className="field">
+                  <div className="control">
                     <button 
-                      className={`button is-success is-fullwidth-mobile ${mutationLoading ? 'is-loading' : ''}`} 
+                      className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
                       type="submit"
                       disabled={mutationLoading}
-                      style={{ marginBottom: '0.75rem' }}
                     >
                       {editing ? 'Update' : 'Add'}
                     </button>
+                  </div>
+                </div>
+                <div className="field">
+                  <div className="control">
                     <button 
-                      className="button is-fullwidth-mobile" 
+                      className="button is-fullwidth" 
                       type="button" 
                       onClick={() => closeForm()}
                       disabled={mutationLoading}
-                      style={{ marginBottom: editing ? '0.75rem' : '0' }}
                     >
                       Cancel
                     </button>
-                    {editing && (
+                  </div>
+                </div>
+                {editing && (
+                  <div className="field">
+                    <div className="control">
                       <button 
-                        className="button is-danger is-fullwidth-mobile" 
+                        className="button is-danger is-fullwidth" 
                         type="button" 
                         onClick={() => handleDelete(form.id)}
                         disabled={mutationLoading}
                       >
                         Delete
                       </button>
-                    )}
+                    </div>
                   </div>
-                </footer>
+                )}
               </form>
             </section>
           </div>
         </div>
       )}
     </div>
+    </>
   )
 }

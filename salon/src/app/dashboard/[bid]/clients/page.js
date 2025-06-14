@@ -143,6 +143,29 @@ export default function ClientsPage() {
   }
 
   return (
+    <>
+      <style jsx>{`
+        @keyframes slideInFromRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes slideOutToRight {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+      `}</style>
     <div className="container py-5 px-4">
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
         <div className="field has-addons is-flex-grow-1 mr-4">
@@ -205,7 +228,10 @@ export default function ClientsPage() {
       {formVisible && (
         <div className="modal is-active">
           <div className="modal-background" onClick={() => closeForm()}></div>
-          <div className="modal-card">
+          <div className="modal-card" style={{ 
+            animation: 'slideInFromRight 0.3s ease-out', 
+            transformOrigin: 'center right' 
+          }}>
             <header className="modal-card-head">
               <p className="modal-card-title">{editing ? 'Edit Client' : 'Add Client'}</p>
               <button className="delete" aria-label="close" onClick={() => closeForm()}></button>
@@ -263,42 +289,49 @@ export default function ClientsPage() {
                     )}
                   </div>
                 </div>
-                <footer className="modal-card-foot" style={{ backgroundColor: 'transparent', display: 'block', padding: '1.5rem' }}>
-                  <div className="buttons is-flex is-flex-direction-column is-flex-direction-row-tablet">
+                <div className="field">
+                  <div className="control">
                     <button 
-                      className={`button is-success is-fullwidth-mobile ${mutationLoading ? 'is-loading' : ''}`} 
+                      className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
                       type="submit"
                       disabled={mutationLoading}
-                      style={{ marginBottom: '0.75rem' }}
                     >
                       {editing ? 'Update' : 'Add'}
                     </button>
+                  </div>
+                </div>
+                <div className="field">
+                  <div className="control">
                     <button 
-                      className="button is-fullwidth-mobile" 
+                      className="button is-fullwidth" 
                       type="button" 
                       onClick={() => closeForm()}
                       disabled={mutationLoading}
-                      style={{ marginBottom: editing ? '0.75rem' : '0' }}
                     >
                       Cancel
                     </button>
-                    {editing && (
+                  </div>
+                </div>
+                {editing && (
+                  <div className="field">
+                    <div className="control">
                       <button 
-                        className="button is-danger is-fullwidth-mobile" 
+                        className="button is-danger is-fullwidth" 
                         type="button" 
                         onClick={() => handleDelete(form.id)}
                         disabled={mutationLoading}
                       >
                         Delete
                       </button>
-                    )}
+                    </div>
                   </div>
-                </footer>
+                )}
               </form>
             </section>
           </div>
         </div>
       )}
     </div>
+    </>
   )
 }

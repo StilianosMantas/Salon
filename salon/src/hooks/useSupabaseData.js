@@ -58,7 +58,8 @@ export function useClientMutations(businessId) {
       toast.error(`Failed to add client: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
@@ -84,7 +85,8 @@ export function useClientMutations(businessId) {
       toast.error(`Failed to update client: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
@@ -104,7 +106,8 @@ export function useClientMutations(businessId) {
       toast.error(`Failed to delete client: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
@@ -142,7 +145,8 @@ export function useStaffMutations(businessId) {
       toast.error(`Failed to add staff member: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
@@ -167,7 +171,8 @@ export function useStaffMutations(businessId) {
       toast.error(`Failed to update staff member: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
@@ -187,7 +192,8 @@ export function useStaffMutations(businessId) {
       toast.error(`Failed to delete staff member: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
@@ -225,7 +231,8 @@ export function useServiceMutations(businessId) {
       toast.error(`Failed to add service: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
@@ -250,7 +257,8 @@ export function useServiceMutations(businessId) {
       toast.error(`Failed to update service: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
@@ -270,7 +278,8 @@ export function useServiceMutations(businessId) {
       toast.error(`Failed to delete service: ${error.message}`)
       throw error
     } finally {
-      setLoading(false)
+      // Small delay to ensure proper state update
+      setTimeout(() => setLoading(false), 100)
     }
   }
 
