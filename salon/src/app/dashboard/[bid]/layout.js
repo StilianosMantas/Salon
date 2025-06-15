@@ -116,6 +116,9 @@ export default function Layout({ children, params }) {
     if (pathname.includes('/appointments')) return 'Appointments'
     if (pathname.includes('/rules')) return 'Rules'
     if (pathname.includes('/settings')) return 'Settings'
+    if (pathname.includes('/shifts')) return 'Shifts'
+    if (pathname.includes('/chairs')) return 'Chairs'
+    if (pathname.includes('/profile')) return 'Profile'
     return 'Salon Dashboard'
   }
 
@@ -232,6 +235,17 @@ export default function Layout({ children, params }) {
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/shifts`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/shifts`) ? 'is-active' : ''}>
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-clock"></i>
+                    </span>
+                    <span>Shifts</span>
+                  </span>
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/appointments`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/appointments`) ? 'is-active' : ''}>
                   <span className="icon-text">
                     <span className="icon">
@@ -254,12 +268,34 @@ export default function Layout({ children, params }) {
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/chairs`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/chairs`) ? 'is-active' : ''}>
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-chair"></i>
+                    </span>
+                    <span>Chairs</span>
+                  </span>
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/settings`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/settings`) ? 'is-active' : ''}>
                   <span className="icon-text">
                     <span className="icon">
                       <i className="fas fa-wrench"></i>
                     </span>
                     <span>Settings</span>
+                  </span>
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/profile`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/profile`) ? 'is-active' : ''}>
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-user"></i>
+                    </span>
+                    <span>Profile</span>
                   </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
@@ -323,6 +359,17 @@ export default function Layout({ children, params }) {
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/shifts`} className={isActiveRoute(`${base}/shifts`) ? 'is-active' : ''}>
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-clock"></i>
+                    </span>
+                    <span>Shifts</span>
+                  </span>
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/appointments`} className={isActiveRoute(`${base}/appointments`) ? 'is-active' : ''}>
                   <span className="icon-text">
                     <span className="icon">
@@ -345,12 +392,34 @@ export default function Layout({ children, params }) {
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/chairs`} className={isActiveRoute(`${base}/chairs`) ? 'is-active' : ''}>
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-chair"></i>
+                    </span>
+                    <span>Chairs</span>
+                  </span>
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
                 <Link href={`${base}/settings`} className={isActiveRoute(`${base}/settings`) ? 'is-active' : ''}>
                   <span className="icon-text">
                     <span className="icon">
                       <i className="fas fa-wrench"></i>
                     </span>
                     <span>Settings</span>
+                  </span>
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/profile`} className={isActiveRoute(`${base}/profile`) ? 'is-active' : ''}>
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-user"></i>
+                    </span>
+                    <span>Profile</span>
                   </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />

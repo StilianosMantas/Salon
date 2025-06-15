@@ -289,7 +289,7 @@ export default function RulesPage() {
                         </span>
                       </button>
                     </div>
-                    <div className="is-hidden-mobile">
+                    <div className="is-hidden-mobile" style={{ marginLeft: 'auto' }}>
                       <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>Delete</button>
                     </div>
                   </div>
@@ -309,25 +309,29 @@ export default function RulesPage() {
       <div className="box">
         
         <div className="columns is-multiline is-vcentered mb-4">
-          <div className="column is-half-tablet is-full-mobile">
+          <div className="column is-one-third-tablet is-full-mobile">
             <label className="label">Override Date</label>
             <input className="input" type="date" value={dateOverride.slotdate} onChange={e => setDateOverride({ ...dateOverride, slotdate: e.target.value })} />
           </div>
-          <div className="column is-half-tablet is-half-mobile">
+          <div className="column is-one-quarter-tablet is-half-mobile">
             <label className="label">Start Time</label>
             <input className="input" type="time" value={dateOverride.start_time} onChange={e => setDateOverride({ ...dateOverride, start_time: e.target.value })} />
           </div>
-          <div className="column is-half-tablet is-half-mobile">
+          <div className="column is-one-quarter-tablet is-half-mobile">
             <label className="label">End Time</label>
             <input className="input" type="time" value={dateOverride.end_time} onChange={e => setDateOverride({ ...dateOverride, end_time: e.target.value })} />
           </div>
-          <div className="column is-half-tablet is-full-mobile">
-            <label className="checkbox">
-              <input type="checkbox" checked={dateOverride.is_closed} onChange={e => setDateOverride({ ...dateOverride, is_closed: e.target.checked })} /> Mark as Closed Day
-            </label>
-          </div>
-          <div className="column is-half-tablet is-full-mobile">
-            <button className="button is-success is-fullwidth-mobile" onClick={saveOverride}>Save Override</button>
+          <div className="column is-full-mobile">
+            <div className="field is-grouped is-grouped-centered-mobile">
+              <div className="control">
+                <label className="checkbox">
+                  <input type="checkbox" checked={dateOverride.is_closed} onChange={e => setDateOverride({ ...dateOverride, is_closed: e.target.checked })} /> Mark as Closed Day
+                </label>
+              </div>
+              <div className="control">
+                <button className="button is-success" onClick={saveOverride}>Save Override</button>
+              </div>
+            </div>
           </div>
         </div>
         <div className="content">

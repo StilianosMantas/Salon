@@ -14,10 +14,11 @@ const fetcher = async (url) => {
     .select('*')
     .eq('business_id', businessId)
   
-  // Only show active records for client and staff tables
-  if (table === 'client' || table === 'staff') {
-    query = query.eq('active', true)
-  }
+  // Only show active records for client and staff tables (if active column exists)
+  // TODO: Uncomment after adding 'active' column to client and staff tables
+  // if (table === 'client' || table === 'staff') {
+  //   query = query.eq('active', true)
+  // }
   
   query = query.order('name')
   
@@ -86,7 +87,7 @@ export function useClientMutations(businessId) {
       
       const { data, error } = await supabase
         .from('client')
-        .insert({ ...sanitizedData, business_id: businessId, active: true })
+        .insert({ ...sanitizedData, business_id: businessId })
         .select()
         .single()
       
@@ -147,25 +148,15 @@ export function useClientMutations(businessId) {
       
       if (appointmentError) throw appointmentError
       
-      if (appointments && appointments.length > 0) {
-        // Soft delete - mark as inactive
-        const { error } = await supabase
-          .from('client')
-          .update({ active: false })
-          .eq('id', id)
-        
-        if (error) throw error
-        toast.success('Client marked as inactive')
-      } else {
-        // Hard delete if no appointments
-        const { error } = await supabase
-          .from('client')
-          .delete()
-          .eq('id', id)
-        
-        if (error) throw error
-        toast.success('Client deleted successfully')
-      }
+      // For now, always hard delete until 'active' column is added
+      // TODO: Implement soft delete after adding 'active' column
+      const { error } = await supabase
+        .from('client')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      toast.success('Client deleted successfully')
       
       mutate(`client/${businessId}`)
     } catch (error) {
@@ -198,7 +189,7 @@ export function useStaffMutations(businessId) {
       
       const { data, error } = await supabase
         .from('staff')
-        .insert({ ...sanitizedData, business_id: businessId, active: true })
+        .insert({ ...sanitizedData, business_id: businessId })
         .select()
         .single()
       
@@ -254,25 +245,15 @@ export function useStaffMutations(businessId) {
       
       if (appointmentError) throw appointmentError
       
-      if (appointments && appointments.length > 0) {
-        // Soft delete - mark as inactive
-        const { error } = await supabase
-          .from('staff')
-          .update({ active: false })
-          .eq('id', id)
-        
-        if (error) throw error
-        toast.success('Staff member marked as inactive')
-      } else {
-        // Hard delete if no appointments
-        const { error } = await supabase
-          .from('staff')
-          .delete()
-          .eq('id', id)
-        
-        if (error) throw error
-        toast.success('Staff member deleted successfully')
-      }
+      // For now, always hard delete until 'active' column is added
+      // TODO: Implement soft delete after adding 'active' column
+      const { error } = await supabase
+        .from('staff')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      toast.success('Staff member deleted successfully')
       
       mutate(`staff/${businessId}`)
     } catch (error) {
