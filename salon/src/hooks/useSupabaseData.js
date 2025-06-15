@@ -16,9 +16,9 @@ const fetcher = async (url) => {
   
   // Only show active records for client and staff tables (if active column exists)
   // TODO: Uncomment after adding 'active' column to client and staff tables
-  // if (table === 'client' || table === 'staff') {
-  //   query = query.eq('active', true)
-  // }
+   if (table === 'client' || table === 'staff') {
+     query = query.eq('active', true)
+   }
   
   query = query.order('name')
   
