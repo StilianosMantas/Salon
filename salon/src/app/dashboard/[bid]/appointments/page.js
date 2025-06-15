@@ -868,7 +868,7 @@ export default function AppointmentManagementPage() {
 
       {/* Modal for Duration Mismatch */}
       {showModal && (
-        <div className="modal is-active">
+        <div className="modal is-active" style={{ zIndex: 1050 }}>
           <div className="modal-background"></div>
           <div className="modal-card">
             <header className="modal-card-head">

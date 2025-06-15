@@ -9,11 +9,19 @@ import { getCSRFToken } from '@/lib/csrf'
 const fetcher = async (url) => {
   const [table, businessId, ...params] = url.split('/')
   
-  const { data, error } = await supabase
+  let query = supabase
     .from(table)
     .select('*')
     .eq('business_id', businessId)
-    .order('name')
+  
+  // Only show active records for client and staff tables
+  if (table === 'client' || table === 'staff') {
+    query = query.eq('active', true)
+  }
+  
+  query = query.order('name')
+  
+  const { data, error } = await query
   
   if (error) throw error
   return data
@@ -30,6 +38,37 @@ export function useClients(businessId) {
 export function useClientMutations(businessId) {
   const [loading, setLoading] = useState(false)
   
+  const checkClientUniqueness = async (email, mobile, excludeId = null) => {
+    try {
+      let query = supabase
+        .from('client')
+        .select('id, email, mobile')
+        .eq('business_id', businessId)
+      
+      if (excludeId) {
+        query = query.neq('id', excludeId)
+      }
+      
+      const { data, error } = await query
+      
+      if (error) throw error
+      
+      if (email) {
+        const emailExists = data.some(client => client.email === email)
+        if (emailExists) throw new Error('Email already exists')
+      }
+      
+      if (mobile) {
+        const mobileExists = data.some(client => client.mobile === mobile)
+        if (mobileExists) throw new Error('Mobile number already exists')
+      }
+      
+      return true
+    } catch (error) {
+      throw error
+    }
+  }
+  
   const createClient = async (clientData) => {
     setLoading(true)
     try {
@@ -39,12 +78,15 @@ export function useClientMutations(businessId) {
         throw new Error('Security validation failed. Please refresh the page.')
       }
 
+      // Check uniqueness before creating
+      await checkClientUniqueness(clientData.email, clientData.mobile)
+
       // Sanitize data before sending to database
       const sanitizedData = sanitizeFormData(clientData)
       
       const { data, error } = await supabase
         .from('client')
-        .insert({ ...sanitizedData, business_id: businessId })
+        .insert({ ...sanitizedData, business_id: businessId, active: true })
         .select()
         .single()
       
@@ -66,6 +108,9 @@ export function useClientMutations(businessId) {
   const updateClient = async ({ id, ...updates }) => {
     setLoading(true)
     try {
+      // Check uniqueness before updating (excluding current record)
+      await checkClientUniqueness(updates.email, updates.mobile, id)
+      
       // Sanitize updates before sending to database
       const sanitizedUpdates = sanitizeFormData(updates)
       
@@ -93,15 +138,36 @@ export function useClientMutations(businessId) {
   const deleteClient = async (id) => {
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('client')
-        .delete()
-        .eq('id', id)
+      // Check if client has any appointments before soft delete
+      const { data: appointments, error: appointmentError } = await supabase
+        .from('appointment')
+        .select('id')
+        .eq('client_id', id)
+        .limit(1)
       
-      if (error) throw error
+      if (appointmentError) throw appointmentError
+      
+      if (appointments && appointments.length > 0) {
+        // Soft delete - mark as inactive
+        const { error } = await supabase
+          .from('client')
+          .update({ active: false })
+          .eq('id', id)
+        
+        if (error) throw error
+        toast.success('Client marked as inactive')
+      } else {
+        // Hard delete if no appointments
+        const { error } = await supabase
+          .from('client')
+          .delete()
+          .eq('id', id)
+        
+        if (error) throw error
+        toast.success('Client deleted successfully')
+      }
       
       mutate(`client/${businessId}`)
-      toast.success('Client deleted successfully')
     } catch (error) {
       toast.error(`Failed to delete client: ${error.message}`)
       throw error
@@ -111,7 +177,7 @@ export function useClientMutations(businessId) {
     }
   }
 
-  return { createClient, updateClient, deleteClient, loading }
+  return { createClient, updateClient, deleteClient, checkClientUniqueness, loading }
 }
 
 // Staff
@@ -132,7 +198,7 @@ export function useStaffMutations(businessId) {
       
       const { data, error } = await supabase
         .from('staff')
-        .insert({ ...sanitizedData, business_id: businessId })
+        .insert({ ...sanitizedData, business_id: businessId, active: true })
         .select()
         .single()
       
@@ -179,15 +245,36 @@ export function useStaffMutations(businessId) {
   const deleteStaff = async (id) => {
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('staff')
-        .delete()
-        .eq('id', id)
+      // Check if staff has any appointments before soft delete
+      const { data: appointments, error: appointmentError } = await supabase
+        .from('appointment')
+        .select('id')
+        .eq('staff_id', id)
+        .limit(1)
       
-      if (error) throw error
+      if (appointmentError) throw appointmentError
+      
+      if (appointments && appointments.length > 0) {
+        // Soft delete - mark as inactive
+        const { error } = await supabase
+          .from('staff')
+          .update({ active: false })
+          .eq('id', id)
+        
+        if (error) throw error
+        toast.success('Staff member marked as inactive')
+      } else {
+        // Hard delete if no appointments
+        const { error } = await supabase
+          .from('staff')
+          .delete()
+          .eq('id', id)
+        
+        if (error) throw error
+        toast.success('Staff member deleted successfully')
+      }
       
       mutate(`staff/${businessId}`)
-      toast.success('Staff member deleted successfully')
     } catch (error) {
       toast.error(`Failed to delete staff member: ${error.message}`)
       throw error

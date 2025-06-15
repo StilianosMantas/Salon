@@ -331,10 +331,12 @@ export default function RulesPage() {
           </div>
         </div>
         <div className="content">
-          {overrides.length === 0 ? (
-            <p className="has-text-grey">No date overrides configured</p>
-          ) : (
-            overrides.map(o => (
+          {(() => {
+            const futureOverrides = overrides.filter(o => new Date(o.slotdate) >= new Date().setHours(0,0,0,0))
+            return futureOverrides.length === 0 ? (
+              <p className="has-text-grey">No upcoming date overrides</p>
+            ) : (
+              futureOverrides.map(o => (
               <div key={o.id} className="box p-3 mb-3">
                 <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet is-justify-content-space-between is-align-items-start is-align-items-center-tablet">
                   <div className="mb-2 mb-0-tablet">
@@ -349,8 +351,9 @@ export default function RulesPage() {
                   <button className="button is-small is-danger is-light is-fullwidth-mobile" onClick={() => deleteOverride(o.id)}>Delete</button>
                 </div>
               </div>
-            ))
-          )}
+              ))
+            )
+          })()}
         </div>
       </div>
 

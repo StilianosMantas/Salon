@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 export default function ClientsPage() {
   const { bid } = useParams()
   const { data: clients, error, isLoading } = useClients(bid)
-  const { createClient, updateClient, deleteClient, loading: mutationLoading } = useClientMutations(bid)
+  const { createClient, updateClient, deleteClient, checkClientUniqueness, loading: mutationLoading } = useClientMutations(bid)
   
   const [formVisible, setFormVisible] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', mobile: '', notes: '', id: null })
@@ -54,10 +54,17 @@ export default function ClientsPage() {
 
     // Sync mobile search with state
     const mobileSearchInput = document.getElementById('mobile-search-input')
+    const mobileSearchClear = document.getElementById('mobile-search-clear')
     if (mobileSearchInput) {
       mobileSearchInput.value = searchTerm
       mobileSearchInput.addEventListener('input', (e) => {
         setSearchTerm(e.target.value)
+      })
+    }
+    if (mobileSearchClear) {
+      mobileSearchClear.style.display = searchTerm ? 'flex' : 'none'
+      mobileSearchClear.addEventListener('click', () => {
+        setSearchTerm('')
       })
     }
 
@@ -68,6 +75,11 @@ export default function ClientsPage() {
       if (mobileSearchInput) {
         mobileSearchInput.removeEventListener('input', (e) => {
           setSearchTerm(e.target.value)
+        })
+      }
+      if (mobileSearchClear) {
+        mobileSearchClear.removeEventListener('click', () => {
+          setSearchTerm('')
         })
       }
     }
@@ -85,6 +97,7 @@ export default function ClientsPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.name.trim()) return toast.error('Name is required')
+    if (!form.mobile?.trim()) return toast.error('Mobile number is required')
     if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return toast.error('Invalid email')
     if (form.mobile && !/^[\d\-\s\+]+$/.test(form.mobile)) return toast.error('Invalid mobile number')
 
@@ -188,7 +201,7 @@ export default function ClientsPage() {
           }
         }
       `}</style>
-    <div className="container py-2 px-2" style={{ fontSize: '1.1em' }}>
+    <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
           <div className="control has-icons-left has-icons-right is-expanded">
@@ -228,7 +241,7 @@ export default function ClientsPage() {
           + Add Client
         </button>
       </div>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px' }}>
+      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div 
@@ -242,8 +255,8 @@ export default function ClientsPage() {
                 {c.mobile && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{c.mobile}</small>}
               </div>
               <div>
-                <span className="icon has-text-grey-light">
-                  <i className="fas fa-chevron-right"></i>
+                <span className="icon is-small has-text-grey-light">
+                  <i className="fas fa-chevron-right" style={{ fontSize: '0.875rem' }}></i>
                 </span>
               </div>
             </div>
@@ -310,6 +323,7 @@ export default function ClientsPage() {
                       placeholder="Mobile"
                       value={form.mobile}
                       onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                      required
                     />
                     {form.mobile && (
                       <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
@@ -359,10 +373,11 @@ export default function ClientsPage() {
                   <div className="field">
                     <div className="control">
                       <button 
-                        className="button is-danger is-fullwidth" 
+                        className="button is-fullwidth has-text-danger" 
                         type="button" 
                         onClick={() => handleDelete(form.id)}
                         disabled={mutationLoading}
+                        style={{ backgroundColor: 'white', borderColor: '#ff3860', color: '#ff3860' }}
                       >
                         Delete
                       </button>

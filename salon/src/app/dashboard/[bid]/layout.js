@@ -115,6 +115,7 @@ export default function Layout({ children, params }) {
     if (pathname.includes('/services')) return 'Services'
     if (pathname.includes('/appointments')) return 'Appointments'
     if (pathname.includes('/rules')) return 'Rules'
+    if (pathname.includes('/settings')) return 'Settings'
     return 'Salon Dashboard'
   }
 
@@ -138,7 +139,7 @@ export default function Layout({ children, params }) {
         {/* Mobile search bar for clients and staff pages */}
         {(pathname.includes('/clients') || pathname.includes('/staff')) && (
           <div className="field has-addons" style={{ margin: '0.5rem 0 0 0' }}>
-            <div className="control has-icons-left is-expanded">
+            <div className="control has-icons-left has-icons-right is-expanded">
               <input
                 id="mobile-search-input"
                 className="input is-small"
@@ -147,6 +148,13 @@ export default function Layout({ children, params }) {
               />
               <span className="icon is-small is-left">
                 <i className="fas fa-search"></i>
+              </span>
+              <span 
+                id="mobile-search-clear"
+                className="icon is-small is-right is-clickable" 
+                style={{ cursor: 'pointer', pointerEvents: 'all', display: 'none' }}
+              >
+                <i className="fas fa-times has-text-grey"></i>
               </span>
             </div>
           </div>
@@ -165,11 +173,12 @@ export default function Layout({ children, params }) {
         {/* Mobile sidebar */}
         <aside className={`column is-narrow has-background-light mobile-sidebar ${sidebarOpen ? 'is-active' : ''} is-hidden-tablet`} style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh', padding: '1.5rem', width: '280px', maxWidth: '80vw' }}>
           <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-tablet">
-            <h2 className="title is-5 mb-0">Salon</h2>
+            <h2 className="title is-5 mb-0 has-text-weight-bold">Salon Dashboard</h2>
             <button 
-              className="delete"
+              className="delete is-large" 
               onClick={() => setSidebarOpen(false)}
               aria-label="close"
+              style={{ flexShrink: 0 }}
             >
             </button>
           </div>
@@ -240,6 +249,17 @@ export default function Layout({ children, params }) {
                       <i className="fas fa-cog"></i>
                     </span>
                     <span>Rules</span>
+                  </span>
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/settings`} onClick={() => setSidebarOpen(false)} className={isActiveRoute(`${base}/settings`) ? 'is-active' : ''}>
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-wrench"></i>
+                    </span>
+                    <span>Settings</span>
                   </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
@@ -320,6 +340,17 @@ export default function Layout({ children, params }) {
                       <i className="fas fa-cog"></i>
                     </span>
                     <span>Rules</span>
+                  </span>
+                </Link>
+                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <Link href={`${base}/settings`} className={isActiveRoute(`${base}/settings`) ? 'is-active' : ''}>
+                  <span className="icon-text">
+                    <span className="icon">
+                      <i className="fas fa-wrench"></i>
+                    </span>
+                    <span>Settings</span>
                   </span>
                 </Link>
                 <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />

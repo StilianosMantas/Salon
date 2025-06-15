@@ -53,10 +53,17 @@ export default function StaffPage() {
 
     // Sync mobile search with state
     const mobileSearchInput = document.getElementById('mobile-search-input')
+    const mobileSearchClear = document.getElementById('mobile-search-clear')
     if (mobileSearchInput) {
       mobileSearchInput.value = searchTerm
       mobileSearchInput.addEventListener('input', (e) => {
         setSearchTerm(e.target.value)
+      })
+    }
+    if (mobileSearchClear) {
+      mobileSearchClear.style.display = searchTerm ? 'flex' : 'none'
+      mobileSearchClear.addEventListener('click', () => {
+        setSearchTerm('')
       })
     }
 
@@ -67,6 +74,11 @@ export default function StaffPage() {
       if (mobileSearchInput) {
         mobileSearchInput.removeEventListener('input', (e) => {
           setSearchTerm(e.target.value)
+        })
+      }
+      if (mobileSearchClear) {
+        mobileSearchClear.removeEventListener('click', () => {
+          setSearchTerm('')
         })
       }
     }
@@ -186,7 +198,7 @@ export default function StaffPage() {
           }
         }
       `}</style>
-    <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
+    <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
           <div className="control has-icons-left has-icons-right is-expanded">
@@ -226,7 +238,7 @@ export default function StaffPage() {
           + Add Staff
         </button>
       </div>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px' }}>
+      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
         {filteredStaff && filteredStaff.length > 0 ? filteredStaff.map((s, index) => (
           <div key={s.id}>
             <div 
@@ -240,8 +252,8 @@ export default function StaffPage() {
                 {s.email && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{s.email}</small>}
               </div>
               <div>
-                <span className="icon has-text-grey-light">
-                  <i className="fas fa-chevron-right"></i>
+                <span className="icon is-small has-text-grey-light">
+                  <i className="fas fa-chevron-right" style={{ fontSize: '0.875rem' }}></i>
                 </span>
               </div>
             </div>
@@ -326,10 +338,11 @@ export default function StaffPage() {
                   <div className="field">
                     <div className="control">
                       <button 
-                        className="button is-danger is-fullwidth" 
+                        className="button is-fullwidth has-text-danger" 
                         type="button" 
                         onClick={() => handleDelete(form.id)}
                         disabled={mutationLoading}
+                        style={{ backgroundColor: 'white', borderColor: '#ff3860', color: '#ff3860' }}
                       >
                         Delete
                       </button>
