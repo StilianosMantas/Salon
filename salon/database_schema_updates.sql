@@ -64,8 +64,8 @@ CREATE POLICY "Users can insert own profile" ON profiles
 
 CREATE TABLE IF NOT EXISTS staff_shifts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  business_id UUID REFERENCES business(id) ON DELETE CASCADE NOT NULL,
-  staff_id UUID REFERENCES staff(id) ON DELETE CASCADE NOT NULL,
+  business_id BIGINT REFERENCES business(id) ON DELETE CASCADE NOT NULL,
+  staff_id BIGINT REFERENCES staff(id) ON DELETE CASCADE NOT NULL,
   date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
@@ -87,9 +87,9 @@ ALTER TABLE staff_shifts ENABLE ROW LEVEL SECURITY;
 -- Create policies for staff_shifts (same business access)
 CREATE POLICY "Business staff shifts access" ON staff_shifts
   FOR ALL USING (
-    business_id IN (
-      SELECT id FROM business 
-      WHERE id = business_id
+    EXISTS (
+      SELECT 1 FROM business 
+      WHERE id = staff_shifts.business_id
     )
   );
 
@@ -99,7 +99,7 @@ CREATE POLICY "Business staff shifts access" ON staff_shifts
 
 CREATE TABLE IF NOT EXISTS chairs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  business_id UUID REFERENCES business(id) ON DELETE CASCADE NOT NULL,
+  business_id BIGINT REFERENCES business(id) ON DELETE CASCADE NOT NULL,
   name VARCHAR(100) NOT NULL,
   description TEXT,
   color VARCHAR(7) DEFAULT '#3273dc',
@@ -118,9 +118,9 @@ ALTER TABLE chairs ENABLE ROW LEVEL SECURITY;
 -- Create policies for chairs (same business access)
 CREATE POLICY "Business chairs access" ON chairs
   FOR ALL USING (
-    business_id IN (
-      SELECT id FROM business 
-      WHERE id = business_id
+    EXISTS (
+      SELECT 1 FROM business 
+      WHERE id = chairs.business_id
     )
   );
 

@@ -23,8 +23,14 @@ To enable ALL new features (shifts, chairs, profiles, soft delete), you need to 
 
 1. **Open your Supabase dashboard**
 2. **Go to SQL Editor**
-3. **Run the script:** `/workspaces/Salon/salon/database_schema_updates.sql`
-4. **Execute each section one by one** and check for errors
+3. **FIRST: Check your schema** by running: `/workspaces/Salon/salon/check_schema.sql`
+4. **THEN: Run the main script:** `/workspaces/Salon/salon/database_schema_updates.sql`
+5. **Execute each section one by one** and check for errors
+
+### 🔍 **IMPORTANT: Schema Check First!**
+The `check_schema.sql` file will show you the data types used in your existing tables. This is important because:
+- If your `business.id` is `bigint`, the script is correct as updated
+- If your tables use `uuid` instead, you'll need to change `BIGINT` to `UUID` in the script
 
 ### 📋 **What the Script Adds:**
 
