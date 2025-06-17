@@ -14,6 +14,7 @@ export default function RulesPage() {
   const [rangeEnd, setRangeEnd] = useState('')
   const [slotLength, setSlotLength] = useState(15)
   const [generatedDates, setGeneratedDates] = useState([])
+  const [chairs, setChairs] = useState([])
   const [showAddForm, setShowAddForm] = useState({})
   const [formVisible, setFormVisible] = useState(false)
   const [currentDay, setCurrentDay] = useState(null)
@@ -28,10 +29,12 @@ export default function RulesPage() {
     const { data: overridesData } = await supabase.from('business_overrides').select('*').eq('business_id', bid).order('slotdate')
     const { data: businessData } = await supabase.from('business').select('slot_length').eq('id', bid).single()
     const { data: slotsData } = await supabase.from('slot').select('slotdate').eq('business_id', bid)
+    const { data: chairsData } = await supabase.from('chairs').select('id, name').eq('business_id', bid).eq('is_active', true).order('name')
     const datesSet = Array.from(new Set(slotsData?.map(s => s.slotdate)))
     setRules(rulesData || [])
     setOverrides(overridesData || [])
     setSlotLength(businessData?.slot_length || 15)
+    setChairs(chairsData || [])
     setGeneratedDates(datesSet)
   }, [bid])
 
@@ -157,9 +160,14 @@ export default function RulesPage() {
 
   async function generateSlots() {
     if (!rangeStart || !rangeEnd) return alert('Please provide a valid date range')
+    
+    if (chairs.length === 0) {
+      return alert('No active chairs found. Please add active chairs before generating slots.')
+    }
 
     const start = new Date(rangeStart)
     const end = new Date(rangeEnd)
+    let totalSlotsCreated = 0
 
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split('T')[0]
@@ -175,43 +183,50 @@ export default function RulesPage() {
         periods = dailyRules.map(r => ({ start_time: r.start_time, end_time: r.end_time }))
       }
 
-      for (const p of periods) {
-        const [sh, sm] = p.start_time.split(':').map(Number)
-        const [eh, em] = p.end_time.split(':').map(Number)
-        const startMin = sh * 60 + sm
-        const endMin = eh * 60 + em
+      // Generate slots for each active chair
+      for (const chair of chairs) {
+        for (const p of periods) {
+          const [sh, sm] = p.start_time.split(':').map(Number)
+          const [eh, em] = p.end_time.split(':').map(Number)
+          const startMin = sh * 60 + sm
+          const endMin = eh * 60 + em
 
-        for (let m = startMin; m + slotLength <= endMin; m += slotLength) {
-          const h = String(Math.floor(m / 60)).padStart(2, '0')
-          const min = String(m % 60).padStart(2, '0')
-          const startTime = `${h}:${min}`
+          for (let m = startMin; m + slotLength <= endMin; m += slotLength) {
+            const h = String(Math.floor(m / 60)).padStart(2, '0')
+            const min = String(m % 60).padStart(2, '0')
+            const startTime = `${h}:${min}`
 
-          const endSlotMin = m + slotLength
-          const eh2 = String(Math.floor(endSlotMin / 60)).padStart(2, '0')
-          const em2 = String(endSlotMin % 60).padStart(2, '0')
-          const endTime = `${eh2}:${em2}`
+            const endSlotMin = m + slotLength
+            const eh2 = String(Math.floor(endSlotMin / 60)).padStart(2, '0')
+            const em2 = String(endSlotMin % 60).padStart(2, '0')
+            const endTime = `${eh2}:${em2}`
 
-          const { data: existing } = await supabase
-            .from('slot')
-            .select('id')
-            .eq('business_id', bid)
-            .eq('slotdate', dateStr)
-            .eq('start_time', startTime)
+            // Check if slot already exists for this chair, date, and time
+            const { data: existing } = await supabase
+              .from('slot')
+              .select('id')
+              .eq('business_id', bid)
+              .eq('slotdate', dateStr)
+              .eq('start_time', startTime)
+              .eq('chair_id', chair.id)
 
-          if (!existing || existing.length === 0) {
-            await supabase.from('slot').insert({
-              business_id: bid,
-              slotdate: dateStr,
-              start_time: startTime,
-              end_time: endTime,
-              duration: slotLength
-            })
+            if (!existing || existing.length === 0) {
+              await supabase.from('slot').insert({
+                business_id: bid,
+                slotdate: dateStr,
+                start_time: startTime,
+                end_time: endTime,
+                duration: slotLength,
+                chair_id: chair.id
+              })
+              totalSlotsCreated++
+            }
           }
         }
       }
     }
 
-    alert('Slots generated')
+    alert(`Slots generated: ${totalSlotsCreated} slots created across ${chairs.length} chair(s)`)
     fetchData()
   }
 
@@ -252,7 +267,19 @@ export default function RulesPage() {
           <input className="input" type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)} />
         </div>
         <div className="column is-full">
-          <button className="button is-info is-fullwidth-mobile" onClick={generateSlots}>Generate Slots</button>
+          <button className="button is-info is-fullwidth-mobile" onClick={generateSlots}>
+            Generate Slots {chairs.length > 0 ? `(${chairs.length} chair${chairs.length > 1 ? 's' : ''})` : ''}
+          </button>
+          {chairs.length > 0 && (
+            <p className="help mt-2">
+              Slots will be created for: {chairs.map(c => c.name).join(', ')}
+            </p>
+          )}
+          {chairs.length === 0 && (
+            <p className="help has-text-danger mt-2">
+              No active chairs found. Please add chairs before generating slots.
+            </p>
+          )}
         </div>
       </div>
         <h2 className="label is-6 mb-3">Weekly Schedule</h2>

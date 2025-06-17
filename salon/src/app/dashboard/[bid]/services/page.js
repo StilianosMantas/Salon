@@ -159,7 +159,7 @@ export default function ServicesPage() {
         }
       `}</style>
     <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
-      <div className="is-flex is-justify-content-end mb-4">
+      <div className="is-flex is-justify-content-end mb-4" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
         <button 
           className="button is-link is-hidden-mobile" 
           data-add-service

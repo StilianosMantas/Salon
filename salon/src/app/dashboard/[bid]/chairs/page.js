@@ -259,7 +259,7 @@ export default function ChairsPage() {
       `}</style>
       
       <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
-        <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
+        <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
           <h1 className="title is-5">Chairs & Stations</h1>
           <button
             className="button is-link"

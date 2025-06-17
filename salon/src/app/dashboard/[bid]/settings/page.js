@@ -17,6 +17,20 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [initialSettings, setInitialSettings] = useState({})
+  const [shiftTemplates, setShiftTemplates] = useState([
+    { id: 1, name: 'Full Day (9:00 - 17:00) with 1h break', start_time: '09:00', end_time: '17:00', break_start: '12:00', break_end: '13:00' },
+    { id: 2, name: 'Morning (9:00 - 13:00)', start_time: '09:00', end_time: '13:00', break_start: '', break_end: '' },
+    { id: 3, name: 'Afternoon (13:00 - 17:00)', start_time: '13:00', end_time: '17:00', break_start: '', break_end: '' },
+    { id: 4, name: 'Evening (17:00 - 21:00)', start_time: '17:00', end_time: '21:00', break_start: '', break_end: '' }
+  ])
+  const [editingTemplate, setEditingTemplate] = useState(null)
+  const [templateForm, setTemplateForm] = useState({
+    name: '',
+    start_time: '',
+    end_time: '',
+    break_start: '',
+    break_end: ''
+  })
 
   // Add mobile header button
   useEffect(() => {
@@ -99,6 +113,76 @@ export default function SettingsPage() {
     setSettings(initialSettings)
   }
 
+  function openTemplateForm(template = null) {
+    if (template) {
+      setEditingTemplate(template)
+      setTemplateForm({
+        name: template.name,
+        start_time: template.start_time,
+        end_time: template.end_time,
+        break_start: template.break_start || '',
+        break_end: template.break_end || ''
+      })
+    } else {
+      setEditingTemplate({})
+      setTemplateForm({
+        name: '',
+        start_time: '09:00',
+        end_time: '17:00',
+        break_start: '',
+        break_end: ''
+      })
+    }
+  }
+
+  function closeTemplateForm() {
+    setEditingTemplate(null)
+    setTemplateForm({
+      name: '',
+      start_time: '',
+      end_time: '',
+      break_start: '',
+      break_end: ''
+    })
+  }
+
+  function saveTemplate() {
+    if (!templateForm.name.trim() || !templateForm.start_time || !templateForm.end_time) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    const newTemplate = {
+      id: (editingTemplate && editingTemplate.id) ? editingTemplate.id : Date.now(),
+      name: templateForm.name.trim(),
+      start_time: templateForm.start_time,
+      end_time: templateForm.end_time,
+      break_start: templateForm.break_start || '',
+      break_end: templateForm.break_end || ''
+    }
+
+    if (editingTemplate && editingTemplate.id) {
+      setShiftTemplates(prev => prev.map(t => t.id === editingTemplate.id ? newTemplate : t))
+      toast.success('Template updated successfully')
+    } else {
+      setShiftTemplates(prev => [...prev, newTemplate])
+      toast.success('Template added successfully')
+    }
+
+    closeTemplateForm()
+  }
+
+  function deleteTemplate(id) {
+    if (!window.confirm('Are you sure you want to delete this template?')) return
+    
+    setShiftTemplates(prev => prev.filter(t => t.id !== id))
+    toast.success('Template deleted successfully')
+    
+    if (editingTemplate && editingTemplate.id === id) {
+      closeTemplateForm()
+    }
+  }
+
   if (loading) {
     return <LoadingSpinner message="Loading settings..." />
   }
@@ -116,9 +200,11 @@ export default function SettingsPage() {
               type="text"
               placeholder="Enter salon name"
               value={settings.salon_name}
-              onChange={(e) => setSettings({ ...settings, salon_name: e.target.value })}
+              readOnly
+              style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
             />
           </div>
+          <p className="help">Salon name is read-only. Contact support to change.</p>
         </div>
 
         <div className="field">
@@ -186,42 +272,63 @@ export default function SettingsPage() {
 
         <hr className="my-5" />
         
-        <h2 className="title is-6 mb-4">Quick Shift Templates</h2>
-        <p className="mb-4 has-text-grey">Use these templates when creating shifts to save time</p>
+        <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
+          <div>
+            <h2 className="title is-6 mb-1">Quick Shift Templates</h2>
+            <p className="has-text-grey">Manage templates used when creating shifts</p>
+          </div>
+          <button
+            className="button is-link is-small"
+            onClick={() => openTemplateForm()}
+          >
+            + Add Template
+          </button>
+        </div>
         
         <div className="field">
-          <label className="label">Available Templates</label>
-          <div className="buttons are-small">
-            <button
-              type="button"
-              className="button is-light"
-              disabled
-            >
-              Full Day (9:00 - 17:00) with 1h break
-            </button>
-            <button
-              type="button"
-              className="button is-light"
-              disabled
-            >
-              Morning (9:00 - 13:00)
-            </button>
-            <button
-              type="button"
-              className="button is-light"
-              disabled
-            >
-              Afternoon (13:00 - 17:00)
-            </button>
-            <button
-              type="button"
-              className="button is-light"
-              disabled
-            >
-              Evening (17:00 - 21:00)
-            </button>
-          </div>
-          <p className="help">These templates are used in the Shifts page when creating new shifts</p>
+          {shiftTemplates.length > 0 ? (
+            <div className="box" style={{ padding: '1rem' }}>
+              {shiftTemplates.map((template, index) => (
+                <div key={template.id}>
+                  <div 
+                    className="is-flex is-justify-content-space-between is-align-items-center p-2 is-clickable"
+                    onClick={() => openTemplateForm(template)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div>
+                      <strong className="is-block">{template.name}</strong>
+                      <small className="has-text-grey">
+                        {template.start_time} - {template.end_time}
+                        {template.break_start && template.break_end && ` (Break: ${template.break_start} - ${template.break_end})`}
+                      </small>
+                    </div>
+                    <div className="is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
+                      <button
+                        className="button is-small is-ghost"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteTemplate(template.id)
+                        }}
+                        title="Delete template"
+                      >
+                        <span className="icon is-small">
+                          <i className="fas fa-trash"></i>
+                        </span>
+                      </button>
+                      <span className="icon is-small has-text-grey-light">
+                        <i className="fas fa-chevron-right"></i>
+                      </span>
+                    </div>
+                  </div>
+                  {index < shiftTemplates.length - 1 && <hr className="my-1" style={{ margin: '4px 0' }} />}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="box has-text-centered py-4">
+              <p className="has-text-grey">No templates configured yet. Add your first template to get started.</p>
+            </div>
+          )}
         </div>
 
         <div className="field is-grouped">
@@ -247,6 +354,97 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Template Edit Modal */}
+      {editingTemplate !== null && (
+        <div className="modal is-active">
+          <div className="modal-background" onClick={closeTemplateForm}></div>
+          <div className="modal-card">
+            <header className="modal-card-head">
+              <p className="modal-card-title">
+                {editingTemplate && editingTemplate.id ? 'Edit Template' : 'Add Template'}
+              </p>
+              <button className="delete" aria-label="close" onClick={closeTemplateForm}></button>
+            </header>
+            <section className="modal-card-body">
+              <div className="field">
+                <label className="label">Template Name</label>
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="e.g., Full Day, Morning Shift"
+                  value={templateForm.name}
+                  onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
+                />
+              </div>
+
+              <div className="columns">
+                <div className="column">
+                  <label className="label">Start Time</label>
+                  <input
+                    className="input"
+                    type="time"
+                    value={templateForm.start_time}
+                    onChange={(e) => setTemplateForm({ ...templateForm, start_time: e.target.value })}
+                  />
+                </div>
+                <div className="column">
+                  <label className="label">End Time</label>
+                  <input
+                    className="input"
+                    type="time"
+                    value={templateForm.end_time}
+                    onChange={(e) => setTemplateForm({ ...templateForm, end_time: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="columns">
+                <div className="column">
+                  <label className="label">Break Start (Optional)</label>
+                  <input
+                    className="input"
+                    type="time"
+                    value={templateForm.break_start}
+                    onChange={(e) => setTemplateForm({ ...templateForm, break_start: e.target.value })}
+                  />
+                </div>
+                <div className="column">
+                  <label className="label">Break End (Optional)</label>
+                  <input
+                    className="input"
+                    type="time"
+                    value={templateForm.break_end}
+                    onChange={(e) => setTemplateForm({ ...templateForm, break_end: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="field">
+                <div className="control">
+                  <button 
+                    className="button is-success is-fullwidth" 
+                    onClick={saveTemplate}
+                  >
+                    {editingTemplate && editingTemplate.id ? 'Update Template' : 'Add Template'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="field">
+                <div className="control">
+                  <button 
+                    className="button is-fullwidth" 
+                    onClick={closeTemplateForm}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

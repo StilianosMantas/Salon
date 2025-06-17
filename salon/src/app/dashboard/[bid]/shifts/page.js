@@ -325,7 +325,7 @@ export default function ShiftsPage() {
           </div>
         </div>
 
-        <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
+        <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
           <h1 className="title is-5">Staff Shifts</h1>
           <button
             className="button is-link"
