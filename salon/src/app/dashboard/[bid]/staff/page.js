@@ -18,6 +18,19 @@ export default function StaffPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredStaff, setFilteredStaff] = useState([])
 
+  // Format phone number for display
+  function formatPhoneNumber(phone) {
+    if (!phone) return phone
+    // Remove all non-digits
+    const cleaned = phone.replace(/\D/g, '')
+    // Format as (xxx) xxx-xxxx for 10-digit US numbers
+    if (cleaned.length === 10) {
+      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+    }
+    // Return original if not 10 digits
+    return phone
+  }
+
   // Filter staff based on search term
   useEffect(() => {
     if (!staff) {
@@ -95,8 +108,10 @@ export default function StaffPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.name.trim()) return toast.error('Name is required')
-    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return toast.error('Invalid email')
-    if (form.mobile && !/^[\d\-\s\+]+$/.test(form.mobile)) return toast.error('Invalid mobile number')
+    if (!form.email?.trim()) return toast.error('Email is required')
+    if (!form.mobile?.trim()) return toast.error('Mobile number is required')
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) return toast.error('Invalid email')
+    if (!/^[\d\-\s\+]+$/.test(form.mobile)) return toast.error('Invalid mobile number')
 
     try {
       if (editing) {
@@ -198,7 +213,7 @@ export default function StaffPage() {
           }
         }
       `}</style>
-    <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
+    <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem', maxWidth: '100%' }}>
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
           <div className="control has-icons-left has-icons-right is-expanded">
@@ -248,7 +263,7 @@ export default function StaffPage() {
             >
               <div>
                 <strong className="is-block" style={{ fontSize: '1.1em' }}>{s.name}</strong>
-                {s.mobile && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{s.mobile}</small>}
+                {s.mobile && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{formatPhoneNumber(s.mobile)}</small>}
                 {s.email && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{s.email}</small>}
               </div>
               <div>
@@ -288,7 +303,7 @@ export default function StaffPage() {
                 <div className="field">
                   <label className="label">Email</label>
                   <div className="control has-icons-right">
-                    <input className="input" type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                    <input className="input" type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
                     {form.email && (
                       <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
                         <a href={`mailto:${form.email}`} className="has-text-info" style={{ pointerEvents: 'all' }}>
@@ -301,7 +316,7 @@ export default function StaffPage() {
                 <div className="field">
                   <label className="label">Mobile</label>
                   <div className="control has-icons-right">
-                    <input className="input" type="text" placeholder="Mobile" value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} />
+                    <input className="input" type="tel" placeholder="Mobile" value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} required />
                     {form.mobile && (
                       <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
                         <a href={`tel:${form.mobile}`} className="has-text-info" style={{ pointerEvents: 'all' }}>
@@ -316,7 +331,7 @@ export default function StaffPage() {
                     <button 
                       className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
                       type="submit"
-                      disabled={mutationLoading}
+                      disabled={mutationLoading || (editing && !isFormDirty(form, initialForm))}
                     >
                       {editing ? 'Update' : 'Add'}
                     </button>

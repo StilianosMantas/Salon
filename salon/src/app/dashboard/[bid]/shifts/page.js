@@ -168,11 +168,11 @@ export default function ShiftsPage() {
     }
   }
 
-  function openAddForm() {
+  function openAddForm(prefillStaffId = '', prefillDate = '') {
     setEditingShift(null)
     setShiftForm({
-      staff_id: '',
-      date: selectedWeek || new Date().toISOString().split('T')[0],
+      staff_id: prefillStaffId || selectedStaff || '',
+      date: prefillDate || selectedWeek || new Date().toISOString().split('T')[0],
       start_time: '09:00',
       end_time: '17:00',
       break_start: '12:00',
@@ -461,6 +461,40 @@ export default function ShiftsPage() {
                       onChange={(e) => setShiftForm({ ...shiftForm, end_time: e.target.value })}
                       required
                     />
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label className="label">Quick Templates</label>
+                  <div className="buttons are-small">
+                    <button
+                      type="button"
+                      className="button is-light"
+                      onClick={() => setShiftForm({ ...shiftForm, start_time: '09:00', end_time: '17:00', break_start: '12:00', break_end: '13:00' })}
+                    >
+                      Full Day (9-5)
+                    </button>
+                    <button
+                      type="button"
+                      className="button is-light"
+                      onClick={() => setShiftForm({ ...shiftForm, start_time: '09:00', end_time: '13:00', break_start: '', break_end: '' })}
+                    >
+                      Morning (9-1)
+                    </button>
+                    <button
+                      type="button"
+                      className="button is-light"
+                      onClick={() => setShiftForm({ ...shiftForm, start_time: '13:00', end_time: '17:00', break_start: '', break_end: '' })}
+                    >
+                      Afternoon (1-5)
+                    </button>
+                    <button
+                      type="button"
+                      className="button is-light"
+                      onClick={() => setShiftForm({ ...shiftForm, start_time: '17:00', end_time: '21:00', break_start: '', break_end: '' })}
+                    >
+                      Evening (5-9)
+                    </button>
                   </div>
                 </div>
 

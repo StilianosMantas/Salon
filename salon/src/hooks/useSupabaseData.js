@@ -236,14 +236,28 @@ export function useStaffMutations(businessId) {
   const deleteStaff = async (id) => {
     setLoading(true)
     try {
-      // Check if staff has any appointments before soft delete
-      const { data: appointments, error: appointmentError } = await supabase
-        .from('appointment')
-        .select('id')
-        .eq('staff_id', id)
-        .limit(1)
-      
-      if (appointmentError) throw appointmentError
+      // Check if staff has any appointments before delete (gracefully handle if table doesn't exist)
+      try {
+        const { data: appointments, error: appointmentError } = await supabase
+          .from('appointment')
+          .select('id')
+          .eq('staff_id', id)
+          .limit(1)
+        
+        if (appointmentError && !appointmentError.message.includes('does not exist')) {
+          throw appointmentError
+        }
+        
+        if (appointments && appointments.length > 0) {
+          toast.error('Cannot delete staff member with existing appointments')
+          return
+        }
+      } catch (appointmentError) {
+        // If appointment table doesn't exist, continue with deletion
+        if (!appointmentError.message?.includes('does not exist')) {
+          throw appointmentError
+        }
+      }
       
       // For now, always hard delete until 'active' column is added
       // TODO: Implement soft delete after adding 'active' column

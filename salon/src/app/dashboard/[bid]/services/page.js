@@ -171,8 +171,8 @@ export default function ServicesPage() {
                 <span className="is-block has-text-info" style={{ fontSize: '0.9em' }}>{s.duration} min - {s.cost ? `${s.cost}€` : 'Free'}</span>
               </div>
               <div>
-                <span className="icon has-text-grey-light">
-                  <i className="fas fa-chevron-right"></i>
+                <span className="icon is-small has-text-grey-light">
+                  <i className="fas fa-chevron-right" style={{ fontSize: '0.875rem' }}></i>
                 </span>
               </div>
             </div>

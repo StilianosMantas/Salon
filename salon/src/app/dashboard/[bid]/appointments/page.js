@@ -625,14 +625,16 @@ export default function AppointmentManagementPage() {
                 </div>
                 <div className="is-flex-grow-1">
                   <div className="is-flex is-flex-direction-column">
-                    <div className="has-text-weight-semibold mb-1" style={{ fontSize: '1.1em' }}>
-                      {formatTime(s.start_time)} – {formatTime(s.end_time)}
-                    </div>
-                    {s.staff_id && staff.find((st) => st.id === s.staff_id)?.name && (
-                      <div className={`is-size-6 mb-1 ${staffColor(s.staff_id)}`}>
-                        Staff: {staff.find((st) => st.id === s.staff_id).name}
+                    <div className="is-flex is-align-items-center mb-1" style={{ gap: '0.5rem' }}>
+                      <div className="has-text-weight-semibold" style={{ fontSize: '1.1em' }}>
+                        {formatTime(s.start_time)} – {formatTime(s.end_time)}
                       </div>
-                    )}
+                      {s.staff_id && staff.find((st) => st.id === s.staff_id)?.name && (
+                        <span className="tag is-small is-info is-light">
+                          {staff.find((st) => st.id === s.staff_id).name}
+                        </span>
+                      )}
+                    </div>
                     {s.client && (
                       <div className="is-size-6 has-text-grey-dark">
                         {s.client.name} ({s.client.mobile})
@@ -655,8 +657,8 @@ export default function AppointmentManagementPage() {
                       </span>
                     </button>
                   )}
-                  <span className="icon has-text-grey-light">
-                    <i className="fas fa-chevron-right"></i>
+                  <span className="icon is-small has-text-grey-light">
+                    <i className="fas fa-chevron-right" style={{ fontSize: '0.875rem' }}></i>
                   </span>
                 </div>
               </div>

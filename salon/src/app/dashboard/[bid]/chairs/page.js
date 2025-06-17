@@ -224,133 +224,50 @@ export default function ChairsPage() {
           </button>
         </div>
 
-        <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginTop: '0.75rem' }}>
-          {chairs && chairs.length > 0 ? (
-            <div className="table-container">
-              <table className="table is-fullwidth is-hoverable">
-                <thead>
-                  <tr>
-                    <th>Color</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {chairs.map(chair => (
-                    <tr key={chair.id} className={!chair.is_active ? 'has-text-grey' : ''}>
-                      <td>
-                        <div 
-                          className="box p-2"
-                          style={{ 
-                            backgroundColor: chair.color, 
-                            width: '30px', 
-                            height: '30px',
-                            minWidth: '30px'
-                          }}
-                        ></div>
-                      </td>
-                      <td className="has-text-weight-semibold">
-                        {chair.name}
-                        {!chair.is_active && (
-                          <span className="tag is-light ml-2">Inactive</span>
-                        )}
-                      </td>
-                      <td>{chair.description || <span className="has-text-grey">No description</span>}</td>
-                      <td>
-                        <button
-                          className={`button is-small ${chair.is_active ? 'is-success' : 'is-warning'}`}
-                          onClick={() => toggleChairStatus(chair.id, chair.is_active)}
-                        >
-                          {chair.is_active ? 'Active' : 'Inactive'}
-                        </button>
-                      </td>
-                      <td>
-                        <div className="buttons">
-                          <button
-                            className="button is-small is-info"
-                            onClick={() => openEditForm(chair)}
-                          >
-                            <span className="icon">
-                              <i className="fas fa-edit"></i>
-                            </span>
-                          </button>
-                          <button
-                            className="button is-small has-text-danger"
-                            onClick={() => deleteChair(chair.id, chair.name)}
-                            style={{ backgroundColor: 'white', borderColor: '#ff3860', color: '#ff3860' }}
-                          >
-                            <span className="icon">
-                              <i className="fas fa-trash"></i>
-                            </span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
+          {chairs && chairs.length > 0 ? chairs.map((chair, index) => (
+            <div key={chair.id}>
+              <div 
+                className="is-flex is-justify-content-space-between is-align-items-center p-1 is-clickable" 
+                onClick={() => openEditForm(chair)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="is-flex is-align-items-center" style={{ gap: '1rem' }}>
+                  <div 
+                    className="box p-2"
+                    style={{ 
+                      backgroundColor: chair.color, 
+                      width: '24px', 
+                      height: '24px',
+                      minWidth: '24px',
+                      margin: 0
+                    }}
+                  ></div>
+                  <div>
+                    <strong className="is-block" style={{ fontSize: '1.1em' }}>
+                      {chair.name}
+                      {!chair.is_active && (
+                        <span className="tag is-light ml-2 is-small">Inactive</span>
+                      )}
+                    </strong>
+                    {chair.description && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{chair.description}</small>}
+                  </div>
+                </div>
+                <div>
+                  <span className="icon is-small has-text-grey-light">
+                    <i className="fas fa-chevron-right" style={{ fontSize: '0.875rem' }}></i>
+                  </span>
+                </div>
+              </div>
+              {index < chairs.length - 1 && <hr className="my-2" style={{ margin: '8px 0', borderColor: '#e5e5e5' }} />}
             </div>
-          ) : (
+          )) : (
             <div className="has-text-centered py-4">
-              <p className="has-text-grey mb-3">No chairs configured yet.</p>
-              <button className="button is-link" onClick={openAddForm}>
-                Add Your First Chair
-              </button>
+              <p className="has-text-grey">{chairs?.length === 0 ? 'No chairs configured yet. Add your first chair to get started.' : 'Loading chairs...'}</p>
             </div>
           )}
         </div>
 
-        {/* Database Schema Information */}
-        <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1em', marginTop: '1rem', backgroundColor: '#f8f9fa' }}>
-          <h2 className="title is-6 mb-3">Database Schema Requirements</h2>
-          <div className="content">
-            <p className="mb-3">To support multiple chairs, the following database changes are needed:</p>
-            
-            <h3 className="subtitle is-6">1. Create Chairs Table</h3>
-            <pre className="has-background-white p-3 mb-3" style={{ fontSize: '0.85rem' }}>
-{`CREATE TABLE chairs (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  business_id UUID REFERENCES business(id) ON DELETE CASCADE,
-  name VARCHAR(100) NOT NULL,
-  description TEXT,
-  color VARCHAR(7) DEFAULT '#3273dc',
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);`}
-            </pre>
-
-            <h3 className="subtitle is-6">2. Add Chair Reference to Appointments</h3>
-            <pre className="has-background-white p-3 mb-3" style={{ fontSize: '0.85rem' }}>
-{`ALTER TABLE appointment 
-ADD COLUMN chair_id UUID REFERENCES chairs(id);
-
--- Optional: Add index for better performance
-CREATE INDEX idx_appointment_chair_id ON appointment(chair_id);`}
-            </pre>
-
-            <h3 className="subtitle is-6">3. Add Chair Reference to Slots</h3>
-            <pre className="has-background-white p-3" style={{ fontSize: '0.85rem' }}>
-{`ALTER TABLE slot 
-ADD COLUMN chair_id UUID REFERENCES chairs(id);
-
--- Optional: Add index for better performance
-CREATE INDEX idx_slot_chair_id ON slot(chair_id);`}
-            </pre>
-
-            <div className="notification is-info mt-4">
-              <p><strong>Note:</strong> After implementing these database changes, you&apos;ll need to:</p>
-              <ul>
-                <li>Update appointment booking logic to consider chair availability</li>
-                <li>Modify slot generation to create slots per chair</li>
-                <li>Update the appointments view to show chair assignments</li>
-                <li>Add chair selection to appointment forms</li>
-              </ul>
-            </div>
-          </div>
-        </div>
 
         {/* Chair Form Modal */}
         {formVisible && (
@@ -440,6 +357,34 @@ CREATE INDEX idx_slot_chair_id ON slot(chair_id);`}
                     </button>
                   </div>
                 </div>
+                
+                {editingChair && (
+                  <>
+                    <div className="field">
+                      <div className="control">
+                        <button 
+                          className={`button is-fullwidth ${chairForm.is_active ? 'is-warning' : 'is-success'}`}
+                          onClick={() => toggleChairStatus(editingChair.id, editingChair.is_active)}
+                          disabled={saving}
+                        >
+                          {chairForm.is_active ? 'Deactivate Chair' : 'Activate Chair'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="field">
+                      <div className="control">
+                        <button 
+                          className="button is-fullwidth has-text-danger" 
+                          onClick={() => deleteChair(editingChair.id, editingChair.name)}
+                          disabled={saving}
+                          style={{ backgroundColor: 'white', borderColor: '#ff3860', color: '#ff3860' }}
+                        >
+                          Delete Chair
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </section>
             </div>
           </div>

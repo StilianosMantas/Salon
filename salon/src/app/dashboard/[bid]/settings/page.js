@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -29,9 +29,9 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!bid) return
     fetchSettings()
-  }, [bid, fetchSettings])
+  }, [bid])
 
-  const fetchSettings = useCallback(async () => {
+  const fetchSettings = async () => {
     try {
       const { data, error } = await supabase
         .from('business')
@@ -57,7 +57,7 @@ export default function SettingsPage() {
     } finally {
       setLoading(false)
     }
-  }, [bid])
+  }
 
   async function saveSettings() {
     setSaving(true)
