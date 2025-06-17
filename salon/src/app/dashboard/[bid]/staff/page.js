@@ -18,17 +18,44 @@ export default function StaffPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredStaff, setFilteredStaff] = useState([])
 
-  // Format phone number for display
+  // Format phone number for display (Greek format)
   function formatPhoneNumber(phone) {
     if (!phone) return phone
-    // Remove all non-digits
-    const cleaned = phone.replace(/\D/g, '')
-    // Format as (xxx) xxx-xxxx for 10-digit US numbers
-    if (cleaned.length === 10) {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+    // Remove all non-digits and plus signs
+    const cleaned = phone.replace(/[^\d+]/g, '')
+    
+    // Greek mobile format: +30 6XX XXX XXXX or 6XX XXX XXXX
+    if (cleaned.startsWith('+306') && cleaned.length === 13) {
+      return `+30 ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`
     }
-    // Return original if not 10 digits
+    if (cleaned.startsWith('6') && cleaned.length === 10) {
+      return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`
+    }
+    // Greek landline format: +30 2X XXXX XXXX or 2X XXXX XXXX
+    if (cleaned.startsWith('+302') && cleaned.length === 13) {
+      return `+30 ${cleaned.slice(3, 5)} ${cleaned.slice(5, 9)} ${cleaned.slice(9)}`
+    }
+    if (cleaned.startsWith('2') && cleaned.length === 10) {
+      return `${cleaned.slice(0, 2)} ${cleaned.slice(2, 6)} ${cleaned.slice(6)}`
+    }
+    // Return original if doesn't match Greek format
     return phone
+  }
+
+  // Validate Greek phone number
+  function isValidGreekPhone(phone) {
+    if (!phone) return false
+    const cleaned = phone.replace(/[^\d+]/g, '')
+    
+    // Greek mobile: +30 6XX XXX XXXX or 6XX XXX XXXX
+    if (cleaned.startsWith('+306') && cleaned.length === 13) return true
+    if (cleaned.startsWith('6') && cleaned.length === 10) return true
+    
+    // Greek landline: +30 2X XXXX XXXX or 2X XXXX XXXX  
+    if (cleaned.startsWith('+302') && cleaned.length === 13) return true
+    if (cleaned.startsWith('2') && cleaned.length === 10) return true
+    
+    return false
   }
 
   // Filter staff based on search term
@@ -97,6 +124,23 @@ export default function StaffPage() {
     }
   }, [searchTerm])
 
+  // Handle ESC key to close form
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && formVisible) {
+        closeForm()
+      }
+    }
+
+    if (formVisible) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [formVisible])
+
   function isFormDirty(current, initial) {
     return (
       current.name.trim() !== initial.name.trim() ||
@@ -111,7 +155,7 @@ export default function StaffPage() {
     if (!form.email?.trim()) return toast.error('Email is required')
     if (!form.mobile?.trim()) return toast.error('Mobile number is required')
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return toast.error('Invalid email')
-    if (!/^[\d\-\s\+]+$/.test(form.mobile)) return toast.error('Invalid mobile number')
+    if (!isValidGreekPhone(form.mobile)) return toast.error('Invalid Greek phone number format')
 
     try {
       if (editing) {
@@ -139,6 +183,7 @@ export default function StaffPage() {
     
     try {
       await deleteStaff(id)
+      closeForm(true) // Auto-close form after successful deletion
     } catch (error) {
       // Error handling is done in the mutation hooks
     }
@@ -213,7 +258,7 @@ export default function StaffPage() {
           }
         }
       `}</style>
-    <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem', maxWidth: '100%' }}>
+    <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem', maxWidth: 'calc(100vw - 300px)' }}>
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile">
         <div className="field has-addons is-flex-grow-1 mr-4">
           <div className="control has-icons-left has-icons-right is-expanded">

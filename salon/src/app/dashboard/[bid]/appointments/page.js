@@ -14,7 +14,9 @@ export default function AppointmentManagementPage() {
   const [staff, setStaff] = useState([])
   const [clients, setClients] = useState([])
   const [services, setServices] = useState([])
+  const [chairs, setChairs] = useState([])
   const [filterStaffId, setFilterStaffId] = useState('')
+  const [filterChairId, setFilterChairId] = useState('')
   const [editingAppointment, setEditingAppointment] = useState(null)
   const [form, setForm] = useState({
     start_time: '',
@@ -22,7 +24,8 @@ export default function AppointmentManagementPage() {
     staff_id: '',
     client_id: '',
     client_search: '',
-    service_ids: []
+    service_ids: [],
+    chair_id: ''
   })
   const [showModal, setShowModal] = useState(false)
   const [filteredClients, setFilteredClients] = useState([])
@@ -37,6 +40,16 @@ export default function AppointmentManagementPage() {
       .eq('business_id', bid)
       .order('name')
     setStaff(data || [])
+  }, [bid])
+
+  const fetchChairs = useCallback(async () => {
+    const { data } = await supabase
+      .from('chairs')
+      .select('id, name, color, is_active')
+      .eq('business_id', bid)
+      .eq('is_active', true)
+      .order('name')
+    setChairs(data || [])
   }, [bid])
 
   const fetchClients = useCallback(async () => {
@@ -61,7 +74,7 @@ export default function AppointmentManagementPage() {
     let query = supabase
       .from('slot')
       .select(
-        'id, slotdate, start_time, end_time, duration, staff_id, client_id, client(name, mobile), slot_service(service_id)'
+        'id, slotdate, start_time, end_time, duration, staff_id, client_id, chair_id, client(name, mobile), slot_service(service_id), chairs(name, color)'
       )
       .eq('business_id', bid)
       .eq('slotdate', selectedDate)
@@ -71,22 +84,27 @@ export default function AppointmentManagementPage() {
       query = query.eq('staff_id', filterStaffId)
     }
 
+    if (filterChairId) {
+      query = query.eq('chair_id', filterChairId)
+    }
+
     const { data } = await query
     setAppointments(data || [])
     setSelectedAppointmentIds([])
-  }, [bid, selectedDate, filterStaffId])
+  }, [bid, selectedDate, filterStaffId, filterChairId])
 
   useEffect(() => {
     if (bid) {
       fetchStaff()
       fetchClients()
       fetchServices()
+      fetchChairs()
     }
-  }, [bid, fetchStaff, fetchClients, fetchServices])
+  }, [bid, fetchStaff, fetchClients, fetchServices, fetchChairs])
 
   useEffect(() => {
     if (bid && selectedDate) fetchAppointments()
-  }, [bid, selectedDate, filterStaffId, fetchAppointments])
+  }, [bid, selectedDate, filterStaffId, filterChairId, fetchAppointments])
 
   // Auto-fetch appointments when component mounts with today's date
   useEffect(() => {
@@ -250,7 +268,8 @@ export default function AppointmentManagementPage() {
           .update({
             client_id: form.client_id,
             book_status: 'booked',
-            staff_id: form.staff_id || null
+            staff_id: form.staff_id || null,
+            chair_id: form.chair_id || null
           })
           .eq('id', slotId)
       }
@@ -272,7 +291,8 @@ export default function AppointmentManagementPage() {
             start_time: form.start_time,
             end_time: lastSlot.end_time,
             staff_id: form.staff_id || null,
-            client_id: form.client_id || null
+            client_id: form.client_id || null,
+            chair_id: form.chair_id || null
           })
           .eq('id', editingAppointment.id)
       }
@@ -294,10 +314,10 @@ export default function AppointmentManagementPage() {
       .eq('id', id)
       .single()
 
-    // Clear client, staff, and slot_service links
+    // Clear client, staff, chair, and slot_service links
     await supabase
       .from('slot')
-      .update({ client_id: null, book_status: null, staff_id: null })
+      .update({ client_id: null, book_status: null, staff_id: null, chair_id: null })
       .eq('id', id)
     await supabase.from('slot_service').delete().eq('slot_id', id)
 
@@ -320,7 +340,7 @@ export default function AppointmentManagementPage() {
 
     const { data: clearedSlots } = await supabase
       .from('slot')
-      .update({ client_id: null, book_status: null, staff_id: null })
+      .update({ client_id: null, book_status: null, staff_id: null, chair_id: null })
       .in('id', selectedAppointmentIds)
       .select('id, start_time, duration')
 
@@ -369,7 +389,8 @@ export default function AppointmentManagementPage() {
       staff_id: appointment.staff_id || '',
       client_id: appointment.client_id || '',
       client_search: client ? `${client.name} (${client.mobile || ''})` : '',
-      service_ids: service_ids
+      service_ids: service_ids,
+      chair_id: appointment.chair_id || ''
     })
     setEditingAppointment(appointment)
     setShowClientDropdown(false)
@@ -384,7 +405,8 @@ export default function AppointmentManagementPage() {
         staff_id: '',
         client_id: '',
         client_search: '',
-        service_ids: []
+        service_ids: [],
+        chair_id: ''
       })
       setEditingAppointment(null)
       setShowClientDropdown(false)
@@ -496,9 +518,9 @@ export default function AppointmentManagementPage() {
       `}</style>
     <div className="container py-5 px-4 larger-font">
 
-      {/* Date & Staff Filter */}
+      {/* Date, Staff & Chair Filters */}
       <div className="columns is-multiline mb-4">
-        <div className="column is-half-tablet is-full-mobile">
+        <div className="column is-one-third-tablet is-full-mobile">
           <label className="label">Select Date</label>
           <input
             className="input"
@@ -507,7 +529,7 @@ export default function AppointmentManagementPage() {
             onChange={(e) => setSelectedDate(e.target.value)}
           />
         </div>
-        <div className="column is-half-tablet is-full-mobile">
+        <div className="column is-one-third-tablet is-full-mobile">
           <label className="label">Filter by Staff</label>
           <div className="select is-fullwidth">
             <select
@@ -518,6 +540,22 @@ export default function AppointmentManagementPage() {
               {staff.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="column is-one-third-tablet is-full-mobile">
+          <label className="label">Filter by Chair</label>
+          <div className="select is-fullwidth">
+            <select
+              value={filterChairId}
+              onChange={(e) => setFilterChairId(e.target.value)}
+            >
+              <option value="">All Chairs</option>
+              {chairs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -634,6 +672,18 @@ export default function AppointmentManagementPage() {
                           {staff.find((st) => st.id === s.staff_id).name}
                         </span>
                       )}
+                      {s.chair_id && s.chairs && (
+                        <span 
+                          className="tag is-small" 
+                          style={{ 
+                            backgroundColor: s.chairs.color || '#dbdbdb', 
+                            color: '#fff', 
+                            border: 'none' 
+                          }}
+                        >
+                          {s.chairs.name}
+                        </span>
+                      )}
                     </div>
                     {s.client && (
                       <div className="is-size-6 has-text-grey-dark">
@@ -725,6 +775,24 @@ export default function AppointmentManagementPage() {
                         {staff.map((s) => (
                           <option key={s.id} value={s.id}>
                             {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="field">
+                  <label className="label">Chair/Station</label>
+                  <div className="control">
+                    <div className="select is-fullwidth">
+                      <select
+                        value={form.chair_id}
+                        onChange={(e) => setForm({ ...form, chair_id: e.target.value })}
+                      >
+                        <option value="">No specific chair</option>
+                        {chairs.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
                           </option>
                         ))}
                       </select>

@@ -36,6 +36,23 @@ export default function ServicesPage() {
     }
   }, [])
 
+  // Handle ESC key to close form
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && formVisible) {
+        closeForm()
+      }
+    }
+
+    if (formVisible) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [formVisible])
+
   function isFormDirty(current, initial) {
     return (
       current.name.trim() !== initial.name.trim() ||
@@ -77,6 +94,7 @@ export default function ServicesPage() {
     
     try {
       await deleteService(id)
+      closeForm(true) // Auto-close form after successful deletion
     } catch (error) {
       // Error handling is done in the mutation hooks
     }
@@ -227,7 +245,7 @@ export default function ServicesPage() {
                     <button 
                       className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
                       type="submit"
-                      disabled={mutationLoading}
+                      disabled={mutationLoading || (editing && !isFormDirty(form, initialForm))}
                     >
                       {editing ? 'Update' : 'Add'}
                     </button>

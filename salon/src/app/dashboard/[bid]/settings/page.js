@@ -184,6 +184,46 @@ export default function SettingsPage() {
           <p className="help">Minimum hours notice required to cancel an appointment</p>
         </div>
 
+        <hr className="my-5" />
+        
+        <h2 className="title is-6 mb-4">Quick Shift Templates</h2>
+        <p className="mb-4 has-text-grey">Use these templates when creating shifts to save time</p>
+        
+        <div className="field">
+          <label className="label">Available Templates</label>
+          <div className="buttons are-small">
+            <button
+              type="button"
+              className="button is-light"
+              disabled
+            >
+              Full Day (9:00 - 17:00) with 1h break
+            </button>
+            <button
+              type="button"
+              className="button is-light"
+              disabled
+            >
+              Morning (9:00 - 13:00)
+            </button>
+            <button
+              type="button"
+              className="button is-light"
+              disabled
+            >
+              Afternoon (13:00 - 17:00)
+            </button>
+            <button
+              type="button"
+              className="button is-light"
+              disabled
+            >
+              Evening (17:00 - 21:00)
+            </button>
+          </div>
+          <p className="help">These templates are used in the Shifts page when creating new shifts</p>
+        </div>
+
         <div className="field is-grouped">
           <div className="control">
             <button

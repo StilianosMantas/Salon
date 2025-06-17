@@ -48,6 +48,23 @@ export default function ShiftsPage() {
     }
   }, [])
 
+  // Handle ESC key to close form
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && formVisible) {
+        closeForm()
+      }
+    }
+
+    if (formVisible) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [formVisible])
+
   const fetchShifts = useCallback(async () => {
     if (!bid) return
     
@@ -161,6 +178,7 @@ export default function ShiftsPage() {
       if (error) throw error
       
       toast.success('Shift deleted successfully')
+      closeForm() // Auto-close form after successful deletion
       fetchShifts()
     } catch (error) {
       console.error('Error deleting shift:', error)
@@ -370,14 +388,7 @@ export default function ShiftsPage() {
                             {dayShifts.length === 0 && (
                               <button 
                                 className="button is-small is-ghost"
-                                onClick={() => {
-                                  setShiftForm({
-                                    ...shiftForm,
-                                    staff_id: staffMember.id,
-                                    date: date
-                                  })
-                                  openAddForm()
-                                }}
+                                onClick={() => openAddForm(staffMember.id, date)}
                               >
                                 <span className="icon is-small">
                                   <i className="fas fa-plus"></i>

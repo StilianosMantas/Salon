@@ -12,6 +12,7 @@ export default function ChairsPage() {
   const [saving, setSaving] = useState(false)
   const [formVisible, setFormVisible] = useState(false)
   const [editingChair, setEditingChair] = useState(null)
+  const [maxChairs, setMaxChairs] = useState(20)
   const [chairForm, setChairForm] = useState({
     name: '',
     description: '',
@@ -39,6 +40,42 @@ export default function ChairsPage() {
     }
   }, [])
 
+  // Handle ESC key to close form
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && formVisible) {
+        closeForm()
+      }
+    }
+
+    if (formVisible) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [formVisible])
+
+  // Fetch max chairs setting
+  const fetchMaxChairs = useCallback(async () => {
+    if (!bid) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('business')
+        .select('chairs_count')
+        .eq('id', bid)
+        .single()
+
+      if (error) throw error
+      setMaxChairs(data.chairs_count || 20)
+    } catch (error) {
+      console.error('Error fetching max chairs:', error)
+      setMaxChairs(20) // Default fallback
+    }
+  }, [bid])
+
   const fetchChairs = useCallback(async () => {
     if (!bid) return
     
@@ -61,12 +98,20 @@ export default function ChairsPage() {
   }, [bid])
 
   useEffect(() => {
+    fetchMaxChairs()
     fetchChairs()
-  }, [fetchChairs])
+  }, [fetchMaxChairs, fetchChairs])
 
   async function saveChair() {
     setSaving(true)
     try {
+      // Validate max chairs limit when adding new chair
+      if (!editingChair && chairs.length >= maxChairs) {
+        toast.error(`Maximum number of chairs (${maxChairs}) reached. Update the limit in Settings if needed.`)
+        setSaving(false)
+        return
+      }
+
       const chairData = {
         business_id: bid,
         name: chairForm.name.trim(),
@@ -128,6 +173,7 @@ export default function ChairsPage() {
       if (error) throw error
       
       toast.success('Chair deleted successfully')
+      closeForm() // Auto-close form after successful deletion
       fetchChairs()
     } catch (error) {
       console.error('Error deleting chair:', error)
