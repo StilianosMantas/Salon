@@ -513,7 +513,7 @@ export default function AppointmentManagementPage() {
           }
         }
         .larger-font { font-size: 1.1em; }
-        .extended-card { margin: 0 -0.75rem; }
+        .extended-card { }
         .compact-header { padding: 0.75rem 1.25rem; }
       `}</style>
     <div className="container py-5 px-4 larger-font">
@@ -565,69 +565,114 @@ export default function AppointmentManagementPage() {
 
       {/* Appointment List */}
       {appointments.length > 0 ? (
-        <div className="box extended-card" style={{ marginBottom: '20px' }}>
-          <div className="is-flex is-justify-content-space-between is-align-items-center mb-3">
-            <p className="has-text-weight-semibold">
-              {selectedAppointmentIds.length > 0 ? `${selectedAppointmentIds.length} selected` : 'Appointments'}
-            </p>
-            {selectedAppointmentIds.length > 0 && (
-              <div className="dropdown is-right is-active" style={{ position: 'relative' }}>
-                <div className="dropdown-trigger">
-                  <button 
-                    className="button is-small" 
-                    onClick={() => setShowActionsDropdown(!showActionsDropdown)}
-                  >
-                    <span className="icon is-small">
-                      <i className="fas fa-ellipsis-v"></i>
-                    </span>
-                  </button>
-                </div>
-                {showActionsDropdown && (
-                  <div className="dropdown-menu" style={{ 
-                    position: 'absolute', 
-                    right: 0, 
-                    top: '100%', 
-                    zIndex: 1000,
-                    background: 'white',
-                    border: '1px solid #dbdbdb',
-                    borderRadius: '4px',
-                    minWidth: '160px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}>
-                    <div className="dropdown-content" style={{ padding: 0 }}>
-                      <a
-                        className="dropdown-item"
-                        onClick={() => {
-                          clearSelectedClients()
-                          setShowActionsDropdown(false)
-                        }}
-                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem 1rem' }}
-                      >
-                        <span className="icon mr-2">
-                          <i className="fas fa-user-times"></i>
-                        </span>
-                        <span>Clear Clients</span>
-                      </a>
-                      <a
-                        className="dropdown-item has-text-danger"
-                        onClick={() => {
-                          deleteSelectedAppointments()
-                          setShowActionsDropdown(false)
-                        }}
-                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem 1rem' }}
-                      >
-                        <span className="icon mr-2">
-                          <i className="fas fa-trash"></i>
-                        </span>
-                        <span>Delete Appointments</span>
-                      </a>
+        <>
+          {/* Group appointments by chair for parallel view */}
+          {(() => {
+            // Group appointments by chair
+            const appointmentsByChair = appointments.reduce((groups, appointment) => {
+              const chairId = appointment.chair_id || 'unassigned'
+              if (!groups[chairId]) {
+                groups[chairId] = []
+              }
+              groups[chairId].push(appointment)
+              return groups
+            }, {})
+
+            // Sort groups to show assigned chairs first, then unassigned
+            const sortedChairIds = Object.keys(appointmentsByChair).sort((a, b) => {
+              if (a === 'unassigned') return 1
+              if (b === 'unassigned') return -1
+              return 0
+            })
+
+            return sortedChairIds.map(chairId => {
+              const chairAppointments = appointmentsByChair[chairId]
+              const chair = chairId !== 'unassigned' ? chairs.find(c => c.id === chairId) : null
+              
+              return (
+                <div key={chairId} className="box extended-card" style={{ marginBottom: '20px' }}>
+                  <div className="is-flex is-justify-content-space-between is-align-items-center mb-3">
+                    <div className="is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
+                      {chair ? (
+                        <>
+                          <span 
+                            className="tag" 
+                            style={{ 
+                              backgroundColor: chair.color || '#dbdbdb', 
+                              color: '#fff', 
+                              border: 'none' 
+                            }}
+                          >
+                            {chair.name}
+                          </span>
+                          <p className="has-text-weight-semibold">
+                            {chairAppointments.length} appointment{chairAppointments.length !== 1 ? 's' : ''}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="has-text-weight-semibold has-text-grey">
+                          Unassigned ({chairAppointments.length} appointment{chairAppointments.length !== 1 ? 's' : ''})
+                        </p>
+                      )}
                     </div>
+                    {selectedAppointmentIds.length > 0 && (
+                      <div className="dropdown is-right is-active" style={{ position: 'relative' }}>
+                        <div className="dropdown-trigger">
+                          <button 
+                            className="button is-small" 
+                            onClick={() => setShowActionsDropdown(!showActionsDropdown)}
+                          >
+                            <span className="icon is-small">
+                              <i className="fas fa-ellipsis-v"></i>
+                            </span>
+                          </button>
+                        </div>
+                        {showActionsDropdown && (
+                          <div className="dropdown-menu" style={{ 
+                            position: 'absolute', 
+                            right: 0, 
+                            top: '100%', 
+                            zIndex: 1000,
+                            background: 'white',
+                            border: '1px solid #dbdbdb',
+                            borderRadius: '4px',
+                            minWidth: '160px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                          }}>
+                            <div className="dropdown-content" style={{ padding: 0 }}>
+                              <a
+                                className="dropdown-item"
+                                onClick={() => {
+                                  clearSelectedClients()
+                                  setShowActionsDropdown(false)
+                                }}
+                                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem 1rem' }}
+                              >
+                                <span className="icon mr-2">
+                                  <i className="fas fa-user-times"></i>
+                                </span>
+                                <span>Clear Clients</span>
+                              </a>
+                              <a
+                                className="dropdown-item has-text-danger"
+                                onClick={() => {
+                                  deleteSelectedAppointments()
+                                  setShowActionsDropdown(false)
+                                }}
+                                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem 1rem' }}
+                              >
+                                <span className="icon mr-2">
+                                  <i className="fas fa-trash"></i>
+                                </span>
+                                <span>Delete Appointments</span>
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-          {appointments.map((s, index) => (
+                  {chairAppointments.map((s, index) => (
             <div key={s.id}>
               <div
                 className="p-3 mb-1 is-clickable"
@@ -712,14 +757,17 @@ export default function AppointmentManagementPage() {
                   </span>
                 </div>
               </div>
+                    </div>
+                    {index < chairAppointments.length - 1 && (
+                      <hr className="my-2" style={{ margin: '8px 0', borderColor: '#e5e5e5' }} />
+                    )}
+                  </div>
+                ))}
               </div>
-              {index < appointments.length - 1 && (
-                <hr className="my-2" style={{ margin: '8px 0', borderColor: '#e5e5e5' }} />
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
+            )
+          })
+        })()}
+      </>) : (
         <div className="box extended-card" style={{ marginBottom: '20px' }}>
           <div className="has-text-centered py-4">
             <p className="has-text-grey">No appointments for selected date. Select a date with scheduled appointments.</p>

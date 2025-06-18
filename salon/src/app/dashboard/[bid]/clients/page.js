@@ -299,7 +299,7 @@ export default function ClientsPage() {
           + Add Client
         </button>
       </div>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
+      <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div 

@@ -182,13 +182,101 @@ FROM business
 WHERE id NOT IN (SELECT DISTINCT business_id FROM chairs WHERE business_id IS NOT NULL);
 
 -- =====================================================
--- 9. GRANT NECESSARY PERMISSIONS
+-- 9. CREATE SHIFT_TEMPLATES TABLE
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS shift_templates (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id BIGINT REFERENCES business(id) ON DELETE CASCADE NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  break_start TIME,
+  break_end TIME,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_shift_templates_business_id ON shift_templates(business_id);
+CREATE INDEX IF NOT EXISTS idx_shift_templates_active ON shift_templates(is_active);
+
+-- Enable RLS on shift_templates table
+ALTER TABLE shift_templates ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for shift_templates (same business access)
+CREATE POLICY "Business shift templates access" ON shift_templates
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM business 
+      WHERE id = shift_templates.business_id
+    )
+  );
+
+-- Add trigger for updated_at on shift_templates
+CREATE TRIGGER update_shift_templates_updated_at 
+  BEFORE UPDATE ON shift_templates 
+  FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+-- Insert default shift templates for existing businesses
+INSERT INTO shift_templates (business_id, name, start_time, end_time, break_start, break_end, is_active)
+SELECT 
+  id as business_id,
+  'Full Day (9:00 - 17:00) with 1h break' as name,
+  '09:00' as start_time,
+  '17:00' as end_time,
+  '12:00' as break_start,
+  '13:00' as break_end,
+  true as is_active
+FROM business
+WHERE id NOT IN (SELECT DISTINCT business_id FROM shift_templates WHERE business_id IS NOT NULL);
+
+INSERT INTO shift_templates (business_id, name, start_time, end_time, break_start, break_end, is_active)
+SELECT 
+  id as business_id,
+  'Morning (9:00 - 13:00)' as name,
+  '09:00' as start_time,
+  '13:00' as end_time,
+  NULL as break_start,
+  NULL as break_end,
+  true as is_active
+FROM business
+WHERE id NOT IN (SELECT DISTINCT business_id FROM shift_templates WHERE business_id IS NOT NULL AND name = 'Morning (9:00 - 13:00)');
+
+INSERT INTO shift_templates (business_id, name, start_time, end_time, break_start, break_end, is_active)
+SELECT 
+  id as business_id,
+  'Afternoon (13:00 - 17:00)' as name,
+  '13:00' as start_time,
+  '17:00' as end_time,
+  NULL as break_start,
+  NULL as break_end,
+  true as is_active
+FROM business
+WHERE id NOT IN (SELECT DISTINCT business_id FROM shift_templates WHERE business_id IS NOT NULL AND name = 'Afternoon (13:00 - 17:00)');
+
+INSERT INTO shift_templates (business_id, name, start_time, end_time, break_start, break_end, is_active)
+SELECT 
+  id as business_id,
+  'Evening (17:00 - 21:00)' as name,
+  '17:00' as start_time,
+  '21:00' as end_time,
+  NULL as break_start,
+  NULL as break_end,
+  true as is_active
+FROM business
+WHERE id NOT IN (SELECT DISTINCT business_id FROM shift_templates WHERE business_id IS NOT NULL AND name = 'Evening (17:00 - 21:00)');
+
+-- =====================================================
+-- 10. GRANT NECESSARY PERMISSIONS
 -- =====================================================
 
 -- Grant permissions to authenticated users
 GRANT ALL ON profiles TO authenticated;
 GRANT ALL ON staff_shifts TO authenticated;
 GRANT ALL ON chairs TO authenticated;
+GRANT ALL ON shift_templates TO authenticated;
 
 -- Grant usage on sequences
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;

@@ -298,7 +298,7 @@ export default function StaffPage() {
           + Add Staff
         </button>
       </div>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
+      <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
         {filteredStaff && filteredStaff.length > 0 ? filteredStaff.map((s, index) => (
           <div key={s.id}>
             <div 

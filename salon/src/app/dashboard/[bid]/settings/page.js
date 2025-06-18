@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { useShiftTemplates, useShiftTemplateMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
@@ -17,12 +18,11 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [initialSettings, setInitialSettings] = useState({})
-  const [shiftTemplates, setShiftTemplates] = useState([
-    { id: 1, name: 'Full Day (9:00 - 17:00) with 1h break', start_time: '09:00', end_time: '17:00', break_start: '12:00', break_end: '13:00' },
-    { id: 2, name: 'Morning (9:00 - 13:00)', start_time: '09:00', end_time: '13:00', break_start: '', break_end: '' },
-    { id: 3, name: 'Afternoon (13:00 - 17:00)', start_time: '13:00', end_time: '17:00', break_start: '', break_end: '' },
-    { id: 4, name: 'Evening (17:00 - 21:00)', start_time: '17:00', end_time: '21:00', break_start: '', break_end: '' }
-  ])
+  
+  // Use database-backed shift templates
+  const { data: shiftTemplates, error: templatesError, isLoading: templatesLoading } = useShiftTemplates(bid)
+  const { createShiftTemplate, updateShiftTemplate, deleteShiftTemplate, loading: templateMutationLoading } = useShiftTemplateMutations(bid)
+  
   const [editingTemplate, setEditingTemplate] = useState(null)
   const [templateForm, setTemplateForm] = useState({
     name: '',
@@ -146,50 +146,65 @@ export default function SettingsPage() {
     })
   }
 
-  function saveTemplate() {
+  async function saveTemplate() {
     if (!templateForm.name.trim() || !templateForm.start_time || !templateForm.end_time) {
       toast.error('Please fill in all required fields')
       return
     }
 
-    const newTemplate = {
-      id: (editingTemplate && editingTemplate.id) ? editingTemplate.id : Date.now(),
+    const templateData = {
       name: templateForm.name.trim(),
       start_time: templateForm.start_time,
       end_time: templateForm.end_time,
-      break_start: templateForm.break_start || '',
-      break_end: templateForm.break_end || ''
+      break_start: templateForm.break_start || null,
+      break_end: templateForm.break_end || null
     }
 
-    if (editingTemplate && editingTemplate.id) {
-      setShiftTemplates(prev => prev.map(t => t.id === editingTemplate.id ? newTemplate : t))
-      toast.success('Template updated successfully')
-    } else {
-      setShiftTemplates(prev => [...prev, newTemplate])
-      toast.success('Template added successfully')
+    try {
+      if (editingTemplate && editingTemplate.id) {
+        await updateShiftTemplate({ id: editingTemplate.id, ...templateData })
+      } else {
+        await createShiftTemplate(templateData)
+      }
+      closeTemplateForm()
+    } catch (error) {
+      // Error handling is done in the mutation hooks
     }
-
-    closeTemplateForm()
   }
 
-  function deleteTemplate(id) {
+  async function deleteTemplate(id) {
     if (!window.confirm('Are you sure you want to delete this template?')) return
     
-    setShiftTemplates(prev => prev.filter(t => t.id !== id))
-    toast.success('Template deleted successfully')
-    
-    if (editingTemplate && editingTemplate.id === id) {
-      closeTemplateForm()
+    try {
+      await deleteShiftTemplate(id)
+      
+      if (editingTemplate && editingTemplate.id === id) {
+        closeTemplateForm()
+      }
+    } catch (error) {
+      // Error handling is done in the mutation hooks
     }
   }
 
-  if (loading) {
+  if (loading || templatesLoading) {
     return <LoadingSpinner message="Loading settings..." />
+  }
+
+  if (templatesError) {
+    return (
+      <div className="notification is-danger">
+        <p>Error loading shift templates: {templatesError.message}</p>
+      </div>
+    )
   }
 
   return (
     <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginTop: '0.75rem' }}>
+      <div className="box extended-card" style={{ 
+        margin: '0 -0.75rem', 
+        fontSize: '1.1em', 
+        marginTop: '0.75rem'
+      }}>
         <h1 className="title is-5 mb-4">Salon Settings</h1>
         
         <div className="field">
@@ -200,11 +215,9 @@ export default function SettingsPage() {
               type="text"
               placeholder="Enter salon name"
               value={settings.salon_name}
-              readOnly
-              style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+              onChange={(e) => setSettings({ ...settings, salon_name: e.target.value })}
             />
           </div>
-          <p className="help">Salon name is read-only. Contact support to change.</p>
         </div>
 
         <div className="field">

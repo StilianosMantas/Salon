@@ -126,7 +126,7 @@ export default function ProfilePage() {
 
   return (
     <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginTop: '0.75rem' }}>
+      <div className="box extended-card" style={{ fontSize: '1.1em', marginTop: '0.75rem' }}>
         <h1 className="title is-5 mb-4">User Profile</h1>
         
         <div className="field">

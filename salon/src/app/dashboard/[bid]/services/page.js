@@ -159,9 +159,10 @@ export default function ServicesPage() {
         }
       `}</style>
     <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
-      <div className="is-flex is-justify-content-end mb-4" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
+      <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
+        <h1 className="title is-5">Services</h1>
         <button 
-          className="button is-link is-hidden-mobile" 
+          className="button is-link" 
           data-add-service
           onClick={() => {
             setEditing(false)
@@ -175,7 +176,7 @@ export default function ServicesPage() {
           + Add Service
         </button>
       </div>
-      <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginBottom: '20px' }}>
+      <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px' }}>
         {services && services.length > 0 ? services.map((s, index) => (
           <div key={s.id}>
             <div 

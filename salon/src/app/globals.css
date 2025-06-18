@@ -170,3 +170,14 @@ body {
 .box:hover .icon {
     transform: scale(1.1);
 }
+
+/* Fix desktop alignment for content cards */
+.extended-card {
+    margin: 0 -0.75rem !important;
+}
+
+@media screen and (min-width: 769px) {
+    .extended-card {
+        margin: 0 !important;
+    }
+}

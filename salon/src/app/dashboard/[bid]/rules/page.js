@@ -8,10 +8,22 @@ export default function RulesPage() {
   const { bid } = useParams()
   const [rules, setRules] = useState([])
   const [overrides, setOverrides] = useState([])
-  const [dateOverride, setDateOverride] = useState({ slotdate: '', start_time: '', end_time: '', is_closed: false })
+  const [dateOverride, setDateOverride] = useState({ 
+    slotdate: new Date().toISOString().split('T')[0], 
+    start_time: '', 
+    end_time: '', 
+    is_closed: false 
+  })
   const [newRanges, setNewRanges] = useState({})
-  const [rangeStart, setRangeStart] = useState('')
-  const [rangeEnd, setRangeEnd] = useState('')
+  const [rangeStart, setRangeStart] = useState(() => {
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  })
+  const [rangeEnd, setRangeEnd] = useState(() => {
+    const today = new Date()
+    const weekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+    return weekLater.toISOString().split('T')[0]
+  })
   const [slotLength, setSlotLength] = useState(15)
   const [generatedDates, setGeneratedDates] = useState([])
   const [chairs, setChairs] = useState([])
@@ -21,8 +33,15 @@ export default function RulesPage() {
   const [form, setForm] = useState({ start_time: '', end_time: '' })
   const [isClosing, setIsClosing] = useState(false)
   const [showOverrideForm, setShowOverrideForm] = useState(false)
-  const [overrideForm, setOverrideForm] = useState({ slotdate: '', start_time: '', end_time: '', is_closed: false })
+  const [overrideForm, setOverrideForm] = useState({ 
+    slotdate: new Date().toISOString().split('T')[0], 
+    start_time: '', 
+    end_time: '', 
+    is_closed: false 
+  })
   const [isOverrideClosing, setIsOverrideClosing] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0, phase: '' })
 
   const fetchData = useCallback(async () => {
     const { data: rulesData } = await supabase.from('business_rules').select('*').eq('business_id', bid).order('weekday')
@@ -127,14 +146,24 @@ export default function RulesPage() {
   }
 
   function openOverrideForm() {
-    setOverrideForm({ slotdate: '', start_time: '', end_time: '', is_closed: false })
+    setOverrideForm({ 
+      slotdate: new Date().toISOString().split('T')[0], 
+      start_time: '', 
+      end_time: '', 
+      is_closed: false 
+    })
     setShowOverrideForm(true)
   }
 
   function closeOverrideForm() {
     setIsOverrideClosing(true)
     setTimeout(() => {
-      setOverrideForm({ slotdate: '', start_time: '', end_time: '', is_closed: false })
+      setOverrideForm({ 
+        slotdate: new Date().toISOString().split('T')[0], 
+        start_time: '', 
+        end_time: '', 
+        is_closed: false 
+      })
       setShowOverrideForm(false)
       setIsOverrideClosing(false)
     }, 300)
@@ -165,9 +194,18 @@ export default function RulesPage() {
       return alert('No active chairs found. Please add active chairs before generating slots.')
     }
 
-    const start = new Date(rangeStart)
-    const end = new Date(rangeEnd)
-    let totalSlotsCreated = 0
+    setIsGenerating(true)
+    setGenerationProgress({ current: 0, total: 0, phase: 'Calculating...' })
+
+    try {
+      const start = new Date(rangeStart)
+      const end = new Date(rangeEnd)
+      const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1
+      const totalTasks = totalDays * chairs.length
+      let completedTasks = 0
+      let totalSlotsCreated = 0
+
+      setGenerationProgress({ current: 0, total: totalTasks, phase: 'Generating slots...' })
 
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split('T')[0]
@@ -185,6 +223,16 @@ export default function RulesPage() {
 
       // Generate slots for each active chair
       for (const chair of chairs) {
+        completedTasks++
+        setGenerationProgress({ 
+          current: completedTasks, 
+          total: totalTasks, 
+          phase: `Processing ${chair.name} for ${dateStr}...` 
+        })
+        
+        // Small delay to make progress visible
+        await new Promise(resolve => setTimeout(resolve, 50))
+        
         for (const p of periods) {
           const [sh, sm] = p.start_time.split(':').map(Number)
           const [eh, em] = p.end_time.split(':').map(Number)
@@ -226,8 +274,18 @@ export default function RulesPage() {
       }
     }
 
-    alert(`Slots generated: ${totalSlotsCreated} slots created across ${chairs.length} chair(s)`)
-    fetchData()
+      setGenerationProgress({ current: totalTasks, total: totalTasks, phase: 'Completing...' })
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      alert(`Slots generated: ${totalSlotsCreated} slots created across ${chairs.length} chair(s)`)
+      fetchData()
+    } catch (error) {
+      console.error('Error generating slots:', error)
+      alert('Error occurred during slot generation. Please try again.')
+    } finally {
+      setIsGenerating(false)
+      setGenerationProgress({ current: 0, total: 0, phase: '' })
+    }
   }
 
   return (
@@ -267,15 +325,34 @@ export default function RulesPage() {
           <input className="input" type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)} />
         </div>
         <div className="column is-full">
-          <button className="button is-info is-fullwidth-mobile" onClick={generateSlots}>
-            Generate Slots {chairs.length > 0 ? `(${chairs.length} chair${chairs.length > 1 ? 's' : ''})` : ''}
+          <button 
+            className={`button is-info is-fullwidth-mobile ${isGenerating ? 'is-loading' : ''}`} 
+            onClick={generateSlots}
+            disabled={isGenerating}
+          >
+            {isGenerating ? 'Generating...' : `Generate Slots ${chairs.length > 0 ? `(${chairs.length} chair${chairs.length > 1 ? 's' : ''})` : ''}`}
           </button>
-          {chairs.length > 0 && (
+          
+          {isGenerating && generationProgress.total > 0 && (
+            <div className="mt-3">
+              <div className="is-flex is-justify-content-space-between is-align-items-center mb-2">
+                <span className="is-size-7">{generationProgress.phase}</span>
+                <span className="is-size-7">{generationProgress.current} / {generationProgress.total}</span>
+              </div>
+              <progress 
+                className="progress is-small is-info" 
+                value={generationProgress.current} 
+                max={generationProgress.total}
+              ></progress>
+            </div>
+          )}
+          
+          {!isGenerating && chairs.length > 0 && (
             <p className="help mt-2">
               Slots will be created for: {chairs.map(c => c.name).join(', ')}
             </p>
           )}
-          {chairs.length === 0 && (
+          {!isGenerating && chairs.length === 0 && (
             <p className="help has-text-danger mt-2">
               No active chairs found. Please add chairs before generating slots.
             </p>

@@ -367,3 +367,86 @@ export function useServiceMutations(businessId) {
 
   return { createService, updateService, deleteService, loading }
 }
+
+// Shift Templates
+export function useShiftTemplates(businessId) {
+  return useSWR(
+    businessId ? `shift_templates/${businessId}` : null,
+    fetcher
+  )
+}
+
+export function useShiftTemplateMutations(businessId) {
+  const [loading, setLoading] = useState(false)
+  
+  const createShiftTemplate = async (templateData) => {
+    setLoading(true)
+    try {
+      const sanitizedData = sanitizeFormData(templateData)
+      
+      const { data, error } = await supabase
+        .from('shift_templates')
+        .insert({ ...sanitizedData, business_id: businessId })
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      mutate(`shift_templates/${businessId}`)
+      toast.success('Shift template added successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to add shift template: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  const updateShiftTemplate = async ({ id, ...updates }) => {
+    setLoading(true)
+    try {
+      const sanitizedUpdates = sanitizeFormData(updates)
+      
+      const { data, error } = await supabase
+        .from('shift_templates')
+        .update(sanitizedUpdates)
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      mutate(`shift_templates/${businessId}`)
+      toast.success('Shift template updated successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to update shift template: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  const deleteShiftTemplate = async (id) => {
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('shift_templates')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      
+      mutate(`shift_templates/${businessId}`)
+      toast.success('Shift template deleted successfully')
+    } catch (error) {
+      toast.error(`Failed to delete shift template: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  return { createShiftTemplate, updateShiftTemplate, deleteShiftTemplate, loading }
+}

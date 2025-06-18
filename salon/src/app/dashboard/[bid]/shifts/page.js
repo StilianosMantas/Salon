@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import { useStaff } from '@/hooks/useSupabaseData'
+import { useStaff, useShiftTemplates } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
@@ -11,16 +11,20 @@ const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satur
 export default function ShiftsPage() {
   const { bid } = useParams()
   const { data: staff, error: staffError, isLoading: staffLoading } = useStaff(bid)
+  const { data: shiftTemplates, error: templatesError, isLoading: templatesLoading } = useShiftTemplates(bid)
   const [shifts, setShifts] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [selectedStaff, setSelectedStaff] = useState('')
-  const [selectedWeek, setSelectedWeek] = useState('')
+  const [selectedWeek, setSelectedWeek] = useState(() => {
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  })
   const [formVisible, setFormVisible] = useState(false)
   const [editingShift, setEditingShift] = useState(null)
   const [shiftForm, setShiftForm] = useState({
     staff_id: '',
-    date: '',
+    date: new Date().toISOString().split('T')[0],
     start_time: '',
     end_time: '',
     break_start: '',
@@ -337,7 +341,7 @@ export default function ShiftsPage() {
         </div>
 
         {/* Week View */}
-        <div className="box" style={{ margin: '0 -0.75rem', fontSize: '1.1em', marginTop: '0.75rem' }}>
+        <div className="box extended-card" style={{ fontSize: '1.1em', marginTop: '0.75rem' }}>
           {weekDates.length > 0 ? (
             <div className="table-container">
               <table className="table is-fullwidth is-hoverable">
@@ -475,39 +479,29 @@ export default function ShiftsPage() {
                   </div>
                 </div>
 
-                <div className="field">
-                  <label className="label">Quick Templates</label>
-                  <div className="buttons are-small">
-                    <button
-                      type="button"
-                      className="button is-light"
-                      onClick={() => setShiftForm({ ...shiftForm, start_time: '09:00', end_time: '17:00', break_start: '12:00', break_end: '13:00' })}
-                    >
-                      Full Day (9-5)
-                    </button>
-                    <button
-                      type="button"
-                      className="button is-light"
-                      onClick={() => setShiftForm({ ...shiftForm, start_time: '09:00', end_time: '13:00', break_start: '', break_end: '' })}
-                    >
-                      Morning (9-1)
-                    </button>
-                    <button
-                      type="button"
-                      className="button is-light"
-                      onClick={() => setShiftForm({ ...shiftForm, start_time: '13:00', end_time: '17:00', break_start: '', break_end: '' })}
-                    >
-                      Afternoon (1-5)
-                    </button>
-                    <button
-                      type="button"
-                      className="button is-light"
-                      onClick={() => setShiftForm({ ...shiftForm, start_time: '17:00', end_time: '21:00', break_start: '', break_end: '' })}
-                    >
-                      Evening (5-9)
-                    </button>
+                {shiftTemplates && shiftTemplates.length > 0 && (
+                  <div className="field">
+                    <label className="label">Shift Templates</label>
+                    <div className="buttons are-small">
+                      {shiftTemplates.map((template) => (
+                        <button
+                          key={template.id}
+                          type="button"
+                          className="button is-light"
+                          onClick={() => setShiftForm({ 
+                            ...shiftForm, 
+                            start_time: template.start_time, 
+                            end_time: template.end_time, 
+                            break_start: template.break_start || '', 
+                            break_end: template.break_end || '' 
+                          })}
+                        >
+                          {template.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="columns">
                   <div className="column">
