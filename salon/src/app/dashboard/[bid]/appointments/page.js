@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useParams } from 'next/navigation'
+import Calendar from '@/components/Calendar'
 
 export default function AppointmentManagementPage() {
   const { bid } = useParams()
@@ -17,6 +18,7 @@ export default function AppointmentManagementPage() {
   const [chairs, setChairs] = useState([])
   const [filterStaffId, setFilterStaffId] = useState('')
   const [filterChairId, setFilterChairId] = useState('')
+  const [viewMode, setViewMode] = useState('calendar') // 'calendar' or 'list'
   const [editingAppointment, setEditingAppointment] = useState(null)
   const [form, setForm] = useState({
     start_time: '',
@@ -639,10 +641,65 @@ export default function AppointmentManagementPage() {
             </select>
           </div>
         </div>
+        <div className="column is-one-third-tablet is-full-mobile">
+          <label className="label">View Mode</label>
+          <div className="buttons has-addons">
+            <button 
+              className={`button ${viewMode === 'calendar' ? 'is-primary' : 'is-light'}`}
+              onClick={() => setViewMode('calendar')}
+            >
+              <span className="icon">
+                <i className="fas fa-calendar"></i>
+              </span>
+              <span>Calendar</span>
+            </button>
+            <button 
+              className={`button ${viewMode === 'list' ? 'is-primary' : 'is-light'}`}
+              onClick={() => setViewMode('list')}
+            >
+              <span className="icon">
+                <i className="fas fa-list"></i>
+              </span>
+              <span>List</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Appointment List */}
-      {appointments.length > 0 ? (
+      {/* Calendar View */}
+      {viewMode === 'calendar' && (
+        <Calendar 
+          bid={bid}
+          appointments={appointments}
+          staff={staff}
+          chairs={chairs}
+          onAppointmentClick={(appointment) => editAppointment(appointment)}
+          onTimeSlotClick={(date, time) => {
+            // Create new appointment at clicked time slot
+            setEditingAppointment({
+              id: null,
+              slotdate: date.toISOString().split('T')[0],
+              start_time: time,
+              end_time: time, // Will be calculated when services are selected
+              staff_id: null,
+              client_id: null,
+              chair_id: null
+            })
+            setForm({
+              start_time: time,
+              end_time: time,
+              staff_id: '',
+              client_id: '',
+              client_search: '',
+              service_ids: [],
+              chair_id: ''
+            })
+          }}
+        />
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && appointments.length > 0 ? (
         <>
           {/* Group appointments by chair for parallel view */}
           {(() => {
@@ -861,13 +918,14 @@ export default function AppointmentManagementPage() {
             )
           })
         })()}
-      </>) : (
+        </>
+      ) : viewMode === 'list' ? (
         <div className="box extended-card" style={{ marginBottom: '20px' }}>
           <div className="has-text-centered py-4">
             <p className="has-text-grey">No appointments for selected date. Select a date with scheduled appointments.</p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Edit Appointment Form */}
       {editingAppointment && (
