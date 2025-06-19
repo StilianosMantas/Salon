@@ -16,6 +16,9 @@ export default function Layout({ children, params }) {
 
   // Keyboard navigation
   useEffect(() => {
+    if (!bid) return // Don't setup keyboard navigation until bid is available
+    
+    const base = `/dashboard/${bid}`
     const handleKeyDown = (e) => {
       // Alt + key combinations for navigation
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
@@ -46,7 +49,7 @@ export default function Layout({ children, params }) {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [base])
+  }, [bid])
 
   useEffect(() => {
     // Extract bid from params

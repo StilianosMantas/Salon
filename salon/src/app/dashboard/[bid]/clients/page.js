@@ -460,7 +460,7 @@ export default function ClientsPage() {
     return () => {
       document.removeEventListener('keydown', handleEscKey)
     }
-  }, [formVisible])
+  }, [formVisible]) // closeForm is hoisted function declaration, safe to use
 
   function isFormDirty(current, initial) {
     return (
@@ -1432,8 +1432,8 @@ export default function ClientsPage() {
                       />
                     </div>
                     <p className="help">
-                      {messageForm.type === 'sms' && `Sending to: ${formatPhoneNumber(selectedClient.mobile)}`}
-                      {messageForm.type === 'email' && `Sending to: ${selectedClient.email}`}
+                      {messageForm.type === 'sms' && selectedClient.mobile && `Sending to: ${formatPhoneNumber(selectedClient.mobile)}`}
+                      {messageForm.type === 'email' && selectedClient.email && `Sending to: ${selectedClient.email}`}
                     </p>
                   </div>
 
