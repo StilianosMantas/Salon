@@ -14,6 +14,40 @@ export default function Layout({ children, params }) {
   const [authChecked, setAuthChecked] = useState(false)
   const pathname = usePathname()
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Alt + key combinations for navigation
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        switch(e.key) {
+          case '1':
+            e.preventDefault()
+            window.location.href = base
+            break
+          case '2':
+            e.preventDefault()
+            window.location.href = `${base}/appointments`
+            break
+          case '3':
+            e.preventDefault()
+            window.location.href = `${base}/clients`
+            break
+          case '4':
+            e.preventDefault()
+            window.location.href = `${base}/staff`
+            break
+          case 'Escape':
+            e.preventDefault()
+            setSidebarOpen(false)
+            break
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [base])
+
   useEffect(() => {
     // Extract bid from params
     const getBid = async () => {

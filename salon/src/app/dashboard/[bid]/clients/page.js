@@ -10,6 +10,59 @@ export default function ClientsPage() {
   const { bid } = useParams()
   const { data: clients, error, isLoading } = useClients(bid)
   const { createClient, updateClient, deleteClient, checkClientUniqueness, loading: mutationLoading } = useClientMutations(bid)
+
+  // Export functions
+  const exportToCSV = () => {
+    if (!filteredClients || filteredClients.length === 0) {
+      toast.error('No clients to export')
+      return
+    }
+
+    const headers = ['Name', 'Email', 'Mobile', 'Notes', 'Created Date']
+    const csvContent = [
+      headers.join(','),
+      ...filteredClients.map(client => [
+        `"${client.name || ''}"`,
+        `"${client.email || ''}"`,
+        `"${client.mobile || ''}"`,
+        `"${(client.notes || '').replace(/"/g, '""')}"`,
+        `"${new Date(client.created_at).toLocaleDateString()}"`
+      ].join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `clients-export-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    toast.success(`Exported ${filteredClients.length} clients to CSV`)
+  }
+
+  const exportToJSON = () => {
+    if (!filteredClients || filteredClients.length === 0) {
+      toast.error('No clients to export')
+      return
+    }
+
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      totalClients: filteredClients.length,
+      clients: filteredClients.map(client => ({
+        name: client.name,
+        email: client.email,
+        mobile: client.mobile,
+        notes: client.notes,
+        createdAt: client.created_at
+      }))
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `clients-export-${new Date().toISOString().split('T')[0]}.json`
+    link.click()
+    toast.success(`Exported ${filteredClients.length} clients to JSON`)
+  }
   
   const [formVisible, setFormVisible] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', mobile: '', notes: '', id: null })
@@ -284,20 +337,51 @@ export default function ClientsPage() {
             )}
           </div>
         </div>
-        <button
-          className="button is-link"
-          data-add-client
-          onClick={() => {
-            setEditing(false)
-            const empty = { name: '', email: '', mobile: '', notes: '', id: null }
-            setForm({ ...empty })
-            setInitialForm({ ...empty })
-            setFormVisible(true)
-          }}
-          disabled={mutationLoading}
-        >
-          + Add Client
-        </button>
+        <div className="buttons">
+          <div className="dropdown is-hoverable">
+            <div className="dropdown-trigger">
+              <button className="button is-light" aria-haspopup="true" aria-controls="dropdown-menu">
+                <span className="icon">
+                  <i className="fas fa-download"></i>
+                </span>
+                <span>Export</span>
+                <span className="icon is-small">
+                  <i className="fas fa-angle-down" aria-hidden="true"></i>
+                </span>
+              </button>
+            </div>
+            <div className="dropdown-menu" id="dropdown-menu" role="menu">
+              <div className="dropdown-content">
+                <button className="dropdown-item button is-ghost" onClick={exportToCSV}>
+                  <span className="icon mr-2">
+                    <i className="fas fa-file-csv"></i>
+                  </span>
+                  Export as CSV
+                </button>
+                <button className="dropdown-item button is-ghost" onClick={exportToJSON}>
+                  <span className="icon mr-2">
+                    <i className="fas fa-file-code"></i>
+                  </span>
+                  Export as JSON
+                </button>
+              </div>
+            </div>
+          </div>
+          <button
+            className="button is-link"
+            data-add-client
+            onClick={() => {
+              setEditing(false)
+              const empty = { name: '', email: '', mobile: '', notes: '', id: null }
+              setForm({ ...empty })
+              setInitialForm({ ...empty })
+              setFormVisible(true)
+            }}
+            disabled={mutationLoading}
+          >
+            + Add Client
+          </button>
+        </div>
       </div>
       <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
@@ -309,8 +393,34 @@ export default function ClientsPage() {
             >
               <div>
                 <strong className="is-block" style={{ fontSize: '1.1em' }}>{c.name}</strong>
-                {c.email && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{c.email}</small>}
-                {c.mobile && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{formatPhoneNumber(c.mobile)}</small>}
+                {c.email && (
+                  <a 
+                    href={`mailto:${c.email}`} 
+                    className="is-block has-text-grey" 
+                    style={{ fontSize: '0.9em' }}
+                    title={`Email ${c.name}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="icon is-small mr-1">
+                      <i className="fas fa-envelope"></i>
+                    </span>
+                    {c.email}
+                  </a>
+                )}
+                {c.mobile && (
+                  <a 
+                    href={`tel:${c.mobile}`} 
+                    className="is-block has-text-grey" 
+                    style={{ fontSize: '0.9em' }}
+                    title={`Call ${c.name}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="icon is-small mr-1">
+                      <i className="fas fa-phone"></i>
+                    </span>
+                    {formatPhoneNumber(c.mobile)}
+                  </a>
+                )}
               </div>
               <div>
                 <span className="icon is-small has-text-grey-light">

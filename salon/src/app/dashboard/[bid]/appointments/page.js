@@ -33,6 +33,82 @@ export default function AppointmentManagementPage() {
   const [isClosing, setIsClosing] = useState(false)
   const [showActionsDropdown, setShowActionsDropdown] = useState(false)
 
+  // Print function
+  const printAppointments = () => {
+    if (!appointments || appointments.length === 0) {
+      if (typeof window !== 'undefined' && window.toast) {
+        window.toast.error('No appointments to print for selected date')
+      }
+      return
+    }
+
+    const printWindow = window.open('', '_blank')
+    const appointmentsByChair = appointments.reduce((groups, appointment) => {
+      const chairId = appointment.chair_id || 'unassigned'
+      if (!groups[chairId]) groups[chairId] = []
+      groups[chairId].push(appointment)
+      return groups
+    }, {})
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Appointments - ${selectedDate}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+          .chair-section { margin-bottom: 30px; page-break-inside: avoid; }
+          .chair-title { background: #f5f5f5; padding: 10px; border-left: 4px solid #3273dc; margin-bottom: 10px; }
+          .appointment { border: 1px solid #ddd; margin: 5px 0; padding: 10px; border-radius: 4px; }
+          .time { font-weight: bold; font-size: 1.1em; }
+          .client { color: #666; margin: 5px 0; }
+          .staff { color: #3273dc; font-weight: 500; }
+          .reference { font-size: 0.9em; color: #999; }
+          .status { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.85em; }
+          .status-booked { background: #d4edda; color: #155724; }
+          .status-completed { background: #d1ecf1; color: #0c5460; }
+          .status-cancelled { background: #f8d7da; color: #721c24; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Salon Appointments</h1>
+          <h2>${new Date(selectedDate).toLocaleDateString()}</h2>
+          <p>Generated on ${new Date().toLocaleString()}</p>
+        </div>
+        ${Object.entries(appointmentsByChair).map(([chairId, chairAppointments]) => {
+          const chair = chairId !== 'unassigned' ? chairs.find(c => c.id === chairId) : null
+          return `
+            <div class="chair-section">
+              <div class="chair-title">
+                <h3>${chair ? chair.name : 'Unassigned'} (${chairAppointments.length} appointments)</h3>
+              </div>
+              ${chairAppointments.map(apt => {
+                const staffMember = staff.find(s => s.id === apt.staff_id)
+                return `
+                  <div class="appointment">
+                    <div class="time">${formatTime(apt.start_time)} – ${formatTime(apt.end_time)}</div>
+                    <div class="reference">Reference: #${apt.id.slice(-6).toUpperCase()}</div>
+                    ${apt.client ? `<div class="client">Client: ${apt.client.name} (${apt.client.mobile})</div>` : ''}
+                    ${staffMember ? `<div class="staff">Staff: ${staffMember.name}</div>` : ''}
+                    ${apt.book_status ? `<span class="status status-${apt.book_status}">${apt.book_status.charAt(0).toUpperCase() + apt.book_status.slice(1)}</span>` : ''}
+                  </div>
+                `
+              }).join('')}
+            </div>
+          `
+        }).join('')}
+      </body>
+      </html>
+    `
+
+    printWindow.document.write(printContent)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
+  }
+
   const fetchStaff = useCallback(async () => {
     const { data } = await supabase
       .from('staff')
@@ -74,7 +150,7 @@ export default function AppointmentManagementPage() {
     let query = supabase
       .from('slot')
       .select(
-        'id, slotdate, start_time, end_time, duration, staff_id, client_id, chair_id, client(name, mobile), slot_service(service_id), chairs(name, color)'
+        'id, slotdate, start_time, end_time, duration, staff_id, client_id, chair_id, book_status, client(name, mobile), slot_service(service_id), chairs(name, color)'
       )
       .eq('business_id', bid)
       .eq('slotdate', selectedDate)
@@ -256,7 +332,9 @@ export default function AppointmentManagementPage() {
       }
 
       if (sum < needed) {
-        alert('Not enough consecutive free appointments to cover the services.')
+        if (typeof window !== 'undefined' && window.toast) {
+          window.toast.error('Not enough consecutive free appointments to cover the services. Please select fewer services or choose a different time slot.', { duration: 5000 })
+        }
         setShowModal(false)
         return
       }
@@ -305,7 +383,7 @@ export default function AppointmentManagementPage() {
   }
 
   async function clearClient(id) {
-    if (!confirm('Clear client and staff from this slot?')) return
+    if (!confirm('Clear client and staff from this slot? This will make the appointment available for booking again.')) return
 
     // Fetch the slot’s original duration to restore end_time
     const { data: slot } = await supabase
@@ -336,7 +414,7 @@ export default function AppointmentManagementPage() {
 
   async function clearSelectedClients() {
     if (!selectedAppointmentIds.length) return
-    if (!confirm('Clear client and staff from selected appointments?')) return
+    if (!confirm(`Clear client and staff from ${selectedAppointmentIds.length} selected appointment(s)? These slots will become available for booking again.`)) return
 
     const { data: clearedSlots } = await supabase
       .from('slot')
@@ -361,7 +439,7 @@ export default function AppointmentManagementPage() {
   }
 
   async function deleteSelectedAppointments() {
-    if (!selectedAppointmentIds.length || !confirm('Delete selected appointments?')) return
+    if (!selectedAppointmentIds.length || !confirm(`Permanently delete ${selectedAppointmentIds.length} selected appointment(s)? This action cannot be undone and will remove these time slots completely.`)) return
     await supabase.from('slot').delete().in('id', selectedAppointmentIds)
     await supabase.from('slot_service').delete().in('slot_id', selectedAppointmentIds)
     setSelectedAppointmentIds([])
@@ -712,6 +790,22 @@ export default function AppointmentManagementPage() {
                       <div className="has-text-weight-semibold" style={{ fontSize: '1.1em' }}>
                         {formatTime(s.start_time)} – {formatTime(s.end_time)}
                       </div>
+                      <span className="tag is-small is-light" title="Booking Reference">
+                        #{s.id.slice(-6).toUpperCase()}
+                      </span>
+                      {s.book_status && (
+                        <span className={`tag is-small ${
+                          s.book_status === 'booked' ? 'is-success is-light' :
+                          s.book_status === 'completed' ? 'is-info is-light' :
+                          s.book_status === 'cancelled' ? 'is-danger is-light' :
+                          'is-warning is-light'
+                        }`}>
+                          {s.book_status === 'booked' ? 'Booked' :
+                           s.book_status === 'completed' ? 'Completed' :
+                           s.book_status === 'cancelled' ? 'Cancelled' :
+                           s.book_status}
+                        </span>
+                      )}
                       {s.staff_id && staff.find((st) => st.id === s.staff_id)?.name && (
                         <span className="tag is-small is-info is-light">
                           {staff.find((st) => st.id === s.staff_id).name}
