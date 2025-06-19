@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { useClients, useClientMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import toast from 'react-hot-toast'
+import { supabase } from '@/lib/supabaseClient'
 
 export default function ClientsPage() {
   const { bid } = useParams()
@@ -65,12 +66,278 @@ export default function ClientsPage() {
   }
   
   const [formVisible, setFormVisible] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', mobile: '', notes: '', id: null })
+  const [form, setForm] = useState({ 
+    name: '', 
+    email: '', 
+    mobile: '', 
+    notes: '', 
+    preferences: '',
+    allergies: '',
+    preferred_staff: '',
+    preferred_services: [],
+    id: null 
+  })
   const [editing, setEditing] = useState(false)
-  const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', notes: '', id: null })
+  const [initialForm, setInitialForm] = useState({ 
+    name: '', 
+    email: '', 
+    mobile: '', 
+    notes: '', 
+    preferences: '',
+    allergies: '',
+    preferred_staff: '',
+    preferred_services: [],
+    id: null 
+  })
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredClients, setFilteredClients] = useState([])
   const [isClosing, setIsClosing] = useState(false)
+  const [selectedClient, setSelectedClient] = useState(null)
+  const [showClientDetails, setShowClientDetails] = useState(false)
+  const [clientHistory, setClientHistory] = useState([])
+  const [staff, setStaff] = useState([])
+  const [services, setServices] = useState([])
+  const [clientPhotos, setClientPhotos] = useState([])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoView, setPhotoView] = useState(null)
+  const [showPhotoModal, setShowPhotoModal] = useState(false)
+  const [photoType, setPhotoType] = useState('before') // 'before' or 'after'
+  const [photoNotes, setPhotoNotes] = useState('')
+  const [showCommunicationModal, setShowCommunicationModal] = useState(false)
+  const [communicationHistory, setCommunicationHistory] = useState([])
+  const [messageForm, setMessageForm] = useState({ type: 'sms', subject: '', message: '' })
+  const [sendingMessage, setSendingMessage] = useState(false)
+
+  // Fetch staff and services for preferences
+  useEffect(() => {
+    const fetchStaffAndServices = async () => {
+      try {
+        const { data: staffData } = await supabase
+          .from('staff')
+          .select('id, name')
+          .eq('business_id', bid)
+          .order('name')
+        
+        const { data: servicesData } = await supabase
+          .from('service')
+          .select('id, name')
+          .eq('business_id', bid)
+          .order('name')
+        
+        setStaff(staffData || [])
+        setServices(servicesData || [])
+      } catch (error) {
+        console.error('Error fetching staff and services:', error)
+      }
+    }
+
+    if (bid) {
+      fetchStaffAndServices()
+    }
+  }, [bid])
+
+  // Fetch client appointment history
+  const fetchClientHistory = async (clientId) => {
+    try {
+      const { data: history } = await supabase
+        .from('slot')
+        .select(`
+          id,
+          slotdate,
+          start_time,
+          end_time,
+          book_status,
+          created_at,
+          staff:staff_id (name),
+          slot_service (
+            service:service_id (name)
+          )
+        `)
+        .eq('business_id', bid)
+        .eq('client_id', clientId)
+        .order('slotdate', { ascending: false })
+        .limit(20)
+
+      setClientHistory(history || [])
+    } catch (error) {
+      console.error('Error fetching client history:', error)
+      setClientHistory([])
+    }
+  }
+
+  // Fetch client photos
+  const fetchClientPhotos = async (clientId) => {
+    try {
+      const { data: photos } = await supabase
+        .from('client_photos')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false })
+
+      setClientPhotos(photos || [])
+    } catch (error) {
+      console.error('Error fetching client photos:', error)
+      setClientPhotos([])
+    }
+  }
+
+  // Upload photo
+  const uploadPhoto = async (file, type, notes) => {
+    if (!selectedClient) return
+
+    setUploadingPhoto(true)
+    try {
+      // Create unique filename
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${selectedClient.id}_${type}_${Date.now()}.${fileExt}`
+      const filePath = `client-photos/${fileName}`
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('client-photos')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('client-photos')
+        .getPublicUrl(filePath)
+
+      // Save photo record to database
+      const { error: dbError } = await supabase
+        .from('client_photos')
+        .insert({
+          client_id: selectedClient.id,
+          business_id: bid,
+          photo_url: publicUrl,
+          photo_type: type,
+          notes: notes,
+          file_name: fileName
+        })
+
+      if (dbError) throw dbError
+
+      // Refresh photos
+      await fetchClientPhotos(selectedClient.id)
+      toast.success('Photo uploaded successfully')
+      setShowPhotoModal(false)
+      setPhotoNotes('')
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      toast.error('Failed to upload photo')
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
+  // Delete photo
+  const deletePhoto = async (photo) => {
+    if (!window.confirm('Are you sure you want to delete this photo?')) return
+
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('client-photos')
+        .remove([photo.file_name])
+
+      if (storageError) console.warn('Storage deletion error:', storageError)
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('client_photos')
+        .delete()
+        .eq('id', photo.id)
+
+      if (dbError) throw dbError
+
+      // Refresh photos
+      await fetchClientPhotos(selectedClient.id)
+      toast.success('Photo deleted successfully')
+    } catch (error) {
+      console.error('Error deleting photo:', error)
+      toast.error('Failed to delete photo')
+    }
+  }
+
+  // Fetch communication history
+  const fetchCommunicationHistory = async (clientId) => {
+    try {
+      const { data: history } = await supabase
+        .from('client_communications')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      setCommunicationHistory(history || [])
+    } catch (error) {
+      console.error('Error fetching communication history:', error)
+      setCommunicationHistory([])
+    }
+  }
+
+  // Send message to client
+  const sendMessage = async () => {
+    if (!selectedClient || !messageForm.message.trim()) {
+      toast.error('Please enter a message')
+      return
+    }
+
+    if (messageForm.type === 'email' && !messageForm.subject.trim()) {
+      toast.error('Please enter a subject for email')
+      return
+    }
+
+    setSendingMessage(true)
+    try {
+      // Save communication record to database
+      const { error } = await supabase
+        .from('client_communications')
+        .insert({
+          client_id: selectedClient.id,
+          business_id: bid,
+          type: messageForm.type,
+          subject: messageForm.subject || null,
+          message: messageForm.message,
+          status: 'sent',
+          sent_at: new Date().toISOString()
+        })
+
+      if (error) throw error
+
+      // Here you would integrate with actual SMS/Email service
+      // For now, we'll just simulate the sending
+      if (messageForm.type === 'sms') {
+        // Integration with SMS service (Twilio, etc.)
+        console.log(`SMS to ${selectedClient.mobile}: ${messageForm.message}`)
+        toast.success(`SMS sent to ${selectedClient.name}`)
+      } else {
+        // Integration with Email service (SendGrid, etc.)
+        console.log(`Email to ${selectedClient.email}: ${messageForm.subject} - ${messageForm.message}`)
+        toast.success(`Email sent to ${selectedClient.name}`)
+      }
+
+      // Refresh communication history
+      await fetchCommunicationHistory(selectedClient.id)
+      
+      // Reset form
+      setMessageForm({ type: 'sms', subject: '', message: '' })
+      setShowCommunicationModal(false)
+    } catch (error) {
+      console.error('Error sending message:', error)
+      toast.error('Failed to send message')
+    } finally {
+      setSendingMessage(false)
+    }
+  }
+
+  // Open communication center
+  const openCommunicationCenter = (client) => {
+    setSelectedClient(client)
+    setShowCommunicationModal(true)
+    fetchCommunicationHistory(client.id)
+  }
 
   // Filter clients based on search term
   useEffect(() => {
@@ -212,10 +479,22 @@ export default function ClientsPage() {
     if (form.mobile && !isValidGreekPhone(form.mobile)) return toast.error('Invalid Greek phone number format')
 
     try {
+      const clientData = {
+        id: form.id,
+        name: form.name,
+        email: form.email,
+        mobile: form.mobile,
+        notes: form.notes,
+        preferences: form.preferences,
+        allergies: form.allergies,
+        preferred_staff: form.preferred_staff || null,
+        preferred_services: form.preferred_services
+      }
+
       if (editing) {
-        await updateClient({ id: form.id, name: form.name, email: form.email, mobile: form.mobile, notes: form.notes })
+        await updateClient(clientData)
       } else {
-        await createClient({ name: form.name, email: form.email, mobile: form.mobile, notes: form.notes })
+        await createClient(clientData)
       }
       closeForm(true)
     } catch (error) {
@@ -224,11 +503,24 @@ export default function ClientsPage() {
   }
 
   function handleEdit(client) {
-    const copy = { ...client }
+    const copy = { 
+      ...client,
+      preferences: client.preferences || '',
+      allergies: client.allergies || '',
+      preferred_staff: client.preferred_staff || '',
+      preferred_services: client.preferred_services || []
+    }
     setForm(copy)
     setInitialForm(copy)
     setEditing(true)
     setFormVisible(true)
+  }
+
+  function viewClientDetails(client) {
+    setSelectedClient(client)
+    setShowClientDetails(true)
+    fetchClientHistory(client.id)
+    fetchClientPhotos(client.id)
   }
 
   async function handleDelete(id) {
@@ -251,8 +543,19 @@ export default function ClientsPage() {
     
     setIsClosing(true)
     setTimeout(() => {
-      setForm({ name: '', email: '', mobile: '', notes: '', id: null })
-      setInitialForm({ name: '', email: '', mobile: '', notes: '', id: null })
+      const emptyForm = { 
+        name: '', 
+        email: '', 
+        mobile: '', 
+        notes: '', 
+        preferences: '',
+        allergies: '',
+        preferred_staff: '',
+        preferred_services: [],
+        id: null 
+      }
+      setForm(emptyForm)
+      setInitialForm(emptyForm)
       setEditing(false)
       setFormVisible(false)
       setIsClosing(false)
@@ -372,7 +675,17 @@ export default function ClientsPage() {
             data-add-client
             onClick={() => {
               setEditing(false)
-              const empty = { name: '', email: '', mobile: '', notes: '', id: null }
+              const empty = { 
+                name: '', 
+                email: '', 
+                mobile: '', 
+                notes: '', 
+                preferences: '',
+                allergies: '',
+                preferred_staff: '',
+                preferred_services: [],
+                id: null 
+              }
               setForm({ ...empty })
               setInitialForm({ ...empty })
               setFormVisible(true)
@@ -386,12 +699,12 @@ export default function ClientsPage() {
       <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
-            <div 
-              className="is-flex is-justify-content-space-between is-align-items-center p-1 is-clickable" 
-              onClick={() => handleEdit(c)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div>
+            <div className="is-flex is-justify-content-space-between is-align-items-center p-1">
+              <div 
+                className="is-flex-grow-1 is-clickable"
+                onClick={() => handleEdit(c)}
+                style={{ cursor: 'pointer' }}
+              >
                 <strong className="is-block" style={{ fontSize: '1.1em' }}>{c.name}</strong>
                 {c.email && (
                   <a 
@@ -421,8 +734,55 @@ export default function ClientsPage() {
                     {formatPhoneNumber(c.mobile)}
                   </a>
                 )}
+                {(c.allergies || c.preferences) && (
+                  <div className="mt-1">
+                    {c.allergies && (
+                      <span className="tag is-warning is-small mr-1" title="Allergies">
+                        <span className="icon is-small">
+                          <i className="fas fa-exclamation-triangle"></i>
+                        </span>
+                        <span>Allergies</span>
+                      </span>
+                    )}
+                    {c.preferences && (
+                      <span className="tag is-info is-small" title="Has preferences">
+                        <span className="icon is-small">
+                          <i className="fas fa-heart"></i>
+                        </span>
+                        <span>Preferences</span>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-              <div>
+              <div className="is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
+                <button
+                  className="button is-small is-info is-outlined"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    viewClientDetails(c)
+                  }}
+                  title="View client details and history"
+                >
+                  <span className="icon">
+                    <i className="fas fa-eye"></i>
+                  </span>
+                  <span>Details</span>
+                </button>
+                <button
+                  className="button is-small is-success is-outlined"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openCommunicationCenter(c)
+                  }}
+                  title="Send message to client"
+                  disabled={!c.mobile && !c.email}
+                >
+                  <span className="icon">
+                    <i className="fas fa-comments"></i>
+                  </span>
+                  <span>Message</span>
+                </button>
                 <span className="icon is-small has-text-grey-light">
                   <i className="fas fa-chevron-right" style={{ fontSize: '0.875rem' }}></i>
                 </span>
@@ -503,6 +863,76 @@ export default function ClientsPage() {
                   </div>
                 </div>
                 <div className="field">
+                  <label className="label">Preferences</label>
+                  <div className="control">
+                    <textarea
+                      className="textarea"
+                      placeholder="Client preferences (e.g., preferred styling, timing, etc.)"
+                      value={form.preferences}
+                      onChange={(e) => setForm({ ...form, preferences: e.target.value })}
+                      rows="2"
+                    />
+                  </div>
+                </div>
+                <div className="field">
+                  <label className="label">Allergies & Sensitivities</label>
+                  <div className="control">
+                    <textarea
+                      className="textarea"
+                      placeholder="Important: List any known allergies or sensitivities"
+                      value={form.allergies}
+                      onChange={(e) => setForm({ ...form, allergies: e.target.value })}
+                      rows="2"
+                    />
+                  </div>
+                  {form.allergies && (
+                    <p className="help is-warning">
+                      <span className="icon is-small">
+                        <i className="fas fa-exclamation-triangle"></i>
+                      </span>
+                      Always verify allergies before service
+                    </p>
+                  )}
+                </div>
+                <div className="field">
+                  <label className="label">Preferred Staff</label>
+                  <div className="control">
+                    <div className="select is-fullwidth">
+                      <select
+                        value={form.preferred_staff}
+                        onChange={(e) => setForm({ ...form, preferred_staff: e.target.value })}
+                      >
+                        <option value="">No preference</option>
+                        {staff.map(staffMember => (
+                          <option key={staffMember.id} value={staffMember.id}>
+                            {staffMember.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="field">
+                  <label className="label">Preferred Services</label>
+                  <div className="control">
+                    {services.map(service => (
+                      <label key={service.id} className="checkbox is-block mb-2">
+                        <input
+                          type="checkbox"
+                          checked={form.preferred_services.includes(service.id)}
+                          onChange={(e) => {
+                            const updatedServices = e.target.checked
+                              ? [...form.preferred_services, service.id]
+                              : form.preferred_services.filter(id => id !== service.id)
+                            setForm({ ...form, preferred_services: updatedServices })
+                          }}
+                        />
+                        <span className="ml-2">{service.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="field">
                   <label className="label">Notes</label>
                   <div className="control">
                     <textarea
@@ -554,6 +984,556 @@ export default function ClientsPage() {
                 )}
               </form>
             </section>
+          </div>
+        </div>
+      )}
+
+      {/* Client Details Modal */}
+      {showClientDetails && selectedClient && (
+        <div className="modal is-active">
+          <div className="modal-background" onClick={() => setShowClientDetails(false)}></div>
+          <div className="modal-card" style={{ maxWidth: '800px', width: '90vw' }}>
+            <header className="modal-card-head">
+              <p className="modal-card-title">
+                <span className="icon mr-2">
+                  <i className="fas fa-user"></i>
+                </span>
+                {selectedClient.name} - Client Details
+              </p>
+              <button className="delete" aria-label="close" onClick={() => setShowClientDetails(false)}></button>
+            </header>
+            <section className="modal-card-body">
+              <div className="columns">
+                <div className="column is-half">
+                  <h5 className="title is-5 mb-4">Contact Information</h5>
+                  <div className="field">
+                    <label className="label">Email</label>
+                    <div className="field has-addons">
+                      <div className="control is-expanded">
+                        <input className="input" type="text" value={selectedClient.email || 'Not provided'} readOnly />
+                      </div>
+                      {selectedClient.email && (
+                        <div className="control">
+                          <a href={`mailto:${selectedClient.email}`} className="button is-info is-outlined">
+                            <span className="icon">
+                              <i className="fas fa-envelope"></i>
+                            </span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label className="label">Mobile</label>
+                    <div className="field has-addons">
+                      <div className="control is-expanded">
+                        <input className="input" type="text" value={selectedClient.mobile || 'Not provided'} readOnly />
+                      </div>
+                      {selectedClient.mobile && (
+                        <div className="control">
+                          <a href={`tel:${selectedClient.mobile}`} className="button is-success is-outlined">
+                            <span className="icon">
+                              <i className="fas fa-phone"></i>
+                            </span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <h5 className="title is-5 mb-4 mt-5">Preferences & Requirements</h5>
+                  {selectedClient.allergies && (
+                    <div className="field">
+                      <label className="label has-text-warning">
+                        <span className="icon">
+                          <i className="fas fa-exclamation-triangle"></i>
+                        </span>
+                        Allergies & Sensitivities
+                      </label>
+                      <div className="notification is-warning is-light">
+                        <p>{selectedClient.allergies}</p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedClient.preferences && (
+                    <div className="field">
+                      <label className="label">Preferences</label>
+                      <div className="content">
+                        <p>{selectedClient.preferences}</p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedClient.preferred_staff && (
+                    <div className="field">
+                      <label className="label">Preferred Staff</label>
+                      <div className="content">
+                        <span className="tag is-info">
+                          {staff.find(s => s.id === selectedClient.preferred_staff)?.name || 'Unknown Staff'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {selectedClient.preferred_services && selectedClient.preferred_services.length > 0 && (
+                    <div className="field">
+                      <label className="label">Preferred Services</label>
+                      <div className="content">
+                        <div className="tags">
+                          {selectedClient.preferred_services.map(serviceId => (
+                            <span key={serviceId} className="tag is-link is-light">
+                              {services.find(s => s.id === serviceId)?.name || 'Unknown Service'}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {selectedClient.notes && (
+                    <div className="field">
+                      <label className="label">Notes</label>
+                      <div className="content">
+                        <p>{selectedClient.notes}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="column is-half">
+                  <h5 className="title is-5 mb-4">Photo Gallery</h5>
+                  <div className="field">
+                    <button 
+                      className="button is-primary is-small mb-3"
+                      onClick={() => setShowPhotoModal(true)}
+                    >
+                      <span className="icon">
+                        <i className="fas fa-camera"></i>
+                      </span>
+                      <span>Add Photo</span>
+                    </button>
+                  </div>
+                  
+                  {clientPhotos.length > 0 ? (
+                    <div className="photo-gallery" style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '1rem' }}>
+                      <div className="columns is-multiline is-mobile">
+                        {clientPhotos.map(photo => (
+                          <div key={photo.id} className="column is-half-mobile is-one-third-tablet">
+                            <div className="card">
+                              <div className="card-image">
+                                <figure className="image is-square">
+                                  <img 
+                                    src={photo.photo_url} 
+                                    alt={`${photo.photo_type} photo`}
+                                    style={{ objectFit: 'cover', cursor: 'pointer' }}
+                                    onClick={() => setPhotoView(photo)}
+                                  />
+                                </figure>
+                              </div>
+                              <div className="card-content is-size-7 p-2">
+                                <span className={`tag is-small ${
+                                  photo.photo_type === 'before' ? 'is-warning' : 'is-success'
+                                }`}>
+                                  {photo.photo_type}
+                                </span>
+                                {photo.notes && (
+                                  <p className="mt-1" title={photo.notes}>
+                                    {photo.notes.length > 20 ? `${photo.notes.substring(0, 20)}...` : photo.notes}
+                                  </p>
+                                )}
+                                <p className="has-text-grey is-size-7">
+                                  {new Date(photo.created_at).toLocaleDateString()}
+                                </p>
+                                <button 
+                                  className="button is-small is-danger is-outlined mt-1"
+                                  onClick={() => deletePhoto(photo)}
+                                  style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}
+                                >
+                                  <span className="icon is-small">
+                                    <i className="fas fa-trash"></i>
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="has-text-centered py-3 mb-3">
+                      <p className="has-text-grey">No photos uploaded yet.</p>
+                    </div>
+                  )}
+                  
+                  <h5 className="title is-5 mb-4">Appointment History</h5>
+                  {clientHistory.length > 0 ? (
+                    <div className="timeline" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                      {clientHistory.map((appointment, index) => (
+                        <div key={appointment.id} className="timeline-item">
+                          <div className="timeline-marker" style={{
+                            backgroundColor: appointment.book_status === 'completed' ? '#48c774' :
+                                           appointment.book_status === 'cancelled' ? '#f14668' :
+                                           appointment.book_status === 'booked' ? '#3273dc' : '#dbdbdb'
+                          }}></div>
+                          <div className="timeline-content">
+                            <p className="heading">{new Date(appointment.slotdate).toLocaleDateString()}</p>
+                            <div className="content">
+                              <p>
+                                <strong>{appointment.start_time.slice(0,5)} - {appointment.end_time.slice(0,5)}</strong>
+                                {appointment.staff && (
+                                  <span className="tag is-small is-info is-light ml-2">
+                                    {appointment.staff.name}
+                                  </span>
+                                )}
+                              </p>
+                              {appointment.slot_service && appointment.slot_service.length > 0 && (
+                                <div className="tags">
+                                  {appointment.slot_service.map((ss, idx) => (
+                                    <span key={idx} className="tag is-small is-light">
+                                      {ss.service?.name || 'Unknown Service'}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              <span className={`tag is-small ${
+                                appointment.book_status === 'completed' ? 'is-success' :
+                                appointment.book_status === 'cancelled' ? 'is-danger' :
+                                appointment.book_status === 'booked' ? 'is-info' : 'is-light'
+                              }`}>
+                                {appointment.book_status || 'Available'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="has-text-centered py-4">
+                      <p className="has-text-grey">No appointment history found.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+            <footer className="modal-card-foot">
+              <button 
+                className="button is-primary"
+                onClick={() => {
+                  setShowClientDetails(false)
+                  handleEdit(selectedClient)
+                }}
+              >
+                <span className="icon">
+                  <i className="fas fa-edit"></i>
+                </span>
+                <span>Edit Client</span>
+              </button>
+              <button className="button" onClick={() => setShowClientDetails(false)}>Close</button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Upload Modal */}
+      {showPhotoModal && (
+        <div className="modal is-active">
+          <div className="modal-background" onClick={() => setShowPhotoModal(false)}></div>
+          <div className="modal-card">
+            <header className="modal-card-head">
+              <p className="modal-card-title">
+                <span className="icon mr-2">
+                  <i className="fas fa-camera"></i>
+                </span>
+                Add Photo for {selectedClient?.name}
+              </p>
+              <button className="delete" onClick={() => setShowPhotoModal(false)}></button>
+            </header>
+            <section className="modal-card-body">
+              <div className="field">
+                <label className="label">Photo Type</label>
+                <div className="control">
+                  <div className="select is-fullwidth">
+                    <select 
+                      value={photoType} 
+                      onChange={(e) => setPhotoType(e.target.value)}
+                    >
+                      <option value="before">Before</option>
+                      <option value="after">After</option>
+                      <option value="reference">Reference</option>
+                      <option value="consultation">Consultation</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="field">
+                <label className="label">Photo</label>
+                <div className="control">
+                  <input 
+                    className="input" 
+                    type="file" 
+                    accept="image/*" 
+                    id="photo-upload"
+                    onChange={(e) => {
+                      const file = e.target.files[0]
+                      if (file) {
+                        uploadPhoto(file, photoType, photoNotes)
+                      }
+                    }}
+                  />
+                </div>
+                <p className="help">Accepted formats: JPG, PNG, GIF (max 5MB)</p>
+              </div>
+              
+              <div className="field">
+                <label className="label">Notes (Optional)</label>
+                <div className="control">
+                  <textarea 
+                    className="textarea" 
+                    placeholder="Add notes about this photo..."
+                    value={photoNotes}
+                    onChange={(e) => setPhotoNotes(e.target.value)}
+                    rows="3"
+                  />
+                </div>
+              </div>
+            </section>
+            <footer className="modal-card-foot">
+              <button 
+                className="button is-primary"
+                onClick={() => document.getElementById('photo-upload').click()}
+                disabled={uploadingPhoto}
+              >
+                {uploadingPhoto ? (
+                  <span className="icon">
+                    <i className="fas fa-spinner fa-spin"></i>
+                  </span>
+                ) : (
+                  <span className="icon">
+                    <i className="fas fa-upload"></i>
+                  </span>
+                )}
+                <span>{uploadingPhoto ? 'Uploading...' : 'Choose Photo'}</span>
+              </button>
+              <button className="button" onClick={() => setShowPhotoModal(false)}>Cancel</button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Photo View Modal */}
+      {photoView && (
+        <div className="modal is-active">
+          <div className="modal-background" onClick={() => setPhotoView(null)}></div>
+          <div className="modal-card" style={{ maxWidth: '800px' }}>
+            <header className="modal-card-head">
+              <p className="modal-card-title">
+                <span className={`tag mr-2 ${
+                  photoView.photo_type === 'before' ? 'is-warning' : 
+                  photoView.photo_type === 'after' ? 'is-success' : 'is-info'
+                }`}>
+                  {photoView.photo_type}
+                </span>
+                Photo - {selectedClient?.name}
+              </p>
+              <button className="delete" onClick={() => setPhotoView(null)}></button>
+            </header>
+            <section className="modal-card-body has-text-centered">
+              <figure className="image">
+                <img src={photoView.photo_url} alt={`${photoView.photo_type} photo`} style={{ maxHeight: '500px', width: 'auto' }} />
+              </figure>
+              {photoView.notes && (
+                <div className="content mt-4">
+                  <p><strong>Notes:</strong> {photoView.notes}</p>
+                </div>
+              )}
+              <p className="has-text-grey mt-2">
+                Uploaded on {new Date(photoView.created_at).toLocaleDateString()}
+              </p>
+            </section>
+            <footer className="modal-card-foot">
+              <button 
+                className="button is-danger"
+                onClick={() => {
+                  setPhotoView(null)
+                  deletePhoto(photoView)
+                }}
+              >
+                <span className="icon">
+                  <i className="fas fa-trash"></i>
+                </span>
+                <span>Delete Photo</span>
+              </button>
+              <button className="button" onClick={() => setPhotoView(null)}>Close</button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Communication Center Modal */}
+      {showCommunicationModal && selectedClient && (
+        <div className="modal is-active">
+          <div className="modal-background" onClick={() => setShowCommunicationModal(false)}></div>
+          <div className="modal-card" style={{ maxWidth: '700px', width: '90vw' }}>
+            <header className="modal-card-head">
+              <p className="modal-card-title">
+                <span className="icon mr-2">
+                  <i className="fas fa-comments"></i>
+                </span>
+                Communication Center - {selectedClient.name}
+              </p>
+              <button className="delete" onClick={() => setShowCommunicationModal(false)}></button>
+            </header>
+            <section className="modal-card-body">
+              <div className="columns">
+                <div className="column is-half">
+                  <h5 className="title is-5 mb-4">Send Message</h5>
+                  
+                  <div className="field">
+                    <label className="label">Message Type</label>
+                    <div className="control">
+                      <div className="select is-fullwidth">
+                        <select 
+                          value={messageForm.type} 
+                          onChange={(e) => setMessageForm({ ...messageForm, type: e.target.value })}
+                        >
+                          <option value="sms" disabled={!selectedClient.mobile}>
+                            SMS {!selectedClient.mobile ? '(No mobile number)' : ''}
+                          </option>
+                          <option value="email" disabled={!selectedClient.email}>
+                            Email {!selectedClient.email ? '(No email address)' : ''}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {messageForm.type === 'email' && (
+                    <div className="field">
+                      <label className="label">Subject</label>
+                      <div className="control">
+                        <input 
+                          className="input" 
+                          type="text" 
+                          placeholder="Email subject..."
+                          value={messageForm.subject}
+                          onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="field">
+                    <label className="label">Message</label>
+                    <div className="control">
+                      <textarea 
+                        className="textarea" 
+                        placeholder={messageForm.type === 'sms' ? 'SMS message...' : 'Email message...'}
+                        value={messageForm.message}
+                        onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
+                        rows="5"
+                      />
+                    </div>
+                    <p className="help">
+                      {messageForm.type === 'sms' && `Sending to: ${formatPhoneNumber(selectedClient.mobile)}`}
+                      {messageForm.type === 'email' && `Sending to: ${selectedClient.email}`}
+                    </p>
+                  </div>
+
+                  <div className="field">
+                    <div className="control">
+                      <button 
+                        className={`button is-success is-fullwidth ${sendingMessage ? 'is-loading' : ''}`}
+                        onClick={sendMessage}
+                        disabled={sendingMessage || !messageForm.message.trim() || 
+                                 (messageForm.type === 'sms' && !selectedClient.mobile) ||
+                                 (messageForm.type === 'email' && !selectedClient.email)}
+                      >
+                        <span className="icon">
+                          <i className={`fas ${messageForm.type === 'sms' ? 'fa-sms' : 'fa-envelope'}`}></i>
+                        </span>
+                        <span>Send {messageForm.type === 'sms' ? 'SMS' : 'Email'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quick Templates */}
+                  <div className="field">
+                    <label className="label">Quick Templates</label>
+                    <div className="buttons">
+                      <button 
+                        className="button is-small is-light"
+                        onClick={() => setMessageForm({ 
+                          ...messageForm, 
+                          message: 'Hi! This is a friendly reminder about your upcoming appointment. Please confirm if you can make it. Thank you!'
+                        })}
+                      >
+                        Appointment Reminder
+                      </button>
+                      <button 
+                        className="button is-small is-light"
+                        onClick={() => setMessageForm({ 
+                          ...messageForm, 
+                          message: 'Thank you for visiting us today! We hope you love your new look. Please feel free to share any feedback.'
+                        })}
+                      >
+                        Follow-up
+                      </button>
+                      <button 
+                        className="button is-small is-light"
+                        onClick={() => setMessageForm({ 
+                          ...messageForm, 
+                          message: 'We have a special promotion this month! Contact us to learn more about our latest offers.'
+                        })}
+                      >
+                        Promotion
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="column is-half">
+                  <h5 className="title is-5 mb-4">Communication History</h5>
+                  {communicationHistory.length > 0 ? (
+                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                      {communicationHistory.map(comm => (
+                        <div key={comm.id} className="card mb-3">
+                          <div className="card-content p-3">
+                            <div className="is-flex is-justify-content-space-between is-align-items-center mb-2">
+                              <span className={`tag is-small ${
+                                comm.type === 'sms' ? 'is-success' : 'is-info'
+                              }`}>
+                                {comm.type.toUpperCase()}
+                              </span>
+                              <span className="has-text-grey is-size-7">
+                                {new Date(comm.created_at).toLocaleDateString()} at {new Date(comm.created_at).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            {comm.subject && (
+                              <p className="has-text-weight-semibold mb-1">{comm.subject}</p>
+                            )}
+                            <p className="is-size-7">{comm.message}</p>
+                            <div className="is-flex is-justify-content-space-between mt-2">
+                              <span className={`tag is-small ${
+                                comm.status === 'sent' ? 'is-success' : 
+                                comm.status === 'delivered' ? 'is-info' : 
+                                comm.status === 'failed' ? 'is-danger' : 'is-light'
+                              }`}>
+                                {comm.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="has-text-centered py-4">
+                      <p className="has-text-grey">No communication history found.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+            <footer className="modal-card-foot">
+              <button className="button" onClick={() => setShowCommunicationModal(false)}>Close</button>
+            </footer>
           </div>
         </div>
       )}

@@ -269,7 +269,108 @@ FROM business
 WHERE id NOT IN (SELECT DISTINCT business_id FROM shift_templates WHERE business_id IS NOT NULL AND name = 'Evening (17:00 - 21:00)');
 
 -- =====================================================
--- 10. GRANT NECESSARY PERMISSIONS
+-- 10. CREATE CLIENT_PHOTOS TABLE
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS client_photos (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  client_id BIGINT REFERENCES client(id) ON DELETE CASCADE NOT NULL,
+  business_id BIGINT REFERENCES business(id) ON DELETE CASCADE NOT NULL,
+  photo_url TEXT NOT NULL,
+  photo_type VARCHAR(50) DEFAULT 'before' CHECK (photo_type IN ('before', 'after', 'reference', 'consultation')),
+  notes TEXT,
+  file_name VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_client_photos_client_id ON client_photos(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_photos_business_id ON client_photos(business_id);
+CREATE INDEX IF NOT EXISTS idx_client_photos_type ON client_photos(photo_type);
+
+-- Enable RLS on client_photos table
+ALTER TABLE client_photos ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for client_photos (same business access)
+CREATE POLICY "Business client photos access" ON client_photos
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM business 
+      WHERE id = client_photos.business_id
+    )
+  );
+
+-- Add trigger for updated_at on client_photos
+CREATE TRIGGER update_client_photos_updated_at 
+  BEFORE UPDATE ON client_photos 
+  FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+-- =====================================================
+-- CREATE CLIENT_COMMUNICATIONS TABLE
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS client_communications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  client_id BIGINT REFERENCES client(id) ON DELETE CASCADE NOT NULL,
+  business_id BIGINT REFERENCES business(id) ON DELETE CASCADE NOT NULL,
+  type VARCHAR(20) DEFAULT 'sms' CHECK (type IN ('sms', 'email', 'call')),
+  subject TEXT,
+  message TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'failed', 'pending')),
+  sent_at TIMESTAMP WITH TIME ZONE,
+  delivered_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_client_communications_client_id ON client_communications(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_communications_business_id ON client_communications(business_id);
+CREATE INDEX IF NOT EXISTS idx_client_communications_type ON client_communications(type);
+CREATE INDEX IF NOT EXISTS idx_client_communications_status ON client_communications(status);
+
+-- Enable RLS on client_communications table
+ALTER TABLE client_communications ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for client_communications (same business access)
+CREATE POLICY "Business client communications access" ON client_communications
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM business 
+      WHERE id = client_communications.business_id
+    )
+  );
+
+-- Add trigger for updated_at on client_communications
+CREATE TRIGGER update_client_communications_updated_at 
+  BEFORE UPDATE ON client_communications 
+  FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+-- =====================================================
+-- 11. ADD EXTENDED CLIENT FIELDS (CRM Enhancement)
+-- =====================================================
+
+-- Add CRM fields to client table
+ALTER TABLE client 
+ADD COLUMN IF NOT EXISTS preferences TEXT,
+ADD COLUMN IF NOT EXISTS allergies TEXT,
+ADD COLUMN IF NOT EXISTS preferred_staff BIGINT REFERENCES staff(id),
+ADD COLUMN IF NOT EXISTS preferred_services BIGINT[];
+
+-- Add indexes for better performance on new client fields
+CREATE INDEX IF NOT EXISTS idx_client_preferred_staff ON client(preferred_staff);
+
+-- =====================================================
+-- 12. CREATE STORAGE BUCKET FOR CLIENT PHOTOS
+-- =====================================================
+
+-- Note: This needs to be run in Supabase Dashboard -> Storage
+-- INSERT INTO storage.buckets (id, name, public) 
+-- VALUES ('client-photos', 'client-photos', true);
+
+-- =====================================================
+-- 13. GRANT NECESSARY PERMISSIONS
 -- =====================================================
 
 -- Grant permissions to authenticated users
@@ -277,6 +378,8 @@ GRANT ALL ON profiles TO authenticated;
 GRANT ALL ON staff_shifts TO authenticated;
 GRANT ALL ON chairs TO authenticated;
 GRANT ALL ON shift_templates TO authenticated;
+GRANT ALL ON client_photos TO authenticated;
+GRANT ALL ON client_communications TO authenticated;
 
 -- Grant usage on sequences
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;

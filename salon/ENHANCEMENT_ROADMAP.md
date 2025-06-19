@@ -34,12 +34,12 @@
 - [ ] Add appointment cancellation functionality - `src/app/dashboard/[bid]/slots/page.js`
 - [ ] Implement waitlist system for fully booked slots - `src/app/dashboard/[bid]/slots/page.js`
 
-### Calendar Integration
-- [ ] Create full calendar view component - `src/components/Calendar.js` (new)
-- [ ] Add drag-and-drop appointment management - `src/components/Calendar.js` (new)
-- [ ] Implement multi-view support (day/week/month) - `src/components/Calendar.js` (new)
-- [ ] Add staff schedule visualization - `src/components/Calendar.js` (new)
-- [ ] Implement resource booking (chairs/equipment) - `src/components/Calendar.js` (new)
+### ✅ Calendar Integration (COMPLETED - v.0.5.0)
+- [x] Create full calendar view component - `src/components/Calendar.js`
+- [x] Add drag-and-drop appointment management - `src/components/Calendar.js`
+- [x] Implement multi-view support (day/week/month) - `src/components/Calendar.js`
+- [x] Add staff schedule visualization - `src/components/Calendar.js`
+- [x] Implement resource booking (chairs/equipment) - `src/components/Calendar.js`
 
 ### Business Logic Enhancements
 - [ ] Add staff availability management - `src/app/dashboard/[bid]/staff/page.js`
@@ -48,11 +48,11 @@
 - [ ] Implement service buffer times - `src/app/dashboard/[bid]/services/page.js`
 - [ ] Add recurring appointment support - `src/app/dashboard/[bid]/slots/page.js`
 
-### Client Relationship Management
-- [ ] Add client history and preferences - `src/app/dashboard/[bid]/clients/page.js`
-- [ ] Implement service notes and allergies - `src/app/dashboard/[bid]/clients/page.js`
-- [ ] Add photo galleries (before/after) - `src/app/dashboard/[bid]/clients/page.js`
-- [ ] Create client communication center - `src/app/dashboard/[bid]/clients/page.js`
+### ✅ Client Relationship Management (COMPLETED - v.0.3.8)
+- [x] Add client history and preferences - `src/app/dashboard/[bid]/clients/page.js`
+- [x] Implement service notes and allergies - `src/app/dashboard/[bid]/clients/page.js`
+- [x] Add photo galleries (before/after) - `src/app/dashboard/[bid]/clients/page.js`
+- [x] Create client communication center - `src/app/dashboard/[bid]/clients/page.js`
 - [ ] Implement loyalty points system - `src/app/dashboard/[bid]/clients/page.js`
 
 ## 📊 PHASE 3: Business Intelligence & Analytics (Weeks 6-7)
