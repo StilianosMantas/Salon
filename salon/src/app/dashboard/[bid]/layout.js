@@ -661,7 +661,7 @@ export default function Layout({ children, params }) {
         }}>
           {/* Desktop page title */}
           <div className="is-hidden-touch" style={{ padding: '1.5rem 1.5rem 0', marginBottom: '1rem' }}>
-            <h1 className="title is-4">{getPageTitle()}</h1>
+            <h1 className="title is-4" style={{ paddingLeft: '0.5rem' }}>{getPageTitle()}</h1>
           </div>
           {children}
         </main>

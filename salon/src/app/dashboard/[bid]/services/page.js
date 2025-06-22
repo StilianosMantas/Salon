@@ -122,7 +122,7 @@ export default function ServicesPage() {
 
   if (error) {
     return (
-      <div className="container py-5 px-4">
+      <div className="container py-2 px-2">
         <div className="notification is-danger">
           <h2 className="title is-4">Unable to Load Services</h2>
           <p>There was an error loading the services list. Please try again.</p>
@@ -158,7 +158,7 @@ export default function ServicesPage() {
           }
         }
       `}</style>
-    <div className="container py-5 px-4">
+    <div className="container py-2 px-2">
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
         <h1 className="salon-title-sm">Services</h1>
         <button 
