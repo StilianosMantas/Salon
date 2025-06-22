@@ -476,6 +476,9 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           box-shadow: 0 4px 6px rgba(0,0,0,0.1);
           margin: 1rem 0;
           border: 1px solid #e9ecef;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
         }
 
         .calendar-header {
@@ -782,10 +785,36 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           flex-direction: column;
           gap: 0.25rem;
           transition: background-color 0.2s ease;
+          overflow: hidden;
+          box-sizing: border-box;
         }
 
         .day-slot:hover {
           background: #f8f9fa;
+        }
+
+        /* Improve touch targets for tablets */
+        @media (hover: none) and (pointer: coarse) {
+          .day-slot {
+            min-height: 80px;
+            padding: 0.75rem;
+          }
+
+          .slot-content {
+            min-height: 80px;
+            padding: 0.75rem;
+          }
+
+          .appointment-block {
+            min-height: 60px;
+            padding: 1rem;
+            font-size: 0.9rem;
+            touch-action: manipulation;
+          }
+
+          .time-slot {
+            min-height: 80px;
+          }
         }
 
         /* Month View Styles */
@@ -914,6 +943,12 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           display: flex;
           flex-direction: column;
           justify-content: space-between;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-wrap: break-word;
         }
 
         .appointment-block:hover {
@@ -994,6 +1029,152 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
         }
 
         /* Responsive Design */
+        
+        /* iPad Pro and larger tablets */
+        @media screen and (min-width: 769px) and (max-width: 1024px) {
+          .calendar-container {
+            margin: 0.5rem 0;
+          }
+
+          .calendar-header {
+            padding: 1rem;
+            gap: 1rem;
+          }
+
+          .calendar-controls {
+            justify-content: center;
+            gap: 1rem;
+          }
+
+          .time-label {
+            width: 70px;
+            font-size: 0.8rem;
+            padding: 0.75rem 0.5rem;
+          }
+
+          .week-header {
+            grid-template-columns: 70px repeat(7, 1fr);
+          }
+
+          .time-row {
+            grid-template-columns: 70px repeat(7, 1fr);
+            min-height: 70px;
+          }
+
+          .day-slot {
+            padding: 0.5rem;
+            min-height: 70px;
+          }
+
+          .slot-content {
+            padding: 0.5rem;
+            min-height: 70px;
+          }
+
+          .appointment-block {
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            min-height: 55px;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow: hidden;
+          }
+
+          .appointment-time {
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            line-height: 1.2;
+          }
+
+          .appointment-client {
+            font-size: 0.75rem;
+            line-height: 1.2;
+          }
+
+          .appointment-staff {
+            font-size: 0.7rem;
+          }
+
+          .day-header {
+            padding: 1rem 0.5rem;
+          }
+
+          .day-name {
+            font-size: 0.8rem;
+          }
+
+          .day-number {
+            font-size: 1.4rem;
+          }
+
+          .calendar-day-view,
+          .calendar-week-view,
+          .calendar-month-view {
+            max-height: 75vh;
+          }
+
+          .month-day {
+            padding: 0.75rem;
+            min-height: 110px;
+          }
+
+          /* Fix grid overflow issues on iPad */
+          .week-body,
+          .time-grid {
+            overflow-x: auto;
+            min-width: 100%;
+          }
+
+          .time-row,
+          .week-header {
+            min-width: 100%;
+          }
+
+          /* Improve appointment positioning */
+          .appointment-block {
+            position: relative;
+            width: calc(100% - 4px);
+            box-sizing: border-box;
+          }
+
+          /* Staff view improvements for iPad */
+          .staff-view .week-header {
+            grid-template-columns: 70px repeat(auto-fit, minmax(140px, 1fr));
+          }
+
+          .staff-view .time-row {
+            grid-template-columns: 70px repeat(auto-fit, minmax(140px, 1fr));
+          }
+
+          .staff-slot {
+            min-height: 70px;
+            padding: 0.5rem;
+          }
+
+          /* Ensure grid stability on iPad */
+          .calendar-week-view {
+            width: 100%;
+            min-width: 0;
+          }
+
+          .week-header,
+          .time-row {
+            width: 100%;
+            min-width: 0;
+          }
+
+          /* Fix text wrapping in appointment blocks */
+          .appointment-time,
+          .appointment-client,
+          .appointment-staff {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+          }
+        }
+
         @media screen and (max-width: 1024px) {
           .calendar-header {
             flex-direction: column;
@@ -1004,6 +1185,81 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           .calendar-controls {
             justify-content: center;
             flex-wrap: wrap;
+          }
+        }
+
+        /* iPad Mini and smaller tablets in portrait */
+        @media screen and (min-width: 481px) and (max-width: 768px) {
+          .calendar-container {
+            margin: 0.25rem 0;
+          }
+
+          .time-label {
+            width: 60px;
+            font-size: 0.75rem;
+            padding: 0.6rem 0.4rem;
+          }
+
+          .week-header {
+            grid-template-columns: 60px repeat(7, 1fr);
+          }
+
+          .time-row {
+            grid-template-columns: 60px repeat(7, 1fr);
+            min-height: 65px;
+          }
+
+          .day-slot {
+            padding: 0.4rem;
+            min-height: 65px;
+          }
+
+          .slot-content {
+            padding: 0.4rem;
+            min-height: 65px;
+          }
+
+          .appointment-block {
+            padding: 0.6rem;
+            font-size: 0.75rem;
+            margin-bottom: 0.4rem;
+            min-height: 50px;
+          }
+
+          .appointment-time {
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+          }
+
+          .appointment-client {
+            font-size: 0.7rem;
+          }
+
+          .appointment-staff {
+            font-size: 0.65rem;
+          }
+
+          .day-header {
+            padding: 0.8rem 0.4rem;
+          }
+
+          .day-name {
+            font-size: 0.75rem;
+          }
+
+          .day-number {
+            font-size: 1.3rem;
+          }
+
+          .calendar-day-view,
+          .calendar-week-view,
+          .calendar-month-view {
+            max-height: 70vh;
+          }
+
+          .month-day {
+            padding: 0.6rem;
+            min-height: 95px;
           }
         }
 
