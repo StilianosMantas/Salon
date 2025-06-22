@@ -151,9 +151,12 @@ export default function AppointmentManagementPage() {
   const fetchAppointments = useCallback(async () => {
     let query = supabase
       .from('slot')
-      .select(
-        'id, slotdate, start_time, end_time, duration, staff_id, client_id, chair_id, client(name, mobile), slot_service(service_id), chairs(name, color)'
-      )
+      .select(`
+        id, slotdate, start_time, end_time, duration, staff_id, client_id, chair_id,
+        client(name, mobile),
+        slot_service(service_id),
+        chair:chairs(name, color)
+      `)
       .eq('business_id', bid)
       .eq('slotdate', selectedDate)
       .order('start_time')
@@ -553,7 +556,8 @@ export default function AppointmentManagementPage() {
   }
 
   function formatTime(t) {
-    return t?.slice(0, 5)
+    if (!t || typeof t !== 'string') return ''
+    return t.slice(0, 5)
   }
 
   function staffColor(id) {
@@ -685,7 +689,8 @@ export default function AppointmentManagementPage() {
           {/* Group appointments by chair for parallel view */}
           {(() => {
             // Group appointments by chair
-            const appointmentsByChair = appointments.reduce((groups, appointment) => {
+            const appointmentsByChair = (appointments || []).reduce((groups, appointment) => {
+              if (!appointment) return groups
               const chairId = appointment.chair_id || 'unassigned'
               if (!groups[chairId]) {
                 groups[chairId] = []
@@ -703,7 +708,7 @@ export default function AppointmentManagementPage() {
 
             return sortedChairIds.map(chairId => {
               const chairAppointments = appointmentsByChair[chairId]
-              const chair = chairId !== 'unassigned' ? chairs.find(c => c.id === chairId) : null
+              const chair = chairId !== 'unassigned' ? chairs?.find(c => c.id === chairId) : null
               
               return (
                 <div key={chairId} className="box extended-card" style={{ marginBottom: '20px' }}>
@@ -829,7 +834,7 @@ export default function AppointmentManagementPage() {
                         {formatTime(s.start_time)} – {formatTime(s.end_time)}
                       </div>
                       <span className="tag is-small is-light" title="Booking Reference">
-                        #{s.id.slice(-6).toUpperCase()}
+                        #{s.id?.slice(-6).toUpperCase() || 'N/A'}
                       </span>
                       {s.book_status && (
                         <span className={`tag is-small ${
@@ -844,27 +849,27 @@ export default function AppointmentManagementPage() {
                            s.book_status}
                         </span>
                       )}
-                      {s.staff_id && staff.find((st) => st.id === s.staff_id)?.name && (
+                      {s.staff_id && staff?.find((st) => st.id === s.staff_id)?.name && (
                         <span className="tag is-small is-info is-light">
-                          {staff.find((st) => st.id === s.staff_id).name}
+                          {staff.find((st) => st.id === s.staff_id)?.name}
                         </span>
                       )}
-                      {s.chair_id && s.chairs && (
+                      {s.chair_id && s.chair && (
                         <span 
                           className="tag is-small" 
                           style={{ 
-                            backgroundColor: s.chairs.color || '#dbdbdb', 
+                            backgroundColor: s.chair.color || '#dbdbdb', 
                             color: '#fff', 
                             border: 'none' 
                           }}
                         >
-                          {s.chairs.name}
+                          {s.chair.name}
                         </span>
                       )}
                     </div>
                     {s.client && (
                       <div className="is-size-6 has-text-grey-dark">
-                        {s.client.name} ({s.client.mobile})
+                        {s.client.name} {s.client.mobile ? `(${s.client.mobile})` : ''}
                       </div>
                     )}
                   </div>
