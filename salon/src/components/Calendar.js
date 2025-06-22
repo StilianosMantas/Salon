@@ -3,13 +3,28 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 
-export default function Calendar({ bid, appointments = [], staff = [], chairs = [], onAppointmentClick, onTimeSlotClick }) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+export default function Calendar({ bid, appointments = [], staff = [], chairs = [], selectedDate, onAppointmentClick, onTimeSlotClick }) {
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (selectedDate) {
+      return new Date(selectedDate + 'T00:00:00')
+    }
+    return new Date()
+  })
   const [view, setView] = useState('week') // 'day', 'week', 'month'
   const [draggedAppointment, setDraggedAppointment] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedStaff, setSelectedStaff] = useState('all') // 'all' or staff id
   const [showStaffSchedule, setShowStaffSchedule] = useState(false)
+
+  // Sync currentDate with selectedDate prop
+  useEffect(() => {
+    if (selectedDate) {
+      const newDate = new Date(selectedDate + 'T00:00:00')
+      if (newDate.getTime() !== currentDate.getTime()) {
+        setCurrentDate(newDate)
+      }
+    }
+  }, [selectedDate, currentDate])
 
   // Get start and end dates for current view
   const getViewDates = useCallback(() => {
@@ -59,7 +74,11 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
   // Get appointments for a specific date
   const getAppointmentsForDate = (date) => {
     const dateStr = date.toISOString().split('T')[0]
-    let filtered = appointments.filter(apt => apt.slotdate === dateStr)
+    let filtered = appointments.filter(apt => {
+      // Handle both slotdate and calculated date from appointments
+      const appointmentDate = apt.slotdate || dateStr
+      return appointmentDate === dateStr
+    })
     
     // Filter by selected staff if not showing all
     if (selectedStaff !== 'all') {
@@ -178,7 +197,7 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
               <div className="time-label">{formatTime(time)}</div>
               <div className="slot-content">
                 {dayAppointments
-                  .filter(apt => apt.start_time.slice(0, 5) === time)
+                  .filter(apt => apt.start_time && apt.start_time.slice(0, 5) === time)
                   .map(apt => (
                     <div
                       key={apt.id}
@@ -250,7 +269,7 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                   const staffAppointments = appointments.filter(apt => 
                     apt.staff_id === staffMember.id && 
                     weekDays.some(day => apt.slotdate === day.toISOString().split('T')[0]) &&
-                    apt.start_time.slice(0, 5) === time
+                    apt.start_time && apt.start_time.slice(0, 5) === time
                   )
 
                   return (
@@ -317,7 +336,7 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
               {weekDays.map(day => {
                 const dayAppointments = getAppointmentsForDate(day)
                 const timeAppointments = dayAppointments.filter(apt => 
-                  apt.start_time.slice(0, 5) === time
+                  apt.start_time && apt.start_time.slice(0, 5) === time
                 )
 
                 return (
@@ -454,7 +473,9 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           background: white;
           border-radius: 8px;
           overflow: hidden;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          margin: 1rem 0;
+          border: 1px solid #e9ecef;
         }
 
         .calendar-header {
@@ -596,12 +617,14 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
         .calendar-legend {
           display: flex;
           gap: 2rem;
-          padding: 0.75rem 1rem;
-          background: #fafafa;
-          border-top: 1px solid #f0f0f0;
+          padding: 1rem;
+          background: #f8f9fa;
+          border-top: 2px solid #e9ecef;
           font-size: 0.875rem;
           flex-wrap: wrap;
           align-items: flex-start;
+          border-bottom-left-radius: 6px;
+          border-bottom-right-radius: 6px;
         }
 
         .legend-section {
@@ -609,30 +632,41 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           align-items: center;
           gap: 0.75rem;
           flex-wrap: wrap;
+          margin-bottom: 0.5rem;
         }
 
         .legend-section strong {
           color: #363636;
-          margin-right: 0.25rem;
+          margin-right: 0.5rem;
+          font-weight: 600;
         }
 
         .legend-item {
           display: flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: 0.5rem;
+          font-size: 0.8rem;
+          padding: 0.25rem 0.5rem;
+          background: white;
+          border-radius: 4px;
+          border: 1px solid #e9ecef;
         }
 
         .legend-color {
-          width: 12px;
-          height: 12px;
-          border-radius: 2px;
+          width: 14px;
+          height: 14px;
+          border-radius: 3px;
           border: 1px solid rgba(0,0,0,0.1);
+          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         /* Day View Styles */
         .calendar-day-view {
-          max-height: 600px;
+          max-height: 70vh;
           overflow-y: auto;
+          border: 1px solid #dbdbdb;
+          border-radius: 6px;
+          background: white;
         }
 
         .time-grid {
@@ -644,23 +678,34 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           display: flex;
           min-height: 60px;
           border-bottom: 1px solid #f0f0f0;
+          transition: background-color 0.2s ease;
+        }
+
+        .time-slot:hover {
+          background: #fafafa;
         }
 
         .time-label {
           width: 80px;
-          padding: 0.5rem;
+          padding: 0.75rem 0.5rem;
           font-size: 0.875rem;
           color: #666;
           border-right: 1px solid #f0f0f0;
           display: flex;
           align-items: flex-start;
+          background: #f8f9fa;
+          font-weight: 500;
         }
 
         .slot-content {
           flex: 1;
-          padding: 0.25rem;
+          padding: 0.5rem;
           cursor: pointer;
           position: relative;
+          min-height: 60px;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
         }
 
         .slot-content:hover {
@@ -669,35 +714,46 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
 
         /* Week View Styles */
         .calendar-week-view {
-          max-height: 600px;
+          max-height: 70vh;
           overflow: auto;
+          border: 1px solid #dbdbdb;
+          border-radius: 6px;
+          background: white;
         }
 
         .week-header {
           display: grid;
           grid-template-columns: 80px repeat(7, 1fr);
-          border-bottom: 1px solid #dbdbdb;
+          border-bottom: 2px solid #dbdbdb;
           background: #f8f9fa;
+          position: sticky;
+          top: 0;
+          z-index: 10;
         }
 
         .time-column-header {
           border-right: 1px solid #dbdbdb;
+          background: #f8f9fa;
         }
 
         .day-header {
-          padding: 0.75rem 0.5rem;
+          padding: 1rem 0.5rem;
           text-align: center;
-          border-right: 1px solid #f0f0f0;
+          border-right: 1px solid #e0e0e0;
+          background: #f8f9fa;
         }
 
         .day-name {
           font-weight: 600;
           color: #363636;
+          font-size: 0.875rem;
+          margin-bottom: 0.25rem;
         }
 
         .day-number {
-          font-size: 1.25rem;
-          color: #666;
+          font-size: 1.5rem;
+          color: #3273dc;
+          font-weight: 700;
         }
 
         .week-body {
@@ -712,11 +768,20 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           border-bottom: 1px solid #f0f0f0;
         }
 
+        .time-row:hover {
+          background: #fafafa;
+        }
+
         .day-slot {
           border-right: 1px solid #f0f0f0;
-          padding: 0.25rem;
+          padding: 0.5rem;
           cursor: pointer;
           position: relative;
+          min-height: 60px;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          transition: background-color 0.2s ease;
         }
 
         .day-slot:hover {
@@ -725,29 +790,36 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
 
         /* Month View Styles */
         .calendar-month-view {
-          height: 500px;
+          height: 70vh;
           display: flex;
           flex-direction: column;
+          border: 1px solid #dbdbdb;
+          border-radius: 6px;
+          background: white;
+          overflow: hidden;
         }
 
         .month-header {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           background: #f8f9fa;
-          border-bottom: 1px solid #dbdbdb;
+          border-bottom: 2px solid #dbdbdb;
         }
 
         .month-header .day-header {
-          padding: 0.75rem;
+          padding: 1rem;
           text-align: center;
           font-weight: 600;
-          border-right: 1px solid #f0f0f0;
+          border-right: 1px solid #e0e0e0;
+          color: #363636;
+          font-size: 0.875rem;
         }
 
         .month-body {
           flex: 1;
           display: flex;
           flex-direction: column;
+          overflow: hidden;
         }
 
         .week-row {
@@ -759,10 +831,14 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
         .month-day {
           border-right: 1px solid #f0f0f0;
           border-bottom: 1px solid #f0f0f0;
-          padding: 0.5rem;
+          padding: 0.75rem;
           cursor: pointer;
           position: relative;
-          min-height: 80px;
+          min-height: 100px;
+          transition: background-color 0.2s ease;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
         .month-day:hover {
@@ -770,13 +846,23 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
         }
 
         .month-day.other-month {
-          color: #ccc;
+          color: #bbb;
           background: #fafafa;
         }
 
+        .month-day.other-month:hover {
+          background: #f0f0f0;
+        }
+
         .day-number {
-          font-weight: 600;
-          margin-bottom: 0.25rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          font-size: 1.1rem;
+          color: #363636;
+        }
+
+        .month-day.other-month .day-number {
+          color: #bbb;
         }
 
         .day-appointments {
@@ -815,47 +901,82 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
 
         /* Appointment Block Styles */
         .appointment-block {
-          border-radius: 4px;
-          padding: 0.5rem;
-          margin-bottom: 0.25rem;
+          border-radius: 6px;
+          padding: 0.75rem;
+          margin-bottom: 0.5rem;
           cursor: move;
-          transition: all 0.2s;
+          transition: all 0.2s ease;
           color: white;
           font-size: 0.875rem;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          border: none;
+          min-height: 50px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
         }
 
         .appointment-block:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          z-index: 5;
+        }
+
+        .appointment-block.available {
+          background: #e9ecef !important;
+          color: #666 !important;
+          border: 2px dashed #ced4da;
+          opacity: 0.7;
+        }
+
+        .appointment-block.booked {
+          background: linear-gradient(135deg, #48c774, #3ec06d) !important;
+        }
+
+        .appointment-block.completed {
+          background: linear-gradient(135deg, #3273dc, #2366d1) !important;
+        }
+
+        .appointment-block.cancelled {
+          background: linear-gradient(135deg, #f14668, #ef2648) !important;
+          opacity: 0.8;
         }
 
         .appointment-time {
-          font-weight: 600;
-          margin-bottom: 0.25rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          font-size: 0.9rem;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         .appointment-client {
           margin-bottom: 0.25rem;
+          font-weight: 600;
+          font-size: 0.85rem;
         }
 
         .appointment-staff {
           font-size: 0.75rem;
           opacity: 0.9;
           margin-bottom: 0.25rem;
+          font-weight: 500;
         }
 
         .appointment-reference {
           font-size: 0.7rem;
           opacity: 0.8;
+          font-weight: 500;
         }
 
         .client-name {
-          font-weight: 600;
+          font-weight: 700;
           margin-bottom: 0.25rem;
+          font-size: 0.85rem;
         }
 
         .appointment-content {
           font-size: 0.8rem;
+          line-height: 1.3;
         }
 
         /* Loading State */
@@ -873,10 +994,24 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
         }
 
         /* Responsive Design */
+        @media screen and (max-width: 1024px) {
+          .calendar-header {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0.75rem;
+          }
+
+          .calendar-controls {
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+        }
+
         @media screen and (max-width: 768px) {
           .calendar-header {
             flex-direction: column;
             gap: 1rem;
+            padding: 0.5rem;
           }
 
           .calendar-navigation {
@@ -884,26 +1019,146 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
             justify-content: space-between;
           }
 
+          .calendar-title {
+            font-size: 1rem;
+          }
+
           .time-label {
-            width: 60px;
+            width: 50px;
             font-size: 0.75rem;
+            padding: 0.5rem 0.25rem;
           }
 
           .week-header {
-            grid-template-columns: 60px repeat(7, 1fr);
+            grid-template-columns: 50px repeat(7, 1fr);
           }
 
           .time-row {
-            grid-template-columns: 60px repeat(7, 1fr);
-          }
-
-          .appointment-block {
-            padding: 0.25rem;
-            font-size: 0.75rem;
+            grid-template-columns: 50px repeat(7, 1fr);
+            min-height: 50px;
           }
 
           .day-header {
             padding: 0.5rem 0.25rem;
+          }
+
+          .day-name {
+            font-size: 0.7rem;
+          }
+
+          .day-number {
+            font-size: 1.1rem;
+          }
+
+          .appointment-block {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+            min-height: 40px;
+          }
+
+          .appointment-time {
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+          }
+
+          .appointment-client {
+            font-size: 0.7rem;
+          }
+
+          .appointment-staff {
+            font-size: 0.65rem;
+          }
+
+          .day-slot {
+            padding: 0.25rem;
+          }
+
+          .slot-content {
+            padding: 0.25rem;
+          }
+
+          .month-day {
+            padding: 0.5rem;
+            min-height: 80px;
+          }
+
+          .calendar-day-view,
+          .calendar-week-view,
+          .calendar-month-view {
+            max-height: 60vh;
+          }
+        }
+
+        @media screen and (max-width: 480px) {
+          .view-switcher {
+            width: 100%;
+          }
+
+          .view-button {
+            flex: 1;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+          }
+
+          .staff-filter {
+            width: 100%;
+          }
+
+          .calendar-navigation {
+            gap: 0.5rem;
+          }
+
+          .nav-button {
+            padding: 0.5rem;
+          }
+
+          .calendar-title {
+            font-size: 0.9rem;
+            text-align: center;
+          }
+
+          .time-label {
+            width: 40px;
+            font-size: 0.7rem;
+          }
+
+          .week-header {
+            grid-template-columns: 40px repeat(7, 1fr);
+          }
+
+          .time-row {
+            grid-template-columns: 40px repeat(7, 1fr);
+            min-height: 45px;
+          }
+
+          .appointment-block {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+            min-height: 35px;
+          }
+
+          .calendar-legend {
+            padding: 0.75rem;
+            gap: 1rem;
+            font-size: 0.75rem;
+          }
+
+          .legend-section {
+            gap: 0.5rem;
+            width: 100%;
+            justify-content: flex-start;
+          }
+
+          .legend-item {
+            font-size: 0.7rem;
+            padding: 0.25rem;
+            gap: 0.25rem;
+          }
+
+          .legend-color {
+            width: 12px;
+            height: 12px;
           }
         }
       `}</style>
