@@ -185,9 +185,9 @@ export default function ServicesPage() {
               style={{ cursor: 'pointer' }}
             >
               <div>
-                <strong className="is-block" style={{ fontSize: '1.1em' }}>{s.name}</strong>
-                {s.description && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{s.description}</small>}
-                <span className="is-block has-text-info" style={{ fontSize: '0.9em' }}>{s.duration} min - {s.cost ? `${s.cost}€` : 'Free'}</span>
+                <strong className="is-block" style={{ fontSize: '0.85em' }}>{s.name}</strong>
+                {s.description && <small className="is-block has-text-grey" style={{ fontSize: '0.75em' }}>{s.description}</small>}
+                <span className="is-block has-text-info" style={{ fontSize: '0.75em' }}>{s.duration} min - {s.cost ? `${s.cost}€` : 'Free'}</span>
               </div>
               <div>
                 <span className="icon is-small has-text-grey-light">

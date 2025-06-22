@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import { useShiftTemplates, useShiftTemplateMutations } from '@/hooks/useSupabaseData'
+import { useShiftTemplates, useShiftTemplateMutations, useBusinessMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import toast from 'react-hot-toast'
+import { isImageFile, isValidFileSize } from '@/utils/imageUtils'
 
 export default function SettingsPage() {
   const { bid } = useParams()
@@ -13,7 +14,8 @@ export default function SettingsPage() {
     slot_length: 15,
     chairs_count: 1,
     advance_booking_days: 30,
-    cancellation_hours: 24
+    cancellation_hours: 24,
+    avatar_url: ''
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -22,6 +24,11 @@ export default function SettingsPage() {
   // Use database-backed shift templates
   const { data: shiftTemplates, error: templatesError, isLoading: templatesLoading } = useShiftTemplates(bid)
   const { createShiftTemplate, updateShiftTemplate, deleteShiftTemplate, loading: templateMutationLoading } = useShiftTemplateMutations(bid)
+  
+  // Business avatar functionality
+  const { uploadBusinessAvatar, deleteBusinessAvatar, loading: avatarLoading } = useBusinessMutations(bid)
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(null)
   
   const [editingTemplate, setEditingTemplate] = useState(null)
   const [templateForm, setTemplateForm] = useState({
@@ -47,9 +54,24 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     try {
+      // Try to get avatar_url, but fall back if column doesn't exist
+      let query = 'salon_name, slot_length, chairs_count, advance_booking_days, cancellation_hours'
+      
+      // Check if avatar_url column exists by trying to select it
+      const testQuery = await supabase
+        .from('business')
+        .select('avatar_url')
+        .eq('id', bid)
+        .limit(1)
+      
+      // If avatar_url column exists, include it in the main query
+      if (!testQuery.error) {
+        query += ', avatar_url'
+      }
+      
       const { data, error } = await supabase
         .from('business')
-        .select('salon_name, slot_length, chairs_count, advance_booking_days, cancellation_hours')
+        .select(query)
         .eq('id', bid)
         .single()
 
@@ -60,7 +82,8 @@ export default function SettingsPage() {
         slot_length: data.slot_length || 15,
         chairs_count: data.chairs_count || 1,
         advance_booking_days: data.advance_booking_days || 30,
-        cancellation_hours: data.cancellation_hours || 24
+        cancellation_hours: data.cancellation_hours || 24,
+        avatar_url: data.avatar_url || ''
       }
 
       setSettings(settingsData)
@@ -76,15 +99,29 @@ export default function SettingsPage() {
   async function saveSettings() {
     setSaving(true)
     try {
+      // Prepare update object
+      const updateData = {
+        salon_name: settings.salon_name,
+        slot_length: settings.slot_length,
+        chairs_count: settings.chairs_count,
+        advance_booking_days: settings.advance_booking_days,
+        cancellation_hours: settings.cancellation_hours
+      }
+      
+      // Only include avatar_url if the column exists
+      const testQuery = await supabase
+        .from('business')
+        .select('avatar_url')
+        .eq('id', bid)
+        .limit(1)
+      
+      if (!testQuery.error) {
+        updateData.avatar_url = settings.avatar_url
+      }
+      
       const { error } = await supabase
         .from('business')
-        .update({
-          salon_name: settings.salon_name,
-          slot_length: settings.slot_length,
-          chairs_count: settings.chairs_count,
-          advance_booking_days: settings.advance_booking_days,
-          cancellation_hours: settings.cancellation_hours
-        })
+        .update(updateData)
         .eq('id', bid)
 
       if (error) throw error
@@ -105,7 +142,8 @@ export default function SettingsPage() {
       settings.slot_length !== initialSettings.slot_length ||
       settings.chairs_count !== initialSettings.chairs_count ||
       settings.advance_booking_days !== initialSettings.advance_booking_days ||
-      settings.cancellation_hours !== initialSettings.cancellation_hours
+      settings.cancellation_hours !== initialSettings.cancellation_hours ||
+      settings.avatar_url !== initialSettings.avatar_url
     )
   }
 
@@ -186,6 +224,59 @@ export default function SettingsPage() {
     }
   }
 
+  // Avatar handling functions
+  function handleAvatarChange(e) {
+    const file = e.target.files[0]
+    if (!file) return
+
+    if (!isImageFile(file)) {
+      toast.error('Please select a valid image file')
+      return
+    }
+
+    if (!isValidFileSize(file, 10)) {
+      toast.error('File size must be less than 10MB')
+      return
+    }
+
+    setAvatarFile(file)
+    
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setAvatarPreview(e.target.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function handleAvatarUpload() {
+    if (!avatarFile) return
+    
+    try {
+      const result = await uploadBusinessAvatar(avatarFile)
+      setSettings({ ...settings, avatar_url: result.avatar_url })
+      setAvatarFile(null)
+      setAvatarPreview(null)
+    } catch (error) {
+      // Error handled in hook
+    }
+  }
+
+  async function handleAvatarDelete() {
+    if (!settings.avatar_url) return
+    
+    if (!window.confirm('Are you sure you want to remove the salon logo?')) return
+    
+    try {
+      await deleteBusinessAvatar(settings.avatar_url)
+      setSettings({ ...settings, avatar_url: '' })
+      setAvatarFile(null)
+      setAvatarPreview(null)
+    } catch (error) {
+      // Error handled in hook
+    }
+  }
+
   if (loading || templatesLoading) {
     return <LoadingSpinner message="Loading settings..." />
   }
@@ -218,6 +309,81 @@ export default function SettingsPage() {
               onChange={(e) => setSettings({ ...settings, salon_name: e.target.value })}
             />
           </div>
+        </div>
+
+        <div className="field">
+          <label className="label">Salon Logo</label>
+          <div className="is-flex is-align-items-center mb-3">
+            {(avatarPreview || settings.avatar_url) && (
+              <figure className="image is-64x64 mr-3">
+                <img 
+                  className="is-rounded" 
+                  src={avatarPreview || settings.avatar_url} 
+                  alt="Salon logo preview"
+                  style={{ objectFit: 'cover' }}
+                />
+              </figure>
+            )}
+            <div className="file">
+              <label className="file-label">
+                <input 
+                  className="file-input" 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  disabled={avatarLoading}
+                />
+                <span className="file-cta">
+                  <span className="file-icon">
+                    <i className="fas fa-upload"></i>
+                  </span>
+                  <span className="file-label">Choose logo</span>
+                </span>
+              </label>
+            </div>
+          </div>
+          
+          {avatarFile && (
+            <div className="field is-grouped">
+              <div className="control">
+                <button
+                  className={`button is-success is-small ${avatarLoading ? 'is-loading' : ''}`}
+                  onClick={handleAvatarUpload}
+                  disabled={avatarLoading}
+                >
+                  Upload Logo
+                </button>
+              </div>
+              <div className="control">
+                <button
+                  className="button is-small"
+                  onClick={() => {
+                    setAvatarFile(null)
+                    setAvatarPreview(null)
+                  }}
+                  disabled={avatarLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {settings.avatar_url && !avatarFile && (
+            <div className="field">
+              <div className="control">
+                <button
+                  className={`button is-danger is-small ${avatarLoading ? 'is-loading' : ''}`}
+                  onClick={handleAvatarDelete}
+                  disabled={avatarLoading}
+                >
+                  Remove Logo
+                </button>
+              </div>
+            </div>
+          )}
+          
+          <p className="help">Upload a logo for your salon. Recommended size: 300x300px</p>
         </div>
 
         <div className="field">
@@ -309,11 +475,11 @@ export default function SettingsPage() {
                     style={{ cursor: 'pointer' }}
                   >
                     <div>
-                      <strong className="is-block">{template.name}</strong>
-                      <small className="has-text-grey">
+                      <strong className="is-block" style={{ fontSize: '0.85em' }}>{template.name}</strong>
+                      <div className="has-text-grey" style={{ fontSize: '0.75em' }}>
                         {template.start_time} - {template.end_time}
                         {template.break_start && template.break_end && ` (Break: ${template.break_start} - ${template.break_end})`}
-                      </small>
+                      </div>
                     </div>
                     <div className="is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
                       <button
@@ -349,7 +515,7 @@ export default function SettingsPage() {
             <button
               className={`button is-success ${saving ? 'is-loading' : ''}`}
               onClick={saveSettings}
-              disabled={saving || !isFormDirty()}
+              disabled={saving || avatarLoading || !isFormDirty()}
             >
               Save Settings
             </button>

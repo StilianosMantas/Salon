@@ -4,16 +4,19 @@ import { useParams } from 'next/navigation'
 import { useStaff, useStaffMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import toast from 'react-hot-toast'
+import { isImageFile, isValidFileSize } from '@/utils/imageUtils'
 
 export default function StaffPage() {
   const { bid } = useParams()
   const { data: staff, error, isLoading } = useStaff(bid)
-  const { createStaff, updateStaff, deleteStaff, loading: mutationLoading } = useStaffMutations(bid)
+  const { createStaff, updateStaff, deleteStaff, uploadStaffAvatar, deleteStaffAvatar, updateStaffAvatarAndSync, loading: mutationLoading } = useStaffMutations(bid)
   
   const [formVisible, setFormVisible] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', mobile: '', id: null })
+  const [form, setForm] = useState({ name: '', email: '', mobile: '', id: null, avatar_url: null })
   const [editing, setEditing] = useState(false)
-  const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null })
+  const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null, avatar_url: null })
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(null)
   const [isClosing, setIsClosing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredStaff, setFilteredStaff] = useState([])
@@ -72,7 +75,6 @@ export default function StaffPage() {
     
     const filtered = staff.filter(s => 
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.email && s.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (s.mobile && s.mobile.includes(searchTerm))
     )
     setFilteredStaff(filtered)
@@ -145,8 +147,55 @@ export default function StaffPage() {
     return (
       current.name.trim() !== initial.name.trim() ||
       (current.email || '').trim() !== (initial.email || '').trim() ||
-      (current.mobile || '').trim() !== (initial.mobile || '').trim()
+      (current.mobile || '').trim() !== (initial.mobile || '').trim() ||
+      avatarFile !== null
     )
+  }
+
+  function handleAvatarChange(e) {
+    const file = e.target.files[0]
+    if (!file) return
+
+    if (!isImageFile(file)) {
+      toast.error('Please select a valid image file')
+      return
+    }
+
+    if (!isValidFileSize(file, 10)) {
+      toast.error('File size must be less than 10MB')
+      return
+    }
+
+    setAvatarFile(file)
+    
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setAvatarPreview(e.target.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function handleAvatarUpload() {
+    if (!avatarFile || !form.id) return
+    
+    try {
+      await updateStaffAvatarAndSync(form.id, avatarFile)
+      setAvatarFile(null)
+      setAvatarPreview(null)
+    } catch (error) {
+      // Error handled in hook
+    }
+  }
+
+  async function handleAvatarDelete() {
+    if (!form.avatar_url || !form.id) return
+    
+    try {
+      await deleteStaffAvatar(form.id, form.avatar_url)
+    } catch (error) {
+      // Error handled in hook
+    }
   }
 
   async function handleSubmit(e) {
@@ -158,11 +207,18 @@ export default function StaffPage() {
     if (!isValidGreekPhone(form.mobile)) return toast.error('Invalid Greek phone number format')
 
     try {
+      let result
       if (editing) {
-        await updateStaff({ id: form.id, name: form.name, email: form.email, mobile: form.mobile })
+        result = await updateStaff({ id: form.id, name: form.name, email: form.email, mobile: form.mobile })
       } else {
-        await createStaff({ name: form.name, email: form.email, mobile: form.mobile })
+        result = await createStaff({ name: form.name, email: form.email, mobile: form.mobile })
       }
+      
+      // Handle avatar upload if there's a file
+      if (avatarFile && result) {
+        await updateStaffAvatarAndSync(result.id, avatarFile)
+      }
+      
       closeForm(true)
     } catch (error) {
       // Error handling is done in the mutation hooks
@@ -197,8 +253,10 @@ export default function StaffPage() {
     
     setIsClosing(true)
     setTimeout(() => {
-      setForm({ name: '', email: '', mobile: '', id: null })
-      setInitialForm({ name: '', email: '', mobile: '', id: null })
+      setForm({ name: '', email: '', mobile: '', id: null, avatar_url: null })
+      setInitialForm({ name: '', email: '', mobile: '', id: null, avatar_url: null })
+      setAvatarFile(null)
+      setAvatarPreview(null)
       setEditing(false)
       setFormVisible(false)
       setIsClosing(false)
@@ -288,9 +346,11 @@ export default function StaffPage() {
           data-add-staff
           onClick={() => {
             setEditing(false)
-            const empty = { name: '', email: '', mobile: '', id: null }
+            const empty = { name: '', email: '', mobile: '', id: null, avatar_url: null }
             setForm({ ...empty })
             setInitialForm({ ...empty })
+            setAvatarFile(null)
+            setAvatarPreview(null)
             setFormVisible(true)
           }}
           disabled={mutationLoading}
@@ -306,10 +366,29 @@ export default function StaffPage() {
               onClick={() => handleEdit(s)}
               style={{ cursor: 'pointer' }}
             >
-              <div>
-                <strong className="is-block" style={{ fontSize: '1.1em' }}>{s.name}</strong>
-                {s.mobile && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{formatPhoneNumber(s.mobile)}</small>}
-                {s.email && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{s.email}</small>}
+              <div className="is-flex is-align-items-center">
+                <div className="mr-3">
+                  {s.avatar_url ? (
+                    <figure className="image is-48x48">
+                      <img 
+                        className="is-rounded" 
+                        src={s.avatar_url} 
+                        alt={`${s.name} avatar`}
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </figure>
+                  ) : (
+                    <div className="has-background-grey-light is-flex is-justify-content-center is-align-items-center" style={{ width: '48px', height: '48px', borderRadius: '50%' }}>
+                      <span className="icon has-text-grey">
+                        <i className="fas fa-user"></i>
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <strong className="is-block" style={{ fontSize: '0.85em' }}>{s.name}</strong>
+                  {s.mobile && <small className="is-block has-text-grey" style={{ fontSize: '0.75em' }}>{formatPhoneNumber(s.mobile)}</small>}
+                </div>
               </div>
               <div>
                 <span className="icon is-small has-text-grey-light">
@@ -370,6 +449,70 @@ export default function StaffPage() {
                       </span>
                     )}
                   </div>
+                </div>
+                <div className="field">
+                  <label className="label">Avatar</label>
+                  <div className="is-flex is-align-items-center mb-3">
+                    {(avatarPreview || form.avatar_url) && (
+                      <figure className="image is-64x64 mr-3">
+                        <img 
+                          className="is-rounded" 
+                          src={avatarPreview || form.avatar_url} 
+                          alt="Avatar preview"
+                          style={{ objectFit: 'cover' }}
+                        />
+                      </figure>
+                    )}
+                    <div className="file">
+                      <label className="file-label">
+                        <input 
+                          className="file-input" 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleAvatarChange}
+                          disabled={mutationLoading}
+                        />
+                        <span className="file-cta">
+                          <span className="file-icon">
+                            <i className="fas fa-upload"></i>
+                          </span>
+                          <span className="file-label">
+                            Choose avatar
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                  {editing && form.avatar_url && (
+                    <div className="control">
+                      <button 
+                        className="button is-small is-danger is-outlined" 
+                        type="button"
+                        onClick={handleAvatarDelete}
+                        disabled={mutationLoading}
+                      >
+                        <span className="icon">
+                          <i className="fas fa-trash"></i>
+                        </span>
+                        <span>Remove Avatar</span>
+                      </button>
+                    </div>
+                  )}
+                  {avatarFile && editing && (
+                    <div className="control mt-2">
+                      <button 
+                        className={`button is-small is-info ${mutationLoading ? 'is-loading' : ''}`} 
+                        type="button"
+                        onClick={handleAvatarUpload}
+                        disabled={mutationLoading}
+                      >
+                        <span className="icon">
+                          <i className="fas fa-upload"></i>
+                        </span>
+                        <span>Upload Avatar</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="field">
                   <div className="control">

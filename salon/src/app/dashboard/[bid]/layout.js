@@ -5,14 +5,17 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import { useEffect, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { useProfile } from '@/hooks/useSupabaseData'
 
 export default function Layout({ children, params }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [bid, setBid] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
   const pathname = usePathname()
+  const { data: profile } = useProfile()
 
   // Keyboard navigation
   useEffect(() => {
@@ -161,6 +164,56 @@ export default function Layout({ children, params }) {
 
   return (
     <div>
+      <style jsx>{`
+        .tooltip {
+          position: relative;
+        }
+        .tooltip::after {
+          content: attr(data-tooltip);
+          position: absolute;
+          left: 100%;
+          top: 50%;
+          transform: translateY(-50%);
+          margin-left: 10px;
+          padding: 8px 12px;
+          background: rgba(0, 0, 0, 0.9);
+          color: white;
+          border-radius: 4px;
+          font-size: 0.875rem;
+          white-space: nowrap;
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.2s, visibility 0.2s;
+          z-index: 1000;
+          pointer-events: none;
+        }
+        .tooltip::before {
+          content: '';
+          position: absolute;
+          left: 100%;
+          top: 50%;
+          transform: translateY(-50%);
+          margin-left: 4px;
+          border: 6px solid transparent;
+          border-right-color: rgba(0, 0, 0, 0.9);
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.2s, visibility 0.2s;
+          z-index: 1000;
+          pointer-events: none;
+        }
+        .tooltip:hover::after,
+        .tooltip:hover::before {
+          opacity: 1;
+          visibility: visible;
+        }
+        .sidebar-transition {
+          transition: width 0.3s ease, padding 0.3s ease;
+        }
+        .text-fade {
+          transition: opacity 0.2s ease;
+        }
+      `}</style>
       {/* Mobile header */}
       <nav className="navbar is-hidden-tablet" style={{ padding: '0.5rem 1.25rem', position: 'sticky', top: 0, zIndex: 30, backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', height: '44pt' }}>
         <div className="navbar-brand" style={{ width: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
@@ -224,6 +277,36 @@ export default function Layout({ children, params }) {
           </div>
           
           <h2 className="title is-4 mb-5 is-hidden-mobile" style={{ textAlign: 'center' }}>Salon</h2>
+          
+          {/* Mobile User Profile Section */}
+          {user && (
+            <div className="box mb-4" style={{ padding: '1rem' }}>
+              <div className="is-flex is-align-items-center">
+                <div className="mr-3">
+                  {profile?.avatar_url ? (
+                    <figure className="image is-48x48">
+                      <img 
+                        className="is-rounded" 
+                        src={profile.avatar_url} 
+                        alt="Your avatar"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </figure>
+                  ) : (
+                    <div className="has-background-grey-light is-flex is-justify-content-center is-align-items-center" style={{ width: '48px', height: '48px', borderRadius: '50%' }}>
+                      <span className="icon has-text-grey">
+                        <i className="fas fa-user"></i>
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="has-text-weight-semibold">{profile?.full_name || user.email}</p>
+                  <p className="is-size-7 has-text-grey">{profile?.role || 'Staff'}</p>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <ul className="menu-list" style={{ flex: 1 }}>
@@ -347,130 +430,237 @@ export default function Layout({ children, params }) {
         </aside>
 
         {/* Desktop sidebar */}
-        <aside className="column is-narrow has-background-light p-5 is-hidden-touch" style={{ borderRight: '1px solid #dbdbdb', display: 'flex', flexDirection: 'column', height: '100vh', width: '280px' }}>
-          <h2 className="title is-4 mb-5">Salon Dashboard</h2>
+        <aside className={`column is-narrow has-background-light is-hidden-touch sidebar-transition`} style={{ 
+          borderRight: '1px solid #dbdbdb', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          height: '100vh', 
+          width: sidebarCollapsed ? '80px' : '280px',
+          padding: sidebarCollapsed ? '1.5rem 1rem' : '1.5rem'
+        }}>
+          <div className={`is-flex is-align-items-center mb-5 ${sidebarCollapsed ? 'is-justify-content-center' : 'is-justify-content-space-between'}`} style={{ minHeight: '2rem' }}>
+            {!sidebarCollapsed && (
+              <h2 className="title is-4 mb-0">
+                Salon Dashboard
+              </h2>
+            )}
+            <button 
+              className="button is-small is-ghost"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              style={{ flexShrink: 0 }}
+            >
+              <span className="icon">
+                <i className={`fas fa-chevron-${sidebarCollapsed ? 'right' : 'left'}`}></i>
+              </span>
+            </button>
+          </div>
+          
+          {/* User Profile Section */}
+          {user && (
+            <div className="box mb-4" style={{ padding: '1rem' }}>
+              <div className={`is-flex is-align-items-center ${sidebarCollapsed ? 'is-justify-content-center' : ''}`}>
+                <div className={sidebarCollapsed ? '' : 'mr-3'}>
+                  {profile?.avatar_url ? (
+                    <figure className="image is-48x48">
+                      <img 
+                        className="is-rounded" 
+                        src={profile.avatar_url} 
+                        alt="Your avatar"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </figure>
+                  ) : (
+                    <div className="has-background-grey-light is-flex is-justify-content-center is-align-items-center" style={{ width: '48px', height: '48px', borderRadius: '50%' }}>
+                      <span className="icon has-text-grey">
+                        <i className="fas fa-user"></i>
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="text-fade">
+                    <p className="has-text-weight-semibold">{profile?.full_name || user.email}</p>
+                    <p className="is-size-7 has-text-grey">{profile?.role || 'Staff'}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <div className="menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <ul className="menu-list" style={{ flex: 1 }}>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={base} className={isActiveRoute(base) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={base} 
+                  className={`${isActiveRoute(base) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Overview' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-chart-bar"></i>
                     </span>
-                    <span>Overview</span>
+                    {!sidebarCollapsed && <span className="text-fade">Overview</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/staff`} className={isActiveRoute(`${base}/staff`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/staff`} 
+                  className={`${isActiveRoute(`${base}/staff`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Staff' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-users"></i>
                     </span>
-                    <span>Staff</span>
+                    {!sidebarCollapsed && <span className="text-fade">Staff</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/clients`} className={isActiveRoute(`${base}/clients`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/clients`} 
+                  className={`${isActiveRoute(`${base}/clients`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Clients' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-user-friends"></i>
                     </span>
-                    <span>Clients</span>
+                    {!sidebarCollapsed && <span className="text-fade">Clients</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/services`} className={isActiveRoute(`${base}/services`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/services`} 
+                  className={`${isActiveRoute(`${base}/services`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Services' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-scissors"></i>
                     </span>
-                    <span>Services</span>
+                    {!sidebarCollapsed && <span className="text-fade">Services</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/shifts`} className={isActiveRoute(`${base}/shifts`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/shifts`} 
+                  className={`${isActiveRoute(`${base}/shifts`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Shifts' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-clock"></i>
                     </span>
-                    <span>Shifts</span>
+                    {!sidebarCollapsed && <span className="text-fade">Shifts</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/appointments`} className={isActiveRoute(`${base}/appointments`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/appointments`} 
+                  className={`${isActiveRoute(`${base}/appointments`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Appointments' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-calendar-alt"></i>
                     </span>
-                    <span>Appointments</span>
+                    {!sidebarCollapsed && <span className="text-fade">Appointments</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/rules`} className={isActiveRoute(`${base}/rules`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/rules`} 
+                  className={`${isActiveRoute(`${base}/rules`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Rules' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-cog"></i>
                     </span>
-                    <span>Rules</span>
+                    {!sidebarCollapsed && <span className="text-fade">Rules</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/chairs`} className={isActiveRoute(`${base}/chairs`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/chairs`} 
+                  className={`${isActiveRoute(`${base}/chairs`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Chairs' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-chair"></i>
                     </span>
-                    <span>Chairs</span>
+                    {!sidebarCollapsed && <span className="text-fade">Chairs</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/settings`} className={isActiveRoute(`${base}/settings`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/settings`} 
+                  className={`${isActiveRoute(`${base}/settings`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Settings' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-wrench"></i>
                     </span>
-                    <span>Settings</span>
+                    {!sidebarCollapsed && <span className="text-fade">Settings</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li style={{ marginBottom: '0.5rem' }}>
-                <Link href={`${base}/profile`} className={isActiveRoute(`${base}/profile`) ? 'is-active' : ''}>
-                  <span className="icon-text">
+                <Link 
+                  href={`${base}/profile`} 
+                  className={`${isActiveRoute(`${base}/profile`) ? 'is-active' : ''} ${sidebarCollapsed ? 'tooltip' : ''}`}
+                  data-tooltip={sidebarCollapsed ? 'Profile' : ''}
+                  style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}
+                >
+                  <span className={sidebarCollapsed ? '' : 'icon-text'}>
                     <span className="icon">
                       <i className="fas fa-user"></i>
                     </span>
-                    <span>Profile</span>
+                    {!sidebarCollapsed && <span className="text-fade">Profile</span>}
                   </span>
                 </Link>
-                <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />
+                {!sidebarCollapsed && <hr style={{ margin: '0.5rem 0', borderColor: '#e0e0e0' }} />}
               </li>
               <li>
-                <div style={{ padding: '0.5rem 0.75rem' }}>
-                  <LogoutButton />
+                <div style={{ padding: '0.5rem 0.75rem', textAlign: sidebarCollapsed ? 'center' : 'left' }}>
+                  <LogoutButton collapsed={sidebarCollapsed} />
                 </div>
               </li>
             </ul>
           </div>
         </aside>
 
-        <main className="column responsive-container" style={{ paddingBottom: '70pt' }}>
+        <main className="column responsive-container" style={{ 
+          paddingBottom: '70pt', 
+          width: sidebarCollapsed ? 'calc(100% - 80px)' : 'calc(100% - 280px)' 
+        }}>
           {/* Desktop page title */}
           <div className="is-hidden-touch" style={{ padding: '1.5rem 1.5rem 0', marginBottom: '1rem' }}>
             <h1 className="title is-4">{getPageTitle()}</h1>

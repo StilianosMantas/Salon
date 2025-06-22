@@ -5,6 +5,18 @@
 -- Execute them one by one and check for any errors
 
 -- =====================================================
+-- 0. ADD AVATAR COLUMNS TO EXISTING TABLES
+-- =====================================================
+
+-- Add avatar_url column to staff table
+ALTER TABLE staff 
+ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+-- Add avatar_url column to client table
+ALTER TABLE client 
+ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+-- =====================================================
 -- 1. ADD ACTIVE COLUMN TO EXISTING TABLES (for soft delete)
 -- =====================================================
 
@@ -29,7 +41,8 @@ ALTER TABLE business
 ADD COLUMN IF NOT EXISTS salon_name VARCHAR(255),
 ADD COLUMN IF NOT EXISTS chairs_count INTEGER DEFAULT 1,
 ADD COLUMN IF NOT EXISTS advance_booking_days INTEGER DEFAULT 30,
-ADD COLUMN IF NOT EXISTS cancellation_hours INTEGER DEFAULT 24;
+ADD COLUMN IF NOT EXISTS cancellation_hours INTEGER DEFAULT 24,
+ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- =====================================================
 -- 3. CREATE PROFILES TABLE (for user management)

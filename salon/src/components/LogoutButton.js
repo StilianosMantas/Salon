@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-export default function LogoutButton({ className = "" }) {
+export default function LogoutButton({ className = "", collapsed = false }) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -84,7 +84,8 @@ export default function LogoutButton({ className = "" }) {
     <button
       onClick={handleLogout}
       disabled={loading}
-      className={`button is-small is-outlined is-danger ${loading ? 'is-loading' : ''} ${className}`}
+      className={`button is-small is-outlined is-danger ${loading ? 'is-loading' : ''} ${className} ${collapsed ? 'tooltip' : ''}`}
+      data-tooltip={collapsed ? 'Logout' : ''}
       style={{ 
         borderRadius: '6px',
         fontWeight: '500',
@@ -95,7 +96,7 @@ export default function LogoutButton({ className = "" }) {
       <span className="icon is-small">
         <i className="fas fa-sign-out-alt"></i>
       </span>
-      <span>{loading ? 'Logging out...' : 'Logout'}</span>
+      {!collapsed && <span>{loading ? 'Logging out...' : 'Logout'}</span>}
     </button>
   )
 }

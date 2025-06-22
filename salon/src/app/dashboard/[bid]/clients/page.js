@@ -6,11 +6,12 @@ import { useClients, useClientMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabaseClient'
+import { isImageFile, isValidFileSize } from '@/utils/imageUtils'
 
 export default function ClientsPage() {
   const { bid } = useParams()
   const { data: clients, error, isLoading } = useClients(bid)
-  const { createClient, updateClient, deleteClient, checkClientUniqueness, loading: mutationLoading } = useClientMutations(bid)
+  const { createClient, updateClient, deleteClient, checkClientUniqueness, uploadClientAvatar, deleteClientAvatar, loading: mutationLoading } = useClientMutations(bid)
 
   // Export functions
   const exportToCSV = () => {
@@ -75,6 +76,7 @@ export default function ClientsPage() {
     allergies: '',
     preferred_staff: '',
     preferred_services: [],
+    avatar_url: null,
     id: null 
   })
   const [editing, setEditing] = useState(false)
@@ -87,6 +89,7 @@ export default function ClientsPage() {
     allergies: '',
     preferred_staff: '',
     preferred_services: [],
+    avatar_url: null,
     id: null 
   })
   const [searchTerm, setSearchTerm] = useState('')
@@ -97,6 +100,8 @@ export default function ClientsPage() {
   const [clientHistory, setClientHistory] = useState([])
   const [staff, setStaff] = useState([])
   const [services, setServices] = useState([])
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(null)
   const [clientPhotos, setClientPhotos] = useState([])
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [photoView, setPhotoView] = useState(null)
@@ -467,8 +472,59 @@ export default function ClientsPage() {
       current.name.trim() !== initial.name.trim() ||
       (current.email || '').trim() !== (initial.email || '').trim() ||
       (current.mobile || '').trim() !== (initial.mobile || '').trim() ||
-      (current.notes || '').trim() !== (initial.notes || '').trim()
+      (current.notes || '').trim() !== (initial.notes || '').trim() ||
+      (current.preferences || '').trim() !== (initial.preferences || '').trim() ||
+      (current.allergies || '').trim() !== (initial.allergies || '').trim() ||
+      (current.preferred_staff || '').trim() !== (initial.preferred_staff || '').trim() ||
+      JSON.stringify(current.preferred_services || []) !== JSON.stringify(initial.preferred_services || []) ||
+      avatarFile !== null
     )
+  }
+
+  function handleAvatarChange(e) {
+    const file = e.target.files[0]
+    if (!file) return
+
+    if (!isImageFile(file)) {
+      toast.error('Please select a valid image file')
+      return
+    }
+
+    if (!isValidFileSize(file, 10)) {
+      toast.error('File size must be less than 10MB')
+      return
+    }
+
+    setAvatarFile(file)
+    
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setAvatarPreview(e.target.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function handleAvatarUpload() {
+    if (!avatarFile || !form.id) return
+    
+    try {
+      await uploadClientAvatar(form.id, avatarFile)
+      setAvatarFile(null)
+      setAvatarPreview(null)
+    } catch (error) {
+      // Error handled in hook
+    }
+  }
+
+  async function handleAvatarDelete() {
+    if (!form.avatar_url || !form.id) return
+    
+    try {
+      await deleteClientAvatar(form.id, form.avatar_url)
+    } catch (error) {
+      // Error handled in hook
+    }
   }
 
   async function handleSubmit(e) {
@@ -491,11 +547,18 @@ export default function ClientsPage() {
         preferred_services: form.preferred_services
       }
 
+      let result
       if (editing) {
-        await updateClient(clientData)
+        result = await updateClient(clientData)
       } else {
-        await createClient(clientData)
+        result = await createClient(clientData)
       }
+      
+      // Handle avatar upload if there's a file
+      if (avatarFile && result) {
+        await uploadClientAvatar(result.id, avatarFile)
+      }
+      
       closeForm(true)
     } catch (error) {
       // Error handling is done in the mutation hooks
@@ -552,10 +615,13 @@ export default function ClientsPage() {
         allergies: '',
         preferred_staff: '',
         preferred_services: [],
+        avatar_url: null,
         id: null 
       }
       setForm(emptyForm)
       setInitialForm(emptyForm)
+      setAvatarFile(null)
+      setAvatarPreview(null)
       setEditing(false)
       setFormVisible(false)
       setIsClosing(false)
@@ -684,10 +750,13 @@ export default function ClientsPage() {
                 allergies: '',
                 preferred_staff: '',
                 preferred_services: [],
+                avatar_url: null,
                 id: null 
               }
               setForm({ ...empty })
               setInitialForm({ ...empty })
+              setAvatarFile(null)
+              setAvatarPreview(null)
               setFormVisible(true)
             }}
             disabled={mutationLoading}
@@ -700,39 +769,37 @@ export default function ClientsPage() {
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div className="is-flex is-justify-content-space-between is-align-items-center p-1">
-              <div 
-                className="is-flex-grow-1 is-clickable"
+              <div className="is-flex is-align-items-center is-flex-grow-1 is-clickable"
                 onClick={() => handleEdit(c)}
                 style={{ cursor: 'pointer' }}
               >
-                <strong className="is-block" style={{ fontSize: '1.1em' }}>{c.name}</strong>
-                {c.email && (
-                  <a 
-                    href={`mailto:${c.email}`} 
-                    className="is-block has-text-grey" 
-                    style={{ fontSize: '0.9em' }}
-                    title={`Email ${c.name}`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span className="icon is-small mr-1">
-                      <i className="fas fa-envelope"></i>
-                    </span>
-                    {c.email}
-                  </a>
-                )}
+                <div className="mr-3">
+                  {c.avatar_url ? (
+                    <figure className="image is-48x48">
+                      <img 
+                        className="is-rounded" 
+                        src={c.avatar_url} 
+                        alt={`${c.name} avatar`}
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </figure>
+                  ) : (
+                    <div className="has-background-grey-light is-flex is-justify-content-center is-align-items-center" style={{ width: '48px', height: '48px', borderRadius: '50%' }}>
+                      <span className="icon has-text-grey">
+                        <i className="fas fa-user"></i>
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <strong className="is-block" style={{ fontSize: '0.85em' }}>{c.name}</strong>
                 {c.mobile && (
-                  <a 
-                    href={`tel:${c.mobile}`} 
-                    className="is-block has-text-grey" 
-                    style={{ fontSize: '0.9em' }}
-                    title={`Call ${c.name}`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="is-block has-text-grey" style={{ fontSize: '0.75em' }}>
                     <span className="icon is-small mr-1">
                       <i className="fas fa-phone"></i>
                     </span>
                     {formatPhoneNumber(c.mobile)}
-                  </a>
+                  </div>
                 )}
                 {(c.allergies || c.preferences) && (
                   <div className="mt-1">
@@ -754,8 +821,25 @@ export default function ClientsPage() {
                     )}
                   </div>
                 )}
+                </div>
               </div>
               <div className="is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
+                <button
+                  className="button is-small is-primary is-outlined"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (c.mobile) {
+                      window.open(`tel:${c.mobile}`, '_self')
+                    }
+                  }}
+                  title="Call client"
+                  disabled={!c.mobile}
+                >
+                  <span className="icon">
+                    <i className="fas fa-phone"></i>
+                  </span>
+                  <span>Call</span>
+                </button>
                 <button
                   className="button is-small is-info is-outlined"
                   onClick={(e) => {
@@ -822,6 +906,70 @@ export default function ClientsPage() {
                       required
                     />
                   </div>
+                </div>
+                <div className="field">
+                  <label className="label">Avatar</label>
+                  <div className="is-flex is-align-items-center mb-3">
+                    {(avatarPreview || form.avatar_url) && (
+                      <figure className="image is-64x64 mr-3">
+                        <img 
+                          className="is-rounded" 
+                          src={avatarPreview || form.avatar_url} 
+                          alt="Avatar preview"
+                          style={{ objectFit: 'cover' }}
+                        />
+                      </figure>
+                    )}
+                    <div className="file">
+                      <label className="file-label">
+                        <input 
+                          className="file-input" 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleAvatarChange}
+                          disabled={mutationLoading}
+                        />
+                        <span className="file-cta">
+                          <span className="file-icon">
+                            <i className="fas fa-upload"></i>
+                          </span>
+                          <span className="file-label">
+                            Choose avatar
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                  {editing && form.avatar_url && (
+                    <div className="control">
+                      <button 
+                        className="button is-small is-danger is-outlined" 
+                        type="button"
+                        onClick={handleAvatarDelete}
+                        disabled={mutationLoading}
+                      >
+                        <span className="icon">
+                          <i className="fas fa-trash"></i>
+                        </span>
+                        <span>Remove Avatar</span>
+                      </button>
+                    </div>
+                  )}
+                  {avatarFile && editing && (
+                    <div className="control mt-2">
+                      <button 
+                        className={`button is-small is-info ${mutationLoading ? 'is-loading' : ''}`} 
+                        type="button"
+                        onClick={handleAvatarUpload}
+                        disabled={mutationLoading}
+                      >
+                        <span className="icon">
+                          <i className="fas fa-upload"></i>
+                        </span>
+                        <span>Upload Avatar</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="field">
                   <label className="label">Email</label>

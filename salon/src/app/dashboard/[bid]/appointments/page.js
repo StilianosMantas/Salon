@@ -835,12 +835,9 @@ export default function AppointmentManagementPage() {
                 <div className="is-flex-grow-1">
                   <div className="is-flex is-flex-direction-column">
                     <div className="is-flex is-align-items-center mb-1" style={{ gap: '0.5rem' }}>
-                      <div className="has-text-weight-semibold" style={{ fontSize: '1.1em' }}>
+                      <div className="has-text-weight-semibold" style={{ fontSize: '0.85em' }}>
                         {formatTime(s.start_time)} – {formatTime(s.end_time)}
                       </div>
-                      <span className="tag is-small is-light" title="Booking Reference">
-                        #{formatId(s.id)}
-                      </span>
                       {s.book_status && (
                         <span className={`tag is-small ${
                           s.book_status === 'booked' ? 'is-success is-light' :
@@ -873,16 +870,16 @@ export default function AppointmentManagementPage() {
                       )}
                     </div>
                     {s.client && (
-                      <div className="is-size-6 has-text-grey-dark">
+                      <div className="has-text-grey-dark" style={{ fontSize: '0.75em' }}>
                         {s.client.name} {s.client.mobile ? `(${s.client.mobile})` : ''}
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="is-flex is-flex-direction-column is-align-items-end">
+                <div className="is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
                   {(s.client_id || s.staff_id) && (
                     <button
-                      className="button is-small is-ghost mb-2"
+                      className="button is-small is-ghost"
                       onClick={(e) => {
                         e.stopPropagation()
                         clearClient(s.id)
@@ -890,12 +887,12 @@ export default function AppointmentManagementPage() {
                       title="Clear client and staff"
                     >
                       <span className="icon is-small">
-                        <i className="fas fa-times"></i>
+                        <i className="fas fa-trash"></i>
                       </span>
                     </button>
                   )}
                   <span className="icon is-small has-text-grey-light">
-                    <i className="fas fa-chevron-right" style={{ fontSize: '0.875rem' }}></i>
+                    <i className="fas fa-chevron-right"></i>
                   </span>
                 </div>
               </div>

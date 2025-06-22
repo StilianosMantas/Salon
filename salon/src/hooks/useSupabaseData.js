@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { useState } from 'react'
 import { sanitizeFormData } from '@/lib/sanitization'
 import { getCSRFToken } from '@/lib/csrf'
+import { compressImage } from '@/utils/imageUtils'
 
 // Fetcher function for SWR
 const fetcher = async (url) => {
@@ -168,7 +169,87 @@ export function useClientMutations(businessId) {
     }
   }
 
-  return { createClient, updateClient, deleteClient, checkClientUniqueness, loading }
+  const uploadClientAvatar = async (clientId, imageFile) => {
+    setLoading(true)
+    try {
+      // Compress image to 300x300px with 80% quality
+      const compressedImage = await compressImage(imageFile, 300, 300, 0.8)
+      
+      // Generate unique filename
+      const timestamp = Date.now()
+      const fileName = `client_${clientId}_${timestamp}.jpg`
+      
+      // Upload to client-photos bucket (reusing existing bucket)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('client-photos')
+        .upload(fileName, compressedImage, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (uploadError) throw uploadError
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('client-photos')
+        .getPublicUrl(fileName)
+      
+      // Update client record with avatar URL
+      const { data, error } = await supabase
+        .from('client')
+        .update({ avatar_url: publicUrl })
+        .eq('id', clientId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      mutate(`client/${businessId}`)
+      toast.success('Avatar uploaded successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to upload avatar: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  const deleteClientAvatar = async (clientId, avatarUrl) => {
+    setLoading(true)
+    try {
+      // Extract filename from URL
+      const fileName = avatarUrl.split('/').pop()
+      
+      // Delete from storage
+      const { error: deleteError } = await supabase.storage
+        .from('client-photos')
+        .remove([fileName])
+      
+      if (deleteError) throw deleteError
+      
+      // Update client record to remove avatar URL
+      const { data, error } = await supabase
+        .from('client')
+        .update({ avatar_url: null })
+        .eq('id', clientId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      mutate(`client/${businessId}`)
+      toast.success('Avatar removed successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to remove avatar: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  return { createClient, updateClient, deleteClient, checkClientUniqueness, uploadClientAvatar, deleteClientAvatar, loading }
 }
 
 // Staff
@@ -279,7 +360,216 @@ export function useStaffMutations(businessId) {
     }
   }
 
-  return { createStaff, updateStaff, deleteStaff, loading }
+  const uploadStaffAvatar = async (staffId, imageFile) => {
+    setLoading(true)
+    try {
+      // Compress image to 300x300px with 80% quality
+      const compressedImage = await compressImage(imageFile, 300, 300, 0.8)
+      
+      // Generate unique filename
+      const timestamp = Date.now()
+      const fileName = `staff_${staffId}_${timestamp}.jpg`
+      
+      // Upload to staff-avatars bucket
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('staff-avatars')
+        .upload(fileName, compressedImage, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (uploadError) throw uploadError
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('staff-avatars')
+        .getPublicUrl(fileName)
+      
+      // Update staff record with avatar URL
+      const { data, error } = await supabase
+        .from('staff')
+        .update({ avatar_url: publicUrl })
+        .eq('id', staffId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      mutate(`staff/${businessId}`)
+      toast.success('Avatar uploaded successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to upload avatar: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  const deleteStaffAvatar = async (staffId, avatarUrl) => {
+    setLoading(true)
+    try {
+      // Extract filename from URL
+      const fileName = avatarUrl.split('/').pop()
+      
+      // Delete from storage
+      const { error: deleteError } = await supabase.storage
+        .from('staff-avatars')
+        .remove([fileName])
+      
+      if (deleteError) throw deleteError
+      
+      // Update staff record to remove avatar URL
+      const { data, error } = await supabase
+        .from('staff')
+        .update({ avatar_url: null })
+        .eq('id', staffId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      mutate(`staff/${businessId}`)
+      toast.success('Avatar removed successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to remove avatar: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  const updateStaffAvatarAndSync = async (staffId, imageFile) => {
+    setLoading(true)
+    try {
+      // Upload staff avatar
+      const result = await uploadStaffAvatar(staffId, imageFile)
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return result
+      
+      // Check if this staff member is the current user by email
+      const staff = await supabase
+        .from('staff')
+        .select('email, avatar_url')
+        .eq('id', staffId)
+        .single()
+      
+      if (staff.data && staff.data.email === user.email) {
+        // Update user profile with the same avatar
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            avatar_url: staff.data.avatar_url,
+            updated_at: new Date().toISOString()
+          })
+      }
+      
+      return result
+    } catch (error) {
+      toast.error(`Failed to sync avatar: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  return { createStaff, updateStaff, deleteStaff, uploadStaffAvatar, deleteStaffAvatar, updateStaffAvatarAndSync, loading }
+}
+
+// User Profile
+export function useProfile() {
+  const fetcher = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+    
+    if (error && error.code !== 'PGRST116') throw error // PGRST116 = not found
+    return data
+  }
+  
+  return useSWR('profile', fetcher)
+}
+
+export function useProfileMutations() {
+  const [loading, setLoading] = useState(false)
+  
+  const updateProfile = async (updates) => {
+    setLoading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      mutate('profile')
+      toast.success('Profile updated successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to update profile: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+  
+  const uploadProfileAvatar = async (imageFile) => {
+    setLoading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      
+      // Compress image to 300x300px with 80% quality
+      const compressedImage = await compressImage(imageFile, 300, 300, 0.8)
+      
+      // Generate unique filename
+      const timestamp = Date.now()
+      const fileName = `profile_${user.id}_${timestamp}.jpg`
+      
+      // Upload to staff-avatars bucket (reusing existing bucket)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('staff-avatars')
+        .upload(fileName, compressedImage, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (uploadError) throw uploadError
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('staff-avatars')
+        .getPublicUrl(fileName)
+      
+      // Update profile with avatar URL
+      return await updateProfile({ avatar_url: publicUrl })
+    } catch (error) {
+      toast.error(`Failed to upload avatar: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+  
+  return { updateProfile, uploadProfileAvatar, loading }
 }
 
 // Services
@@ -449,4 +739,89 @@ export function useShiftTemplateMutations(businessId) {
   }
 
   return { createShiftTemplate, updateShiftTemplate, deleteShiftTemplate, loading }
+}
+
+// Business/Salon Avatar Functions
+export function useBusinessMutations(businessId) {
+  const [loading, setLoading] = useState(false)
+  
+  const uploadBusinessAvatar = async (imageFile) => {
+    setLoading(true)
+    try {
+      // Compress image to 300x300px with 80% quality
+      const compressedImage = await compressImage(imageFile, 300, 300, 0.8)
+      
+      // Generate unique filename
+      const timestamp = Date.now()
+      const fileName = `business_${businessId}_${timestamp}.jpg`
+      
+      // Upload to staff-avatars bucket (reusing existing bucket)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('staff-avatars')
+        .upload(fileName, compressedImage, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (uploadError) throw uploadError
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('staff-avatars')
+        .getPublicUrl(fileName)
+      
+      // Update business record with avatar URL
+      const { data, error } = await supabase
+        .from('business')
+        .update({ avatar_url: publicUrl })
+        .eq('id', businessId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      toast.success('Salon logo uploaded successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to upload logo: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  const deleteBusinessAvatar = async (avatarUrl) => {
+    setLoading(true)
+    try {
+      // Extract filename from URL
+      const fileName = avatarUrl.split('/').pop()
+      
+      // Delete from storage
+      const { error: deleteError } = await supabase.storage
+        .from('staff-avatars')
+        .remove([fileName])
+      
+      if (deleteError) throw deleteError
+      
+      // Update business record to remove avatar URL
+      const { data, error } = await supabase
+        .from('business')
+        .update({ avatar_url: null })
+        .eq('id', businessId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      toast.success('Salon logo removed successfully')
+      return data
+    } catch (error) {
+      toast.error(`Failed to remove logo: ${error.message}`)
+      throw error
+    } finally {
+      setTimeout(() => setLoading(false), 100)
+    }
+  }
+
+  return { uploadBusinessAvatar, deleteBusinessAvatar, loading }
 }

@@ -31,6 +31,9 @@ export const sanitizeObject = (obj) => {
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'string') {
       sanitized[key] = sanitizeInput(value)
+    } else if (Array.isArray(value)) {
+      // Handle arrays - for PostgreSQL array columns, ensure proper format
+      sanitized[key] = value.filter(item => item !== null && item !== undefined)
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeObject(value)
     } else {

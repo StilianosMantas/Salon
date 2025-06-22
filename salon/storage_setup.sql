@@ -13,6 +13,11 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('client-photos', 'client-photos', true)
 ON CONFLICT (id) DO NOTHING;
 
+-- Create the staff-avatars bucket
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('staff-avatars', 'staff-avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
 -- =====================================================
 -- 2. CREATE STORAGE POLICIES FOR CLIENT PHOTOS
 -- =====================================================
@@ -36,6 +41,30 @@ USING (bucket_id = 'client-photos');
 CREATE POLICY "Allow authenticated deletes" ON storage.objects
 FOR DELETE TO authenticated
 USING (bucket_id = 'client-photos');
+
+-- =====================================================
+-- 3. CREATE STORAGE POLICIES FOR STAFF AVATARS
+-- =====================================================
+
+-- Policy to allow authenticated users to upload avatars
+CREATE POLICY "Allow authenticated avatar uploads" ON storage.objects
+FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'staff-avatars');
+
+-- Policy to allow authenticated users to view avatars
+CREATE POLICY "Allow authenticated avatar views" ON storage.objects
+FOR SELECT TO authenticated
+USING (bucket_id = 'staff-avatars');
+
+-- Policy to allow authenticated users to update avatars
+CREATE POLICY "Allow authenticated avatar updates" ON storage.objects
+FOR UPDATE TO authenticated
+USING (bucket_id = 'staff-avatars');
+
+-- Policy to allow authenticated users to delete avatars
+CREATE POLICY "Allow authenticated avatar deletes" ON storage.objects
+FOR DELETE TO authenticated
+USING (bucket_id = 'staff-avatars');
 
 -- =====================================================
 -- 3. VERIFICATION QUERIES
