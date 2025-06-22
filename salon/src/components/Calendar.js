@@ -14,7 +14,6 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
   const [draggedAppointment, setDraggedAppointment] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedStaff, setSelectedStaff] = useState('all') // 'all' or staff id
-  const [showStaffSchedule, setShowStaffSchedule] = useState(false)
 
   // Sync currentDate with selectedDate prop
   useEffect(() => {
@@ -249,7 +248,7 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
     )
   }
 
-  // Render week view with optional staff columns
+  // Render week view with chairs/stations as columns (Outlook-style)
   const renderWeekView = () => {
     const { start } = getViewDates()
     const weekDays = []
@@ -261,39 +260,43 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
     }
 
     const timeSlots = getTimeSlots()
+    const availableChairs = chairs.length > 0 ? chairs : [{ id: 'default', name: 'Station 1', color: '#3273dc' }]
 
-    if (showStaffSchedule && selectedStaff === 'all') {
-      // Staff-centric view: columns are staff members, rows are times
-      return (
-        <div className="calendar-week-view staff-view">
-          <div className="week-header">
-            <div className="time-column-header"></div>
-            {staff.map(staffMember => (
-              <div key={staffMember.id} className="staff-header">
-                <div className="staff-name">{staffMember.name}</div>
-                <div className="staff-color-indicator" style={{ backgroundColor: getStaffColor(staffMember.id) }}></div>
-              </div>
-            ))}
+    // Chairs-centric view: columns are chairs/stations, rows are times
+    return (
+      <div className="calendar-week-view chairs-view">
+        <div className="week-header">
+          <div className="time-column-header">
+            <div className="time-header-text">Time</div>
           </div>
-          <div className="week-body">
-            {timeSlots.map(time => (
-              <div key={time} className="time-row">
-                <div className="time-label">{formatTime(time)}</div>
-                {staff.map(staffMember => {
-                  const staffAppointments = appointments.filter(apt => 
-                    apt.staff_id === staffMember.id && 
-                    weekDays.some(day => apt.slotdate === day.toISOString().split('T')[0]) &&
-                    apt.start_time && apt.start_time.slice(0, 5) === time
-                  )
+          {availableChairs.map(chair => (
+            <div key={chair.id} className="chair-header">
+              <div className="chair-name">{chair.name}</div>
+              <div className="chair-color-indicator" style={{ backgroundColor: chair.color || '#3273dc' }}></div>
+            </div>
+          ))}
+        </div>
+        <div className="week-body">
+          {timeSlots.map(time => (
+            <div key={time} className="time-row">
+              <div className="time-label">{formatTime(time)}</div>
+              {availableChairs.map(chair => {
+                // Get appointments for this chair and time across all days of the week
+                const chairAppointments = appointments.filter(apt => 
+                  (apt.chair_id === chair.id || (chair.id === 'default' && !apt.chair_id)) &&
+                  weekDays.some(day => apt.slotdate === day.toISOString().split('T')[0]) &&
+                  apt.start_time && apt.start_time.slice(0, 5) === time
+                )
 
-                  return (
-                    <div
-                      key={`${staffMember.id}-${time}`}
-                      className="staff-slot"
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, weekDays[0], time)} // Default to first day
-                    >
-                      {staffAppointments.map(apt => (
+                return (
+                  <div
+                    key={`${chair.id}-${time}`}
+                    className="chair-slot"
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, weekDays[0], time)} // Default to first day
+                  >
+                    <div className="appointments-container">
+                      {chairAppointments.map(apt => (
                         <div
                           key={apt.id}
                           className={`appointment-block ${apt.client_id ? (apt.book_status || 'booked') : 'available'}`}
@@ -304,12 +307,13 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                             onAppointmentClick && onAppointmentClick(apt)
                           }}
                           style={{
-                            backgroundColor: apt.client_id ? getStaffColor(staffMember.id) : '#e9ecef',
-                            opacity: apt.client_id ? (
-                              apt.book_status === 'booked' ? 1 : 
-                              apt.book_status === 'completed' ? 0.8 :
-                              apt.book_status === 'cancelled' ? 0.4 : 1
-                            ) : 0.7,
+                            backgroundColor: apt.client_id ? (
+                              apt.staff_id ? getStaffColor(apt.staff_id) : 
+                              apt.book_status === 'booked' ? '#48c774' : 
+                              apt.book_status === 'completed' ? '#3273dc' :
+                              apt.book_status === 'cancelled' ? '#f14668' : '#48c774'
+                            ) : '#e9ecef',
+                            borderLeft: chair.color ? `4px solid ${chair.color}` : 'none',
                             color: apt.client_id ? 'white' : '#666'
                           }}
                         >
@@ -325,95 +329,34 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                             <div className="appointment-time">
                               {formatTime(apt.start_time)} - {formatTime(apt.end_time)}
                             </div>
+                            {apt.staff_id && (
+                              <div className="staff-indicator">
+                                {staff.find(s => s.id === apt.staff_id)?.name}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    }
-
-    // Regular day-centric view
-    return (
-      <div className="calendar-week-view">
-        <div className="week-header">
-          <div className="time-column-header"></div>
-          {weekDays.map(day => (
-            <div key={day.toISOString()} className="day-header">
-              <div className="day-name">{day.toLocaleDateString('en', { weekday: 'short' })}</div>
-              <div className="day-number">{day.getDate()}</div>
-            </div>
-          ))}
-        </div>
-        <div className="week-body">
-          {timeSlots.map(time => (
-            <div key={time} className="time-row">
-              <div className="time-label">{formatTime(time)}</div>
-              {weekDays.map(day => {
-                const dayAppointments = getAppointmentsForDate(day)
-                const timeAppointments = dayAppointments.filter(apt => 
-                  apt.start_time && apt.start_time.slice(0, 5) === time
-                )
-
-                return (
-                  <div
-                    key={`${day.toISOString()}-${time}`}
-                    className="day-slot"
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, day, time)}
-                  >
-                    {timeAppointments.map(apt => (
-                      <div
-                        key={apt.id}
-                        className={`appointment-block ${apt.client_id ? (apt.book_status || 'booked') : 'available'}`}
-                        draggable={apt.client_id}
-                        onDragStart={(e) => handleDragStart(e, apt)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onAppointmentClick && onAppointmentClick(apt)
-                        }}
-                        style={{
-                          backgroundColor: apt.client_id ? (
-                            apt.staff_id ? getStaffColor(apt.staff_id) : 
-                            apt.book_status === 'booked' ? '#48c774' : 
-                            apt.book_status === 'completed' ? '#3273dc' :
-                            apt.book_status === 'cancelled' ? '#f14668' : '#48c774'
-                          ) : '#e9ecef',
-                          borderLeft: apt.staff_id ? `4px solid ${getStaffColor(apt.staff_id)}` : 'none',
-                          color: apt.client_id ? 'white' : '#666'
-                        }}
-                      >
-                        <div className="appointment-content">
-                          {apt.client ? (
-                            <div className="client-name">{apt.client.name}</div>
-                          ) : (
-                            <div className="client-name">Available</div>
-                          )}
-                          {apt.staff_id && (
-                            <div className="staff-indicator">
-                              {staff.find(s => s.id === apt.staff_id)?.name}
-                            </div>
-                          )}
-                          <div className="appointment-time">
-                            {formatTime(apt.start_time)} - {formatTime(apt.end_time)}
-                          </div>
-                          {apt.chair_id && (
-                            <div 
-                              className="chair-indicator" 
-                              style={{ 
-                                backgroundColor: chairs.find(c => c.id === apt.chair_id)?.color || '#666'
-                              }}
-                              title={`Chair: ${chairs.find(c => c.id === apt.chair_id)?.name || 'Unknown'}`}
-                            />
-                          )}
+                      {/* Add empty slots to indicate available times */}
+                      {chairAppointments.length === 0 && (
+                        <div 
+                          className="empty-slot"
+                          onClick={(e) => {
+                            // Create a new appointment at this time slot
+                            const newAppt = {
+                              id: `new-${chair.id}-${time}`,
+                              start_time: time,
+                              end_time: time,
+                              chair_id: chair.id,
+                              slotdate: weekDays[0].toISOString().split('T')[0]
+                            }
+                            onAppointmentClick && onAppointmentClick(newAppt)
+                          }}
+                        >
+                          <span className="add-appointment-text">+</span>
                         </div>
-                      </div>
-                    ))}
+                      )}
+                    </div>
                   </div>
                 )
               })}
@@ -583,45 +526,17 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           background: #f5f5f5;
         }
 
-        /* Staff Schedule Styles */
-        .staff-view .week-header {
-          grid-template-columns: 80px repeat(auto-fit, minmax(120px, 1fr));
-        }
-
-        .staff-view .time-row {
-          grid-template-columns: 80px repeat(auto-fit, minmax(120px, 1fr));
-        }
-
-        .staff-header {
-          padding: 0.75rem 0.5rem;
-          text-align: center;
-          border-right: 1px solid #f0f0f0;
-          position: relative;
-        }
-
-        .staff-name {
-          font-weight: 600;
-          color: #363636;
-          margin-bottom: 0.25rem;
-        }
-
-        .staff-color-indicator {
-          width: 20px;
-          height: 4px;
-          border-radius: 2px;
-          margin: 0 auto;
-        }
-
-        .staff-slot {
-          border-right: 1px solid #f0f0f0;
-          padding: 0.25rem;
-          cursor: pointer;
-          position: relative;
-          min-height: 60px;
-        }
-
-        .staff-slot:hover {
-          background: #f8f9fa;
+        .calendar-info {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: #f0f8ff;
+          border: 1px solid #3273dc;
+          border-radius: 4px;
+          color: #3273dc;
+          font-size: 0.875rem;
+          font-weight: 500;
         }
 
         .staff-indicator {
@@ -746,7 +661,7 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           background: #f8f9fa;
         }
 
-        /* Week View Styles */
+        /* Week View Styles - Chairs/Stations Layout */
         .calendar-week-view {
           max-height: 70vh;
           overflow: auto;
@@ -755,9 +670,9 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           background: white;
         }
 
-        .week-header {
+        .calendar-week-view.chairs-view .week-header {
           display: grid;
-          grid-template-columns: 80px repeat(7, 1fr);
+          grid-template-columns: 80px repeat(auto-fit, minmax(200px, 1fr));
           border-bottom: 2px solid #dbdbdb;
           background: #f8f9fa;
           position: sticky;
@@ -768,26 +683,39 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
         .time-column-header {
           border-right: 1px solid #dbdbdb;
           background: #f8f9fa;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem 0.5rem;
         }
 
-        .day-header {
+        .time-header-text {
+          font-weight: 600;
+          color: #363636;
+          font-size: 0.875rem;
+        }
+
+        .chair-header {
           padding: 1rem 0.5rem;
           text-align: center;
           border-right: 1px solid #e0e0e0;
           background: #f8f9fa;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
         }
 
-        .day-name {
+        .chair-name {
           font-weight: 600;
           color: #363636;
           font-size: 0.875rem;
-          margin-bottom: 0.25rem;
         }
 
-        .day-number {
-          font-size: 1.5rem;
-          color: #3273dc;
-          font-weight: 700;
+        .chair-color-indicator {
+          width: 20px;
+          height: 4px;
+          border-radius: 2px;
         }
 
         .week-body {
@@ -795,9 +723,9 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           flex-direction: column;
         }
 
-        .time-row {
+        .calendar-week-view.chairs-view .time-row {
           display: grid;
-          grid-template-columns: 80px repeat(7, 1fr);
+          grid-template-columns: 80px repeat(auto-fit, minmax(200px, 1fr));
           min-height: 60px;
           border-bottom: 1px solid #f0f0f0;
         }
@@ -806,7 +734,7 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           background: #fafafa;
         }
 
-        .day-slot {
+        .chair-slot {
           border-right: 1px solid #f0f0f0;
           padding: 0.5rem;
           cursor: pointer;
@@ -816,12 +744,59 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
           flex-direction: column;
           gap: 0.25rem;
           transition: background-color 0.2s ease;
-          overflow: hidden;
+          overflow: visible;
           box-sizing: border-box;
         }
 
-        .day-slot:hover {
+        .chair-slot:hover {
           background: #f8f9fa;
+        }
+
+        .appointments-container {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: nowrap;
+          gap: 0.25rem;
+          align-items: stretch;
+          width: 100%;
+          min-height: 100%;
+          overflow-x: auto;
+        }
+
+        .appointments-container .appointment-block {
+          flex: 0 0 auto;
+          min-width: 120px;
+          max-width: 180px;
+          width: auto;
+        }
+
+        .empty-slot {
+          width: 100%;
+          height: 100%;
+          min-height: 50px;
+          border: 2px dashed #e0e0e0;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          background: transparent;
+        }
+
+        .empty-slot:hover {
+          border-color: #3273dc;
+          background: rgba(50, 115, 220, 0.05);
+        }
+
+        .add-appointment-text {
+          color: #666;
+          font-size: 1.2rem;
+          font-weight: 300;
+        }
+
+        .empty-slot:hover .add-appointment-text {
+          color: #3273dc;
         }
 
         /* Improve touch targets for tablets */
@@ -1169,16 +1144,16 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
             box-sizing: border-box;
           }
 
-          /* Staff view improvements for iPad */
-          .staff-view .week-header {
-            grid-template-columns: 70px repeat(auto-fit, minmax(140px, 1fr));
+          /* Chairs view improvements for iPad */
+          .calendar-week-view.chairs-view .week-header {
+            grid-template-columns: 70px repeat(auto-fit, minmax(160px, 1fr));
           }
 
-          .staff-view .time-row {
-            grid-template-columns: 70px repeat(auto-fit, minmax(140px, 1fr));
+          .calendar-week-view.chairs-view .time-row {
+            grid-template-columns: 70px repeat(auto-fit, minmax(160px, 1fr));
           }
 
-          .staff-slot {
+          .chair-slot {
             min-height: 70px;
             padding: 0.5rem;
           }
@@ -1526,18 +1501,14 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
               </div>
             </div>
 
-            {/* Staff Schedule Toggle */}
+            {/* Chairs View Info */}
             {view === 'week' && (
-              <button 
-                className={`button is-small ${showStaffSchedule ? 'is-info' : 'is-light'}`}
-                onClick={() => setShowStaffSchedule(!showStaffSchedule)}
-                title="Toggle staff schedule view"
-              >
+              <div className="calendar-info">
                 <span className="icon">
-                  <i className="fas fa-users"></i>
+                  <i className="fas fa-chair"></i>
                 </span>
-                <span>Staff View</span>
-              </button>
+                <span>Stations/Chairs View</span>
+              </div>
             )}
           </div>
         </div>
