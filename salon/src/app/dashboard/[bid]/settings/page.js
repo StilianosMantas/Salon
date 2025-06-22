@@ -298,11 +298,11 @@ export default function SettingsPage() {
       }}>
         <h1 className="title is-5 mb-4">Salon Settings</h1>
         
-        <div className="field">
-          <label className="label">Salon Name</label>
-          <div className="control">
+        <div className="salon-field">
+          <label className="salon-label">Salon Name</label>
+          <div className="salon-control">
             <input
-              className="input"
+              className="salon-input"
               type="text"
               placeholder="Enter salon name"
               value={settings.salon_name}
@@ -311,8 +311,8 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="field">
-          <label className="label">Salon Logo</label>
+        <div className="salon-field">
+          <label className="salon-label">Salon Logo</label>
           <div className="is-flex is-align-items-center mb-3">
             {(avatarPreview || settings.avatar_url) && (
               <figure className="image is-64x64 mr-3">
@@ -386,10 +386,10 @@ export default function SettingsPage() {
           <p className="help">Upload a logo for your salon. Recommended size: 300x300px</p>
         </div>
 
-        <div className="field">
-          <label className="label">Default Appointment Slot Length (minutes)</label>
-          <div className="control">
-            <div className="select is-fullwidth">
+        <div className="salon-field">
+          <label className="salon-label">Default Appointment Slot Length (minutes)</label>
+          <div className="salon-control">
+            <div className="salon-select">
               <select
                 value={settings.slot_length}
                 onChange={(e) => setSettings({ ...settings, slot_length: parseInt(e.target.value) })}
@@ -401,14 +401,14 @@ export default function SettingsPage() {
               </select>
             </div>
           </div>
-          <p className="help">This sets the default time slots for appointments</p>
+          <p className="salon-help">This sets the default time slots for appointments</p>
         </div>
 
-        <div className="field">
-          <label className="label">Number of Chairs/Stations</label>
-          <div className="control">
+        <div className="salon-field">
+          <label className="salon-label">Number of Chairs/Stations</label>
+          <div className="salon-control">
             <input
-              className="input"
+              className="salon-input"
               type="number"
               min="1"
               max="20"
@@ -416,7 +416,7 @@ export default function SettingsPage() {
               onChange={(e) => setSettings({ ...settings, chairs_count: parseInt(e.target.value) || 1 })}
             />
           </div>
-          <p className="help">How many chairs or stations are available for appointments</p>
+          <p className="salon-help">How many chairs or stations are available for appointments</p>
         </div>
 
         <div className="field">

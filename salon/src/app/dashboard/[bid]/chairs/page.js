@@ -258,9 +258,9 @@ export default function ChairsPage() {
         }
       `}</style>
       
-      <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
+      <div className="container py-2 px-2">
         <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
-          <h1 className="title is-5">Chairs & Stations</h1>
+          <h1 className="salon-title-sm">Chairs & Stations</h1>
           <button
             className="button is-link"
             data-add-chair
@@ -270,7 +270,7 @@ export default function ChairsPage() {
           </button>
         </div>
 
-        <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
+        <div className="box extended-card">
           {chairs && chairs.length > 0 ? chairs.map((chair, index) => (
             <div key={chair.id}>
               <div 
@@ -290,13 +290,13 @@ export default function ChairsPage() {
                     }}
                   ></div>
                   <div>
-                    <strong className="is-block" style={{ fontSize: '1.1em' }}>
+                    <strong className="is-block" style={{ fontSize: '0.85em' }}>
                       {chair.name}
                       {!chair.is_active && (
                         <span className="tag is-light ml-2 is-small">Inactive</span>
                       )}
                     </strong>
-                    {chair.description && <small className="is-block has-text-grey" style={{ fontSize: '0.9em' }}>{chair.description}</small>}
+                    {chair.description && <small className="is-block has-text-grey" style={{ fontSize: '0.75em' }}>{chair.description}</small>}
                   </div>
                 </div>
                 <div>
@@ -330,10 +330,10 @@ export default function ChairsPage() {
                 <button className="delete" aria-label="close" onClick={closeForm}></button>
               </header>
               <section className="modal-card-body">
-                <div className="field">
-                  <label className="label">Chair Name</label>
+                <div className="salon-field">
+                  <label className="salon-label">Chair Name</label>
                   <input
-                    className="input"
+                    className="salon-input"
                     type="text"
                     placeholder="e.g., Chair 1, Station A, VIP Suite"
                     value={chairForm.name}
@@ -342,10 +342,10 @@ export default function ChairsPage() {
                   />
                 </div>
 
-                <div className="field">
-                  <label className="label">Description (Optional)</label>
+                <div className="salon-field">
+                  <label className="salon-label">Description (Optional)</label>
                   <textarea
-                    className="textarea"
+                    className="salon-textarea"
                     placeholder="Additional details about this chair/station..."
                     value={chairForm.description}
                     onChange={(e) => setChairForm({ ...chairForm, description: e.target.value })}
@@ -353,11 +353,11 @@ export default function ChairsPage() {
                   />
                 </div>
 
-                <div className="field">
-                  <label className="label">Color</label>
+                <div className="salon-field">
+                  <label className="salon-label">Color</label>
                   <div className="is-flex is-align-items-center" style={{ gap: '1rem' }}>
                     <input
-                      className="input"
+                      className="salon-input"
                       type="color"
                       value={chairForm.color}
                       onChange={(e) => setChairForm({ ...chairForm, color: e.target.value })}

@@ -305,8 +305,8 @@ export default function ShiftsPage() {
         {/* Filters */}
         <div className="columns is-multiline mb-4 is-hidden-mobile">
           <div className="column is-half">
-            <label className="label">Filter by Staff</label>
-            <div className="select is-fullwidth">
+            <label className="salon-label">Filter by Staff</label>
+            <div className="salon-select">
               <select
                 value={selectedStaff}
                 onChange={(e) => setSelectedStaff(e.target.value)}
@@ -319,9 +319,9 @@ export default function ShiftsPage() {
             </div>
           </div>
           <div className="column is-half">
-            <label className="label">Week Starting</label>
+            <label className="salon-label">Week Starting</label>
             <input
-              className="input"
+              className="salon-input"
               type="date"
               value={selectedWeek}
               onChange={(e) => setSelectedWeek(e.target.value)}
@@ -330,7 +330,7 @@ export default function ShiftsPage() {
         </div>
 
         <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
-          <h1 className="title is-5">Staff Shifts</h1>
+          <h1 className="salon-title-sm">Staff Shifts</h1>
           <button
             className="button is-link"
             data-add-shift

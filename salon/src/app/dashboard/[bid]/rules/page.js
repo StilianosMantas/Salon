@@ -312,300 +312,310 @@ export default function RulesPage() {
           }
         }
       `}</style>
-    <div className="container py-5 px-4">
-      <h1 className="title is-4 mb-4">Business Open Hours</h1>
+      <div className="container py-2 px-2">
+        <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
+          <h1 className="salon-title-sm">Business Open Hours</h1>
+        </div>
 
-      <div className="columns is-multiline mb-5">
-        <div className="column is-half-tablet is-full-mobile">
-          <label className="label">Start Date</label>
-          <input className="input" type="date" value={rangeStart} onChange={e => setRangeStart(e.target.value)} />
-        </div>
-        <div className="column is-half-tablet is-full-mobile">
-          <label className="label">End Date</label>
-          <input className="input" type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)} />
-        </div>
-        <div className="column is-full">
-          <button 
-            className={`button is-info is-fullwidth-mobile ${isGenerating ? 'is-loading' : ''}`} 
-            onClick={generateSlots}
-            disabled={isGenerating}
-          >
-            {isGenerating ? 'Generating...' : `Generate Slots ${chairs.length > 0 ? `(${chairs.length} chair${chairs.length > 1 ? 's' : ''})` : ''}`}
-          </button>
-          
-          {isGenerating && generationProgress.total > 0 && (
-            <div className="mt-3">
-              <div className="is-flex is-justify-content-space-between is-align-items-center mb-2">
-                <span className="is-size-7">{generationProgress.phase}</span>
-                <span className="is-size-7">{generationProgress.current} / {generationProgress.total}</span>
-              </div>
-              <progress 
-                className="progress is-small is-info" 
-                value={generationProgress.current} 
-                max={generationProgress.total}
-              ></progress>
+        <div className="box extended-card">
+          {/* Slot Generation Section */}
+          <h2 className="salon-title-sm mb-4">Generate Appointment Slots</h2>
+          <div className="columns is-multiline mb-5">
+            <div className="column is-half-tablet is-full-mobile">
+              <label className="salon-label">Start Date</label>
+              <input className="salon-input" type="date" value={rangeStart} onChange={e => setRangeStart(e.target.value)} />
             </div>
-          )}
-          
-          {!isGenerating && chairs.length > 0 && (
-            <p className="help mt-2">
-              Slots will be created for: {chairs.map(c => c.name).join(', ')}
-            </p>
-          )}
-          {!isGenerating && chairs.length === 0 && (
-            <p className="help has-text-danger mt-2">
-              No active chairs found. Please add chairs before generating slots.
-            </p>
-          )}
-        </div>
-      </div>
-        <h2 className="label is-6 mb-3">Weekly Schedule</h2>
-      <div className="box mb-5">
-        
-        {weekdays.map((day, i) => {
-          const dayRules = rules.filter(r => r.weekday === i)
-          return (
-            <div key={i} className="mb-5">
-              <div className="is-flex is-justify-content-space-between is-align-items-center mb-2">
-                <div className="has-text-weight-semibold">{day}</div>
-                <button 
-                  className="button is-small is-rounded is-ghost"
-                  onClick={() => openAddForm(i)}
-                  style={{ width: '32px', height: '32px', padding: '0' }}
-                >
-                  <span className="icon is-small">
-                    <i className="fas fa-plus"></i>
-                  </span>
-                </button>
-              </div>
+            <div className="column is-half-tablet is-full-mobile">
+              <label className="salon-label">End Date</label>
+              <input className="salon-input" type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)} />
+            </div>
+            <div className="column is-full">
+              <button 
+                className={`button is-info is-fullwidth-mobile ${isGenerating ? 'is-loading' : ''}`} 
+                onClick={generateSlots}
+                disabled={isGenerating}
+              >
+                {isGenerating ? 'Generating...' : `Generate Slots ${chairs.length > 0 ? `(${chairs.length} chair${chairs.length > 1 ? 's' : ''})` : ''}`}
+              </button>
               
-              {dayRules.length > 0 ? dayRules.map(rule => (
-                <div key={rule.id} className="box p-3 mb-2">
-                  <div className="is-flex is-justify-content-space-between is-align-items-center">
-                    <div className="is-hidden-mobile">
-                      <span className="has-text-weight-semibold">{rule.start_time.slice(0,5)} - {rule.end_time.slice(0,5)}</span>
-                    </div>
-                    <div className="is-hidden-tablet is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
-                      <span className="has-text-weight-semibold" style={{ fontSize: '0.875rem' }}>{rule.start_time.slice(0,5)} - {rule.end_time.slice(0,5)}</span>
-                      <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>
-                        <span className="icon is-small">
-                          <i className="fas fa-trash"></i>
-                        </span>
-                      </button>
-                    </div>
-                    <div className="is-hidden-mobile" style={{ marginLeft: 'auto' }}>
-                      <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>Delete</button>
-                    </div>
+              {isGenerating && generationProgress.total > 0 && (
+                <div className="mt-3">
+                  <div className="is-flex is-justify-content-space-between is-align-items-center mb-2">
+                    <span className="is-size-7">{generationProgress.phase}</span>
+                    <span className="is-size-7">{generationProgress.current} / {generationProgress.total}</span>
                   </div>
-                </div>
-              )) : (
-                <div className="box p-3 mb-2 has-background-light">
-                  <div className="is-flex is-justify-content-space-between is-align-items-center">
-                    <span className="has-text-grey">No hours set - click + to add</span>
-                  </div>
+                  <progress 
+                    className="progress is-small is-info" 
+                    value={generationProgress.current} 
+                    max={generationProgress.total}
+                  ></progress>
                 </div>
               )}
-            </div>
-          )
-        })}
-      </div>
-        <h2 className="label is-6 mb-3">Date Overrides</h2>
-      <div className="box">
-        
-        <div className="columns is-multiline is-vcentered mb-4">
-          <div className="column is-one-third-tablet is-full-mobile">
-            <label className="label">Override Date</label>
-            <input className="input" type="date" value={dateOverride.slotdate} onChange={e => setDateOverride({ ...dateOverride, slotdate: e.target.value })} />
-          </div>
-          <div className="column is-one-quarter-tablet is-half-mobile">
-            <label className="label">Start Time</label>
-            <input className="input" type="time" value={dateOverride.start_time} onChange={e => setDateOverride({ ...dateOverride, start_time: e.target.value })} />
-          </div>
-          <div className="column is-one-quarter-tablet is-half-mobile">
-            <label className="label">End Time</label>
-            <input className="input" type="time" value={dateOverride.end_time} onChange={e => setDateOverride({ ...dateOverride, end_time: e.target.value })} />
-          </div>
-          <div className="column is-full-mobile">
-            <div className="field is-grouped is-grouped-centered-mobile">
-              <div className="control">
-                <label className="checkbox">
-                  <input type="checkbox" checked={dateOverride.is_closed} onChange={e => setDateOverride({ ...dateOverride, is_closed: e.target.checked })} /> Mark as Closed Day
-                </label>
-              </div>
-              <div className="control">
-                <button className="button is-success" onClick={saveOverride}>Save Override</button>
-              </div>
+              
+              {!isGenerating && chairs.length > 0 && (
+                <p className="help mt-2">
+                  Slots will be created for: {chairs.map(c => c.name).join(', ')}
+                </p>
+              )}
+              {!isGenerating && chairs.length === 0 && (
+                <p className="help has-text-danger mt-2">
+                  No active chairs found. Please add chairs before generating slots.
+                </p>
+              )}
             </div>
           </div>
-        </div>
-        <div className="content">
-          {(() => {
-            const futureOverrides = overrides.filter(o => new Date(o.slotdate) >= new Date().setHours(0,0,0,0))
-            return futureOverrides.length === 0 ? (
-              <p className="has-text-grey">No upcoming date overrides</p>
-            ) : (
-              futureOverrides.map(o => (
-              <div key={o.id} className="box p-3 mb-3">
-                <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet is-justify-content-space-between is-align-items-start is-align-items-center-tablet">
-                  <div className="mb-2 mb-0-tablet">
-                    <div className="has-text-weight-semibold">{o.slotdate}</div>
-                    <div className="is-size-7 has-text-grey">
-                      {o.is_closed ? 'Closed' : `${o.start_time?.slice(0,5)} – ${o.end_time?.slice(0,5)}`}
-                    </div>
-                    {generatedDates.includes(o.slotdate) && (
-                      <span className="tag is-info is-size-7 mt-1">Slots Generated</span>
-                    )}
-                  </div>
-                  <button className="button is-small is-danger is-light is-fullwidth-mobile" onClick={() => deleteOverride(o.id)}>Delete</button>
+          
+          <hr className="my-5" />
+          
+          {/* Weekly Schedule Section */}
+          <h2 className="salon-title-sm mb-4">Weekly Business Hours</h2>
+          
+          {weekdays.map((day, i) => {
+            const dayRules = rules.filter(r => r.weekday === i)
+            return (
+              <div key={i} className="mb-5">
+                <div className="is-flex is-justify-content-space-between is-align-items-center mb-2">
+                  <div className="has-text-weight-semibold">{day}</div>
+                  <button 
+                    className="button is-small is-rounded is-ghost"
+                    onClick={() => openAddForm(i)}
+                    style={{ width: '32px', height: '32px', padding: '0' }}
+                  >
+                    <span className="icon is-small">
+                      <i className="fas fa-plus"></i>
+                    </span>
+                  </button>
                 </div>
-              </div>
-              ))
-            )
-          })()}
-        </div>
-      </div>
-
-      {formVisible && (
-        <div className="modal is-active">
-          <div className="modal-background" onClick={() => closeForm()}></div>
-          <div className="modal-card" style={{ 
-            animation: isClosing ? 'slideOutToRight 0.3s ease-in' : 'slideInFromRight 0.3s ease-out', 
-            transformOrigin: 'center right' 
-          }}>
-            <header className="modal-card-head">
-              <p className="modal-card-title">Add Time Range for {weekdays[currentDay]}</p>
-              <button className="delete" aria-label="close" onClick={() => closeForm()}></button>
-            </header>
-            <section className="modal-card-body">
-              <form onSubmit={handleSubmit}>
-                <div className="field">
-                  <label className="label">Start Time</label>
-                  <div className="control">
-                    <input 
-                      className="input" 
-                      type="time" 
-                      value={form.start_time} 
-                      onChange={e => setForm({ ...form, start_time: e.target.value })} 
-                      required 
-                    />
-                  </div>
-                </div>
-                <div className="field">
-                  <label className="label">End Time</label>
-                  <div className="control">
-                    <input 
-                      className="input" 
-                      type="time" 
-                      value={form.end_time} 
-                      onChange={e => setForm({ ...form, end_time: e.target.value })} 
-                      required 
-                    />
-                  </div>
-                </div>
-                <div className="field">
-                  <div className="control">
-                    <button className="button is-success is-fullwidth" type="submit">
-                      Add Range
-                    </button>
-                  </div>
-                </div>
-                <div className="field">
-                  <div className="control">
-                    <button className="button is-fullwidth" type="button" onClick={() => closeForm()}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </section>
-          </div>
-        </div>
-      )}
-
-      {showOverrideForm && (
-        <div className="modal is-active">
-          <div className="modal-background" onClick={() => closeOverrideForm()}></div>
-          <div className="modal-card" style={{ 
-            animation: isOverrideClosing ? 'slideOutToRight 0.3s ease-in' : 'slideInFromRight 0.3s ease-out', 
-            transformOrigin: 'center right' 
-          }}>
-            <header className="modal-card-head">
-              <p className="modal-card-title">Add Date Override</p>
-              <button className="delete" aria-label="close" onClick={() => closeOverrideForm()}></button>
-            </header>
-            <section className="modal-card-body">
-              <form onSubmit={handleOverrideSubmit}>
-                <div className="field">
-                  <label className="label">Override Date</label>
-                  <div className="control">
-                    <input 
-                      className="input" 
-                      type="date" 
-                      value={overrideForm.slotdate} 
-                      onChange={e => setOverrideForm({ ...overrideForm, slotdate: e.target.value })} 
-                      required 
-                    />
-                  </div>
-                </div>
-                <div className="field">
-                  <div className="control">
-                    <label className="checkbox">
-                      <input 
-                        type="checkbox" 
-                        checked={overrideForm.is_closed} 
-                        onChange={e => setOverrideForm({ ...overrideForm, is_closed: e.target.checked })} 
-                      /> Mark as Closed Day
-                    </label>
-                  </div>
-                </div>
-                {!overrideForm.is_closed && (
-                  <>
-                    <div className="field">
-                      <label className="label">Start Time</label>
-                      <div className="control">
-                        <input 
-                          className="input" 
-                          type="time" 
-                          value={overrideForm.start_time} 
-                          onChange={e => setOverrideForm({ ...overrideForm, start_time: e.target.value })} 
-                          required 
-                        />
+                
+                {dayRules.length > 0 ? dayRules.map(rule => (
+                  <div key={rule.id} className="p-3 mb-2" style={{ backgroundColor: '#fafafa', borderRadius: '6px', border: '1px solid #e5e5e5' }}>
+                    <div className="is-flex is-justify-content-space-between is-align-items-center">
+                      <div className="is-hidden-mobile">
+                        <span className="has-text-weight-semibold">{rule.start_time.slice(0,5)} - {rule.end_time.slice(0,5)}</span>
+                      </div>
+                      <div className="is-hidden-tablet is-flex is-align-items-center" style={{ gap: '0.5rem' }}>
+                        <span className="has-text-weight-semibold" style={{ fontSize: '0.875rem' }}>{rule.start_time.slice(0,5)} - {rule.end_time.slice(0,5)}</span>
+                        <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>
+                          <span className="icon is-small">
+                            <i className="fas fa-trash"></i>
+                          </span>
+                        </button>
+                      </div>
+                      <div className="is-hidden-mobile" style={{ marginLeft: 'auto' }}>
+                        <button className="button is-small is-danger is-light" onClick={() => deleteRule(rule.id)}>Delete</button>
                       </div>
                     </div>
-                    <div className="field">
-                      <label className="label">End Time</label>
-                      <div className="control">
-                        <input 
-                          className="input" 
-                          type="time" 
-                          value={overrideForm.end_time} 
-                          onChange={e => setOverrideForm({ ...overrideForm, end_time: e.target.value })} 
-                          required 
-                        />
-                      </div>
+                  </div>
+                )) : (
+                  <div className="p-3 mb-2 has-background-light" style={{ borderRadius: '6px', border: '1px solid #e5e5e5' }}>
+                    <div className="is-flex is-justify-content-space-between is-align-items-center">
+                      <span className="has-text-grey">No hours set - click + to add</span>
                     </div>
-                  </>
+                  </div>
                 )}
-                <div className="field">
-                  <div className="control">
-                    <button className="button is-success is-fullwidth" type="submit">
-                      Add Override
-                    </button>
+              </div>
+            )
+          })}
+          
+          <hr className="my-5" />
+          
+          {/* Date Overrides Section */}
+          <h2 className="salon-title-sm mb-4">Date Overrides</h2>
+          
+          <div className="columns is-multiline is-vcentered mb-4">
+            <div className="column is-one-third-tablet is-full-mobile">
+              <label className="salon-label">Override Date</label>
+              <input className="salon-input" type="date" value={dateOverride.slotdate} onChange={e => setDateOverride({ ...dateOverride, slotdate: e.target.value })} />
+            </div>
+            <div className="column is-one-quarter-tablet is-half-mobile">
+              <label className="salon-label">Start Time</label>
+              <input className="salon-input" type="time" value={dateOverride.start_time} onChange={e => setDateOverride({ ...dateOverride, start_time: e.target.value })} />
+            </div>
+            <div className="column is-one-quarter-tablet is-half-mobile">
+              <label className="salon-label">End Time</label>
+              <input className="salon-input" type="time" value={dateOverride.end_time} onChange={e => setDateOverride({ ...dateOverride, end_time: e.target.value })} />
+            </div>
+            <div className="column is-full-mobile">
+              <div className="field is-grouped is-grouped-centered-mobile">
+                <div className="control">
+                  <label className="checkbox">
+                    <input type="checkbox" checked={dateOverride.is_closed} onChange={e => setDateOverride({ ...dateOverride, is_closed: e.target.checked })} /> Mark as Closed Day
+                  </label>
+                </div>
+                <div className="control">
+                  <button className="button is-success" onClick={saveOverride}>Save Override</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="content">
+            {(() => {
+              const futureOverrides = overrides.filter(o => new Date(o.slotdate) >= new Date().setHours(0,0,0,0))
+              return futureOverrides.length === 0 ? (
+                <p className="has-text-grey">No upcoming date overrides</p>
+              ) : (
+                futureOverrides.map(o => (
+                <div key={o.id} className="p-3 mb-3" style={{ backgroundColor: '#fafafa', borderRadius: '6px', border: '1px solid #e5e5e5' }}>
+                  <div className="is-flex is-flex-direction-column is-flex-direction-row-tablet is-justify-content-space-between is-align-items-start is-align-items-center-tablet">
+                    <div className="mb-2 mb-0-tablet">
+                      <div className="has-text-weight-semibold">{o.slotdate}</div>
+                      <div className="is-size-7 has-text-grey">
+                        {o.is_closed ? 'Closed' : `${o.start_time?.slice(0,5)} – ${o.end_time?.slice(0,5)}`}
+                      </div>
+                      {generatedDates.includes(o.slotdate) && (
+                        <span className="tag is-info is-size-7 mt-1">Slots Generated</span>
+                      )}
+                    </div>
+                    <button className="button is-small is-danger is-light is-fullwidth-mobile" onClick={() => deleteOverride(o.id)}>Delete</button>
                   </div>
                 </div>
-                <div className="field">
-                  <div className="control">
-                    <button className="button is-fullwidth" type="button" onClick={() => closeOverrideForm()}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </section>
+                ))
+              )
+            })()}
           </div>
         </div>
-      )}
-    </div>
+
+        {formVisible && (
+          <div className="modal is-active">
+            <div className="modal-background" onClick={() => closeForm()}></div>
+            <div className="modal-card" style={{ 
+              animation: isClosing ? 'slideOutToRight 0.3s ease-in' : 'slideInFromRight 0.3s ease-out', 
+              transformOrigin: 'center right' 
+            }}>
+              <header className="modal-card-head">
+                <p className="modal-card-title">Add Time Range for {weekdays[currentDay]}</p>
+                <button className="delete" aria-label="close" onClick={() => closeForm()}></button>
+              </header>
+              <section className="modal-card-body">
+                <form onSubmit={handleSubmit}>
+                  <div className="salon-field">
+                    <label className="salon-label">Start Time</label>
+                    <div className="salon-control">
+                      <input 
+                        className="salon-input" 
+                        type="time" 
+                        value={form.start_time} 
+                        onChange={e => setForm({ ...form, start_time: e.target.value })} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                  <div className="salon-field">
+                    <label className="salon-label">End Time</label>
+                    <div className="salon-control">
+                      <input 
+                        className="salon-input" 
+                        type="time" 
+                        value={form.end_time} 
+                        onChange={e => setForm({ ...form, end_time: e.target.value })} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <div className="control">
+                      <button className="button is-success is-fullwidth" type="submit">
+                        Add Range
+                      </button>
+                    </div>
+                  </div>
+                  <div className="field">
+                    <div className="control">
+                      <button className="button is-fullwidth" type="button" onClick={() => closeForm()}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </section>
+            </div>
+          </div>
+        )}
+
+        {showOverrideForm && (
+          <div className="modal is-active">
+            <div className="modal-background" onClick={() => closeOverrideForm()}></div>
+            <div className="modal-card" style={{ 
+              animation: isOverrideClosing ? 'slideOutToRight 0.3s ease-in' : 'slideInFromRight 0.3s ease-out', 
+              transformOrigin: 'center right' 
+            }}>
+              <header className="modal-card-head">
+                <p className="modal-card-title">Add Date Override</p>
+                <button className="delete" aria-label="close" onClick={() => closeOverrideForm()}></button>
+              </header>
+              <section className="modal-card-body">
+                <form onSubmit={handleOverrideSubmit}>
+                  <div className="salon-field">
+                    <label className="salon-label">Override Date</label>
+                    <div className="salon-control">
+                      <input 
+                        className="salon-input" 
+                        type="date" 
+                        value={overrideForm.slotdate} 
+                        onChange={e => setOverrideForm({ ...overrideForm, slotdate: e.target.value })} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <div className="control">
+                      <label className="checkbox">
+                        <input 
+                          type="checkbox" 
+                          checked={overrideForm.is_closed} 
+                          onChange={e => setOverrideForm({ ...overrideForm, is_closed: e.target.checked })} 
+                        /> Mark as Closed Day
+                      </label>
+                    </div>
+                  </div>
+                  {!overrideForm.is_closed && (
+                    <>
+                      <div className="salon-field">
+                        <label className="salon-label">Start Time</label>
+                        <div className="salon-control">
+                          <input 
+                            className="salon-input" 
+                            type="time" 
+                            value={overrideForm.start_time} 
+                            onChange={e => setOverrideForm({ ...overrideForm, start_time: e.target.value })} 
+                            required 
+                          />
+                        </div>
+                      </div>
+                      <div className="salon-field">
+                        <label className="salon-label">End Time</label>
+                        <div className="salon-control">
+                          <input 
+                            className="salon-input" 
+                            type="time" 
+                            value={overrideForm.end_time} 
+                            onChange={e => setOverrideForm({ ...overrideForm, end_time: e.target.value })} 
+                            required 
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <div className="field">
+                    <div className="control">
+                      <button className="button is-success is-fullwidth" type="submit">
+                        Add Override
+                      </button>
+                    </div>
+                  </div>
+                  <div className="field">
+                    <div className="control">
+                      <button className="button is-fullwidth" type="button" onClick={() => closeOverrideForm()}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </section>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   )
 }

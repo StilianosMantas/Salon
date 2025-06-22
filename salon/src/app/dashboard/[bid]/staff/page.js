@@ -316,30 +316,28 @@ export default function StaffPage() {
           }
         }
       `}</style>
-    <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem', maxWidth: 'calc(100vw - 300px)' }}>
+    <div className="container py-2 px-2">
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
-        <div className="field has-addons is-flex-grow-1 mr-4">
-          <div className="control has-icons-left has-icons-right is-expanded">
-            <input
-              className="input"
-              type="text"
-              placeholder="Search staff..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="icon is-small is-left">
-              <i className="fas fa-search"></i>
+        <div className="control has-icons-left has-icons-right is-flex-grow-1 mr-4">
+          <input
+            className="salon-input"
+            type="text"
+            placeholder="Search staff..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <span className="icon is-small is-left">
+            <i className="fas fa-search"></i>
+          </span>
+          {searchTerm && (
+            <span 
+              className="icon is-small is-right is-clickable" 
+              onClick={() => setSearchTerm('')}
+              style={{ cursor: 'pointer', pointerEvents: 'all' }}
+            >
+              <i className="fas fa-times has-text-grey"></i>
             </span>
-            {searchTerm && (
-              <span 
-                className="icon is-small is-right is-clickable" 
-                onClick={() => setSearchTerm('')}
-                style={{ cursor: 'pointer', pointerEvents: 'all' }}
-              >
-                <i className="fas fa-times has-text-grey"></i>
-              </span>
-            )}
-          </div>
+          )}
         </div>
         <button 
           className="button is-link" 
@@ -358,7 +356,7 @@ export default function StaffPage() {
           + Add Staff
         </button>
       </div>
-      <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
+      <div className="box extended-card">
         {filteredStaff && filteredStaff.length > 0 ? filteredStaff.map((s, index) => (
           <div key={s.id}>
             <div 
@@ -418,16 +416,16 @@ export default function StaffPage() {
             </header>
             <section className="modal-card-body">
               <form onSubmit={handleSubmit}>
-                <div className="field">
-                  <label className="label">Name</label>
-                  <div className="control">
-                    <input className="input" type="text" placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                <div className="salon-field">
+                  <label className="salon-label">Name</label>
+                  <div className="salon-control">
+                    <input className="salon-input" type="text" placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Email</label>
-                  <div className="control has-icons-right">
-                    <input className="input" type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+                <div className="salon-field">
+                  <label className="salon-label">Email</label>
+                  <div className="salon-control has-icons-right">
+                    <input className="salon-input" type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
                     {form.email && (
                       <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
                         <a href={`mailto:${form.email}`} className="has-text-info" style={{ pointerEvents: 'all' }}>
@@ -437,10 +435,10 @@ export default function StaffPage() {
                     )}
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Mobile</label>
-                  <div className="control has-icons-right">
-                    <input className="input" type="tel" placeholder="Mobile" value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} required />
+                <div className="salon-field">
+                  <label className="salon-label">Mobile</label>
+                  <div className="salon-control has-icons-right">
+                    <input className="salon-input" type="tel" placeholder="Mobile" value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} required />
                     {form.mobile && (
                       <span className="icon is-small is-right" style={{ pointerEvents: 'all', zIndex: 10 }}>
                         <a href={`tel:${form.mobile}`} className="has-text-info" style={{ pointerEvents: 'all' }}>
@@ -450,8 +448,8 @@ export default function StaffPage() {
                     )}
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Avatar</label>
+                <div className="salon-field">
+                  <label className="salon-label">Avatar</label>
                   <div className="is-flex is-align-items-center mb-3">
                     {(avatarPreview || form.avatar_url) && (
                       <figure className="image is-64x64 mr-3">

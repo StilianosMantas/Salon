@@ -681,30 +681,28 @@ export default function ClientsPage() {
           }
         }
       `}</style>
-    <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem', maxWidth: 'calc(100vw - 300px)' }}>
+    <div className="container py-2 px-2">
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
-        <div className="field has-addons is-flex-grow-1 mr-4">
-          <div className="control has-icons-left has-icons-right is-expanded">
-            <input
-              className="input"
-              type="text"
-              placeholder="Search clients..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="icon is-small is-left">
-              <i className="fas fa-search"></i>
+        <div className="control has-icons-left has-icons-right is-flex-grow-1 mr-4">
+          <input
+            className="salon-input"
+            type="text"
+            placeholder="Search clients..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <span className="icon is-small is-left">
+            <i className="fas fa-search"></i>
+          </span>
+          {searchTerm && (
+            <span 
+              className="icon is-small is-right is-clickable" 
+              onClick={() => setSearchTerm('')}
+              style={{ cursor: 'pointer', pointerEvents: 'all' }}
+            >
+              <i className="fas fa-times has-text-grey"></i>
             </span>
-            {searchTerm && (
-              <span 
-                className="icon is-small is-right is-clickable" 
-                onClick={() => setSearchTerm('')}
-                style={{ cursor: 'pointer', pointerEvents: 'all' }}
-              >
-                <i className="fas fa-times has-text-grey"></i>
-              </span>
-            )}
-          </div>
+          )}
         </div>
         <div className="buttons">
           <div className="dropdown is-hoverable">
@@ -765,7 +763,7 @@ export default function ClientsPage() {
           </button>
         </div>
       </div>
-      <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px', marginTop: '0.75rem' }}>
+      <div className="box extended-card">
         {filteredClients && filteredClients.length > 0 ? filteredClients.map((c, index) => (
           <div key={c.id}>
             <div className="is-flex is-justify-content-space-between is-align-items-center p-1">
@@ -894,11 +892,11 @@ export default function ClientsPage() {
             </header>
             <section className="modal-card-body">
               <form onSubmit={handleSubmit}>
-                <div className="field">
-                  <label className="label">Name</label>
-                  <div className="control">
+                <div className="salon-field">
+                  <label className="salon-label">Name</label>
+                  <div className="salon-control">
                     <input
-                      className="input"
+                      className="salon-input"
                       type="text"
                       placeholder="Client Name"
                       value={form.name}
@@ -907,8 +905,8 @@ export default function ClientsPage() {
                     />
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Avatar</label>
+                <div className="salon-field">
+                  <label className="salon-label">Avatar</label>
                   <div className="is-flex is-align-items-center mb-3">
                     {(avatarPreview || form.avatar_url) && (
                       <figure className="image is-64x64 mr-3">
@@ -971,11 +969,11 @@ export default function ClientsPage() {
                     </div>
                   )}
                 </div>
-                <div className="field">
-                  <label className="label">Email</label>
-                  <div className="control has-icons-right">
+                <div className="salon-field">
+                  <label className="salon-label">Email</label>
+                  <div className="salon-control has-icons-right">
                     <input
-                      className="input"
+                      className="salon-input"
                       type="email"
                       placeholder="Email"
                       value={form.email}
@@ -990,11 +988,11 @@ export default function ClientsPage() {
                     )}
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Mobile</label>
-                  <div className="control has-icons-right">
+                <div className="salon-field">
+                  <label className="salon-label">Mobile</label>
+                  <div className="salon-control has-icons-right">
                     <input
-                      className="input"
+                      className="salon-input"
                       type="text"
                       placeholder="Mobile"
                       value={form.mobile}
@@ -1010,11 +1008,11 @@ export default function ClientsPage() {
                     )}
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Preferences</label>
-                  <div className="control">
+                <div className="salon-field">
+                  <label className="salon-label">Preferences</label>
+                  <div className="salon-control">
                     <textarea
-                      className="textarea"
+                      className="salon-textarea"
                       placeholder="Client preferences (e.g., preferred styling, timing, etc.)"
                       value={form.preferences}
                       onChange={(e) => setForm({ ...form, preferences: e.target.value })}
@@ -1022,11 +1020,11 @@ export default function ClientsPage() {
                     />
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Allergies & Sensitivities</label>
-                  <div className="control">
+                <div className="salon-field">
+                  <label className="salon-label">Allergies & Sensitivities</label>
+                  <div className="salon-control">
                     <textarea
-                      className="textarea"
+                      className="salon-textarea"
                       placeholder="Important: List any known allergies or sensitivities"
                       value={form.allergies}
                       onChange={(e) => setForm({ ...form, allergies: e.target.value })}
@@ -1042,10 +1040,10 @@ export default function ClientsPage() {
                     </p>
                   )}
                 </div>
-                <div className="field">
-                  <label className="label">Preferred Staff</label>
-                  <div className="control">
-                    <div className="select is-fullwidth">
+                <div className="salon-field">
+                  <label className="salon-label">Preferred Staff</label>
+                  <div className="salon-control">
+                    <div className="salon-select">
                       <select
                         value={form.preferred_staff}
                         onChange={(e) => setForm({ ...form, preferred_staff: e.target.value })}
@@ -1060,9 +1058,9 @@ export default function ClientsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Preferred Services</label>
-                  <div className="control">
+                <div className="salon-field">
+                  <label className="salon-label">Preferred Services</label>
+                  <div className="salon-control">
                     {services.map(service => (
                       <label key={service.id} className="checkbox is-block mb-2">
                         <input
@@ -1080,11 +1078,11 @@ export default function ClientsPage() {
                     ))}
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Notes</label>
-                  <div className="control">
+                <div className="salon-field">
+                  <label className="salon-label">Notes</label>
+                  <div className="salon-control">
                     <textarea
-                      className="textarea"
+                      className="salon-textarea"
                       placeholder="Additional notes about the client..."
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -1394,10 +1392,10 @@ export default function ClientsPage() {
               <button className="delete" onClick={() => setShowPhotoModal(false)}></button>
             </header>
             <section className="modal-card-body">
-              <div className="field">
-                <label className="label">Photo Type</label>
-                <div className="control">
-                  <div className="select is-fullwidth">
+              <div className="salon-field">
+                <label className="salon-label">Photo Type</label>
+                <div className="salon-control">
+                  <div className="salon-select">
                     <select 
                       value={photoType} 
                       onChange={(e) => setPhotoType(e.target.value)}
@@ -1411,11 +1409,11 @@ export default function ClientsPage() {
                 </div>
               </div>
               
-              <div className="field">
-                <label className="label">Photo</label>
-                <div className="control">
+              <div className="salon-field">
+                <label className="salon-label">Photo</label>
+                <div className="salon-control">
                   <input 
-                    className="input" 
+                    className="salon-input" 
                     type="file" 
                     accept="image/*" 
                     id="photo-upload"
@@ -1430,11 +1428,11 @@ export default function ClientsPage() {
                 <p className="help">Accepted formats: JPG, PNG, GIF (max 5MB)</p>
               </div>
               
-              <div className="field">
-                <label className="label">Notes (Optional)</label>
-                <div className="control">
+              <div className="salon-field">
+                <label className="salon-label">Notes (Optional)</label>
+                <div className="salon-control">
                   <textarea 
-                    className="textarea" 
+                    className="salon-textarea" 
                     placeholder="Add notes about this photo..."
                     value={photoNotes}
                     onChange={(e) => setPhotoNotes(e.target.value)}
@@ -1534,10 +1532,10 @@ export default function ClientsPage() {
                 <div className="column is-half">
                   <h5 className="title is-5 mb-4">Send Message</h5>
                   
-                  <div className="field">
-                    <label className="label">Message Type</label>
-                    <div className="control">
-                      <div className="select is-fullwidth">
+                  <div className="salon-field">
+                    <label className="salon-label">Message Type</label>
+                    <div className="salon-control">
+                      <div className="salon-select">
                         <select 
                           value={messageForm.type} 
                           onChange={(e) => setMessageForm({ ...messageForm, type: e.target.value })}
@@ -1554,11 +1552,11 @@ export default function ClientsPage() {
                   </div>
 
                   {messageForm.type === 'email' && (
-                    <div className="field">
-                      <label className="label">Subject</label>
-                      <div className="control">
+                    <div className="salon-field">
+                      <label className="salon-label">Subject</label>
+                      <div className="salon-control">
                         <input 
-                          className="input" 
+                          className="salon-input" 
                           type="text" 
                           placeholder="Email subject..."
                           value={messageForm.subject}
@@ -1568,11 +1566,11 @@ export default function ClientsPage() {
                     </div>
                   )}
 
-                  <div className="field">
-                    <label className="label">Message</label>
-                    <div className="control">
+                  <div className="salon-field">
+                    <label className="salon-label">Message</label>
+                    <div className="salon-control">
                       <textarea 
-                        className="textarea" 
+                        className="salon-textarea" 
                         placeholder={messageForm.type === 'sms' ? 'SMS message...' : 'Email message...'}
                         value={messageForm.message}
                         onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
@@ -1603,8 +1601,8 @@ export default function ClientsPage() {
                   </div>
 
                   {/* Quick Templates */}
-                  <div className="field">
-                    <label className="label">Quick Templates</label>
+                  <div className="salon-field">
+                    <label className="salon-label">Quick Templates</label>
                     <div className="buttons">
                       <button 
                         className="button is-small is-light"

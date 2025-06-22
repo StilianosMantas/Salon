@@ -178,6 +178,409 @@ body {
 
 @media screen and (min-width: 769px) {
     .extended-card {
-        margin: 0 !important;
+        margin: 0 1.5rem !important;
+    }
+}
+
+/* ===== SALON DESIGN SYSTEM ===== */
+/* Desktop and Tablet First Approach */
+
+/* CSS Variables for Consistent Sizing */
+:root {
+    --font-size-base: 16px;
+    --font-size-sm: 14px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+    --font-size-3xl: 30px;
+    
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.6;
+    
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    --border-radius: 6px;
+    --border-width: 1px;
+    --border-color: #dbdbdb;
+    --border-color-focus: #3273dc;
+    
+    --color-text: #363636;
+    --color-text-light: #7a7a7a;
+    --color-text-muted: #b5b5b5;
+    --color-background: #ffffff;
+    --color-background-light: #fafafa;
+    
+    --input-height: 2.5rem;
+    --input-padding: 0.75rem 1rem;
+    --input-font-size: var(--font-size-base);
+    
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Typography System */
+.salon-title {
+    font-size: var(--font-size-3xl);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-lg) 0;
+}
+
+.salon-title-lg {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-lg) 0;
+}
+
+.salon-title-md {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.salon-title-sm {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.salon-subtitle {
+    font-size: var(--font-size-lg);
+    font-weight: 400;
+    line-height: var(--line-height-normal);
+    color: var(--color-text-light);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.salon-subtitle-sm {
+    font-size: var(--font-size-base);
+    font-weight: 400;
+    line-height: var(--line-height-normal);
+    color: var(--color-text-light);
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+/* Input System */
+.salon-input {
+    width: 100%;
+    height: var(--input-height);
+    padding: var(--input-padding);
+    font-size: var(--input-font-size);
+    font-family: inherit;
+    line-height: var(--line-height-normal);
+    color: var(--color-text);
+    background-color: var(--color-background);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    appearance: none;
+}
+
+.salon-input:focus {
+    outline: none;
+    border-color: var(--border-color-focus);
+    box-shadow: 0 0 0 3px rgba(50, 115, 220, 0.1);
+}
+
+.salon-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.salon-input:disabled {
+    background-color: var(--color-background-light);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Textarea variant */
+.salon-textarea {
+    width: 100%;
+    min-height: 6rem;
+    padding: var(--input-padding);
+    font-size: var(--input-font-size);
+    font-family: inherit;
+    line-height: var(--line-height-normal);
+    color: var(--color-text);
+    background-color: var(--color-background);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    resize: vertical;
+    appearance: none;
+}
+
+.salon-textarea:focus {
+    outline: none;
+    border-color: var(--border-color-focus);
+    box-shadow: 0 0 0 3px rgba(50, 115, 220, 0.1);
+}
+
+.salon-textarea::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Select/Dropdown System */
+.salon-select {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.salon-select select {
+    width: 100%;
+    height: var(--input-height);
+    padding: 0 2.5rem 0 0.75rem;
+    font-size: var(--input-font-size);
+    font-family: inherit;
+    line-height: 1.5;
+    color: var(--color-text);
+    background-color: var(--color-background);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    cursor: pointer;
+    appearance: none;
+    background-image: 
+        linear-gradient(45deg, transparent 50%, var(--color-text) 50%),
+        linear-gradient(135deg, var(--color-text) 50%, transparent 50%);
+    background-position: 
+        calc(100% - 16px) 50%,
+        calc(100% - 11px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    box-sizing: border-box;
+}
+
+.salon-select select:focus {
+    outline: none;
+    border-color: var(--border-color-focus);
+    box-shadow: 0 0 0 3px rgba(50, 115, 220, 0.1);
+}
+
+.salon-select select:disabled {
+    background-color: var(--color-background-light);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Field System for Form Layouts */
+.salon-field {
+    margin-bottom: var(--spacing-lg);
+}
+
+.salon-field:last-child {
+    margin-bottom: 0;
+}
+
+.salon-field-horizontal {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.salon-field-horizontal .salon-label {
+    flex: 0 0 auto;
+    width: 120px;
+    margin-bottom: 0;
+}
+
+.salon-field-horizontal .salon-control {
+    flex: 1;
+}
+
+.salon-label {
+    display: inline-block;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-sm);
+    line-height: var(--line-height-normal);
+}
+
+.salon-control {
+    position: relative;
+    display: inline-block;
+}
+
+/* Ensure salon-control aligns with salon-button in flex containers */
+.salon-control.is-flex-grow-1 {
+    display: flex;
+    flex-grow: 1;
+}
+
+/* Icon positioning for salon inputs - works with Bulma control */
+.control.has-icons-left .salon-input {
+    text-indent: 2rem;
+    padding-left: 1rem !important;
+}
+
+.control.has-icons-right .salon-input {
+    padding-right: 2.75rem !important;
+}
+
+.control.has-icons-left.has-icons-right .salon-input {
+    text-indent: 2rem;
+    padding-left: 1rem !important;
+    padding-right: 2.75rem !important;
+}
+
+/* Help text */
+.salon-help {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-top: var(--spacing-xs);
+    line-height: var(--line-height-normal);
+}
+
+/* Error states */
+.salon-input.is-error,
+.salon-textarea.is-error,
+.salon-select select.is-error {
+    border-color: #ff3860;
+    box-shadow: 0 0 0 3px rgba(255, 56, 96, 0.1);
+}
+
+.salon-help.is-error {
+    color: #ff3860;
+}
+
+/* Success states */
+.salon-input.is-success,
+.salon-textarea.is-success,
+.salon-select select.is-success {
+    border-color: #23d160;
+    box-shadow: 0 0 0 3px rgba(35, 209, 96, 0.1);
+}
+
+.salon-help.is-success {
+    color: #23d160;
+}
+
+/* Size variations */
+.salon-input-sm,
+.salon-textarea-sm,
+.salon-select-sm select {
+    height: 2rem;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-size-sm);
+    line-height: 2rem;
+}
+
+.salon-select-sm select {
+    padding: 0 2rem 0 0.5rem;
+    line-height: 1.5;
+}
+
+.salon-input-lg,
+.salon-textarea-lg,
+.salon-select-lg select {
+    height: 3rem;
+    padding: 1rem 1.25rem;
+    font-size: var(--font-size-lg);
+    line-height: 1.5;
+}
+
+.salon-select-lg select {
+    padding: 0 3rem 0 1rem;
+    line-height: 1.5;
+}
+
+/* Button System for consistent alignment */
+.salon-button {
+    height: var(--input-height);
+    padding: 0 1rem;
+    font-size: var(--input-font-size);
+    font-family: inherit;
+    line-height: 1.5;
+    color: var(--color-text);
+    background-color: var(--color-background);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+.salon-button:hover {
+    background-color: var(--color-background-light);
+    border-color: var(--border-color-focus);
+}
+
+.salon-button:focus {
+    outline: none;
+    border-color: var(--border-color-focus);
+    box-shadow: 0 0 0 3px rgba(50, 115, 220, 0.1);
+}
+
+.salon-button.is-primary {
+    background-color: #3273dc;
+    color: white;
+    border-color: #3273dc;
+}
+
+.salon-button.is-primary:hover {
+    background-color: #2366d1;
+    border-color: #2366d1;
+}
+
+.salon-button-sm {
+    height: 2rem;
+    padding: 0 0.75rem;
+    font-size: var(--font-size-sm);
+}
+
+.salon-button-lg {
+    height: 3rem;
+    padding: 0 1.25rem;
+    font-size: var(--font-size-lg);
+}
+
+/* Mobile Responsive Adjustments */
+@media screen and (max-width: 768px) {
+    :root {
+        --input-height: 3rem;
+        --input-padding: 1rem;
+        --input-font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .salon-title {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .salon-title-lg {
+        font-size: var(--font-size-xl);
+    }
+    
+    .salon-field-horizontal {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .salon-field-horizontal .salon-label {
+        width: auto;
+        margin-bottom: var(--spacing-sm);
     }
 }

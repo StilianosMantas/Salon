@@ -127,13 +127,13 @@ export default function ProfilePage() {
   return (
     <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
       <div className="box extended-card" style={{ fontSize: '1.1em', marginTop: '0.75rem' }}>
-        <h1 className="title is-5 mb-4">User Profile</h1>
+        <h1 className="salon-title-sm">User Profile</h1>
         
-        <div className="field">
-          <label className="label">Full Name</label>
-          <div className="control">
+        <div className="salon-field">
+          <label className="salon-label">Full Name</label>
+          <div className="salon-control">
             <input
-              className="input"
+              className="salon-input"
               type="text"
               placeholder="Enter your full name"
               value={profile.full_name}
@@ -142,25 +142,25 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="field">
-          <label className="label">Email</label>
-          <div className="control">
+        <div className="salon-field">
+          <label className="salon-label">Email</label>
+          <div className="salon-control">
             <input
-              className="input"
+              className="salon-input"
               type="email"
               value={profile.email}
               disabled
               style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
             />
           </div>
-          <p className="help">Email cannot be changed here. Contact support if needed.</p>
+          <p className="salon-help">Email cannot be changed here. Contact support if needed.</p>
         </div>
 
-        <div className="field">
-          <label className="label">Phone</label>
-          <div className="control">
+        <div className="salon-field">
+          <label className="salon-label">Phone</label>
+          <div className="salon-control">
             <input
-              className="input"
+              className="salon-input"
               type="tel"
               placeholder="Enter your phone number"
               value={profile.phone}
@@ -169,10 +169,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="field">
-          <label className="label">Role</label>
-          <div className="control">
-            <div className="select is-fullwidth">
+        <div className="salon-field">
+          <label className="salon-label">Role</label>
+          <div className="salon-control">
+            <div className="salon-select">
               <select
                 value={profile.role}
                 onChange={(e) => setProfile({ ...profile, role: e.target.value })}

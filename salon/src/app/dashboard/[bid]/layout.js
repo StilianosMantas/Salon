@@ -231,25 +231,23 @@ export default function Layout({ children, params }) {
         </div>
         {/* Mobile search bar for clients and staff pages */}
         {(pathname.includes('/clients') || pathname.includes('/staff')) && (
-          <div className="field has-addons" style={{ margin: '0.5rem 0 0 0' }}>
-            <div className="control has-icons-left has-icons-right is-expanded">
-              <input
-                id="mobile-search-input"
-                className="input is-small"
-                type="text"
-                placeholder={pathname.includes('/clients') ? 'Search clients...' : 'Search staff...'}
-              />
-              <span className="icon is-small is-left">
-                <i className="fas fa-search"></i>
-              </span>
-              <span 
-                id="mobile-search-clear"
-                className="icon is-small is-right is-clickable" 
-                style={{ cursor: 'pointer', pointerEvents: 'all', display: 'none' }}
-              >
-                <i className="fas fa-times has-text-grey"></i>
-              </span>
-            </div>
+          <div className="control has-icons-left has-icons-right" style={{ margin: '0.5rem 0 0 0' }}>
+            <input
+              id="mobile-search-input"
+              className="salon-input salon-input-sm"
+              type="text"
+              placeholder={pathname.includes('/clients') ? 'Search clients...' : 'Search staff...'}
+            />
+            <span className="icon is-small is-left">
+              <i className="fas fa-search"></i>
+            </span>
+            <span 
+              id="mobile-search-clear"
+              className="icon is-small is-right is-clickable" 
+              style={{ cursor: 'pointer', pointerEvents: 'all', display: 'none' }}
+            >
+              <i className="fas fa-times has-text-grey"></i>
+            </span>
           </div>
         )}
       </nav>

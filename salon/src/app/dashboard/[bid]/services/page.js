@@ -158,9 +158,9 @@ export default function ServicesPage() {
           }
         }
       `}</style>
-    <div className="container py-5 px-4" style={{ fontSize: '1.1em' }}>
+    <div className="container py-5 px-4">
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-4 is-hidden-mobile" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
-        <h1 className="title is-5">Services</h1>
+        <h1 className="salon-title-sm">Services</h1>
         <button 
           className="button is-link" 
           data-add-service
@@ -176,7 +176,7 @@ export default function ServicesPage() {
           + Add Service
         </button>
       </div>
-      <div className="box extended-card" style={{ fontSize: '1.1em', marginBottom: '20px' }}>
+      <div className="box extended-card">
         {services && services.length > 0 ? services.map((s, index) => (
           <div key={s.id}>
             <div 
@@ -217,28 +217,28 @@ export default function ServicesPage() {
             </header>
             <section className="modal-card-body">
               <form onSubmit={handleSubmit}>
-                <div className="field">
-                  <label className="label">Name</label>
-                  <div className="control">
-                    <input className="input" type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                <div className="salon-field">
+                  <label className="salon-label">Name</label>
+                  <div className="salon-control">
+                    <input className="salon-input" type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Description</label>
-                  <div className="control">
-                    <input className="input" type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+                <div className="salon-field">
+                  <label className="salon-label">Description</label>
+                  <div className="salon-control">
+                    <input className="salon-input" type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Duration (min)</label>
-                  <div className="control">
-                    <input className="input" type="number" value={form.duration} onChange={e => setForm({ ...form, duration: parseInt(e.target.value) })} />
+                <div className="salon-field">
+                  <label className="salon-label">Duration (min)</label>
+                  <div className="salon-control">
+                    <input className="salon-input" type="number" value={form.duration} onChange={e => setForm({ ...form, duration: parseInt(e.target.value) })} />
                   </div>
                 </div>
-                <div className="field">
-                  <label className="label">Cost (€)</label>
-                  <div className="control">
-                    <input className="input" type="text" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} />
+                <div className="salon-field">
+                  <label className="salon-label">Cost (€)</label>
+                  <div className="salon-control">
+                    <input className="salon-input" type="text" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} />
                   </div>
                 </div>
                 <div className="field">
