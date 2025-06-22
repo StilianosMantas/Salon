@@ -18,7 +18,7 @@ export default function AppointmentManagementPage() {
   const [chairs, setChairs] = useState([])
   const [filterStaffId, setFilterStaffId] = useState('')
   const [filterChairId, setFilterChairId] = useState('')
-  const [viewMode, setViewMode] = useState('calendar') // 'calendar' or 'list'
+  const [viewMode, setViewMode] = useState('list') // 'calendar' or 'list'
   const [editingAppointment, setEditingAppointment] = useState(null)
   const [form, setForm] = useState({
     start_time: '',
@@ -152,7 +152,7 @@ export default function AppointmentManagementPage() {
     let query = supabase
       .from('slot')
       .select(
-        'id, slotdate, start_time, end_time, duration, staff_id, client_id, chair_id, book_status, client(name, mobile), slot_service(service_id), chairs(name, color)'
+        'id, slotdate, start_time, end_time, duration, staff_id, client_id, chair_id, client(name, mobile), slot_service(service_id), chairs(name, color)'
       )
       .eq('business_id', bid)
       .eq('slotdate', selectedDate)
@@ -235,23 +235,12 @@ export default function AppointmentManagementPage() {
       if (service) totalDuration += service.duration
     }
 
-    // If creating a new appointment, calculate end time based on services
-    if (!editingAppointment.id && form.service_ids.length > 0) {
-      const newEnd = new Date(start.getTime() + totalDuration * 60000)
-      const newEndStr = newEnd.toTimeString().substring(0, 5)
-      setForm(prev => ({ ...prev, end_time: newEndStr }))
-    }
-
-    if (totalDuration > actualDuration && editingAppointment.id) {
+    if (totalDuration > actualDuration) {
       setShowModal(true)
       return
     }
 
-    if (editingAppointment.id) {
-      await performAppointmentUpdate(client_id)
-    } else {
-      await createNewAppointment(client_id)
-    }
+    await performAppointmentUpdate(client_id)
   }
 
   async function performAppointmentUpdate(client_id) {
@@ -277,59 +266,6 @@ export default function AppointmentManagementPage() {
 
     closeForm(true)
     // Refresh the appointments list
-    fetchAppointments()
-  }
-
-  async function createNewAppointment(client_id) {
-    // Calculate duration for new appointment
-    const start = new Date(`2000-01-01T${form.start_time}`)
-    let totalDuration = 0
-    for (let id of form.service_ids) {
-      const service = services.find((s) => s.id === id)
-      if (service) totalDuration += service.duration
-    }
-
-    // If no services selected, default to 30 minutes
-    if (totalDuration === 0) totalDuration = 30
-
-    const newEnd = new Date(start.getTime() + totalDuration * 60000)
-    const newEndStr = newEnd.toTimeString().substring(0, 5)
-
-    // Create new slot
-    const { data: newSlot, error } = await supabase
-      .from('slot')
-      .insert({
-        business_id: bid,
-        slotdate: editingAppointment.slotdate,
-        start_time: form.start_time,
-        end_time: newEndStr,
-        duration: totalDuration,
-        staff_id: form.staff_id || null,
-        client_id: client_id || null,
-        chair_id: form.chair_id || null,
-        book_status: client_id ? 'booked' : null
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error creating appointment:', error)
-      if (typeof window !== 'undefined' && window.toast) {
-        window.toast.error('Failed to create appointment')
-      }
-      return
-    }
-
-    // Add service links
-    if (form.service_ids.length > 0) {
-      const insertData = form.service_ids.map((service_id) => ({
-        slot_id: newSlot.id,
-        service_id
-      }))
-      await supabase.from('slot_service').insert(insertData)
-    }
-
-    closeForm(true)
     fetchAppointments()
   }
 
@@ -734,37 +670,12 @@ export default function AppointmentManagementPage() {
       {viewMode === 'calendar' && (
         <Calendar 
           bid={bid}
-          appointments={appointments.map(apt => ({
-            ...apt,
-            slotdate: apt.slotdate || selectedDate // Ensure slotdate is available
-          }))}
+          appointments={appointments}
           staff={staff}
           chairs={chairs}
           selectedDate={selectedDate}
           onAppointmentClick={(appointment) => editAppointment(appointment)}
-          onTimeSlotClick={(date, time) => {
-            // Update selected date to match clicked date
-            setSelectedDate(date.toISOString().split('T')[0])
-            // Create new appointment at clicked time slot
-            setEditingAppointment({
-              id: null,
-              slotdate: date.toISOString().split('T')[0],
-              start_time: time,
-              end_time: time, // Will be calculated when services are selected
-              staff_id: null,
-              client_id: null,
-              chair_id: null
-            })
-            setForm({
-              start_time: time,
-              end_time: time,
-              staff_id: '',
-              client_id: '',
-              client_search: '',
-              service_ids: [],
-              chair_id: ''
-            })
-          }}
+          onDateChange={(newDate) => setSelectedDate(newDate)}
         />
       )}
 
@@ -1006,9 +917,7 @@ export default function AppointmentManagementPage() {
             transformOrigin: 'center right' 
           }}>
             <header className="modal-card-head compact-header">
-              <p className="modal-card-title">
-                {editingAppointment.id ? 'Edit Appointment' : 'Create New Appointment'}
-              </p>
+              <p className="modal-card-title">Edit Appointment</p>
               <button className="delete" aria-label="close" onClick={() => closeForm()}></button>
             </header>
             <section className="modal-card-body">
@@ -1187,7 +1096,7 @@ export default function AppointmentManagementPage() {
                       className="button is-success is-fullwidth" 
                       type="submit"
                     >
-                      {editingAppointment.id ? 'Update Appointment' : 'Create Appointment'}
+                      Update Appointment
                     </button>
                   </div>
                 </div>

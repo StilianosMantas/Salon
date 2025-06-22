@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 
-export default function Calendar({ bid, appointments = [], staff = [], chairs = [], selectedDate, onAppointmentClick, onTimeSlotClick }) {
+export default function Calendar({ bid, appointments = [], staff = [], chairs = [], selectedDate, onAppointmentClick, onDateChange }) {
   const [currentDate, setCurrentDate] = useState(() => {
     if (selectedDate) {
       return new Date(selectedDate + 'T00:00:00')
@@ -63,6 +63,10 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
         break
     }
     setCurrentDate(newDate)
+    // Update parent component's selected date
+    if (onDateChange) {
+      onDateChange(newDate.toISOString().split('T')[0])
+    }
   }
 
   // Format time for display
@@ -192,7 +196,6 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
               className="time-slot"
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, currentDate, time)}
-              onClick={() => onTimeSlotClick && onTimeSlotClick(currentDate, time)}
             >
               <div className="time-label">{formatTime(time)}</div>
               <div className="slot-content">
@@ -201,21 +204,26 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                   .map(apt => (
                     <div
                       key={apt.id}
-                      className={`appointment-block ${apt.book_status || 'available'}`}
+                      className={`appointment-block ${apt.client_id ? (apt.book_status || 'booked') : 'available'}`}
                       draggable={apt.client_id}
                       onDragStart={(e) => handleDragStart(e, apt)}
                       onClick={() => onAppointmentClick && onAppointmentClick(apt)}
                       style={{
-                        backgroundColor: apt.book_status === 'booked' ? '#48c774' : 
-                                       apt.book_status === 'completed' ? '#3273dc' :
-                                       apt.book_status === 'cancelled' ? '#f14668' : '#dbdbdb'
+                        backgroundColor: apt.client_id ? (
+                          apt.book_status === 'booked' ? '#48c774' : 
+                          apt.book_status === 'completed' ? '#3273dc' :
+                          apt.book_status === 'cancelled' ? '#f14668' : '#48c774'
+                        ) : '#e9ecef',
+                        color: apt.client_id ? 'white' : '#666'
                       }}
                     >
                       <div className="appointment-time">
                         {formatTime(apt.start_time)} - {formatTime(apt.end_time)}
                       </div>
-                      {apt.client && (
+                      {apt.client ? (
                         <div className="appointment-client">{apt.client.name}</div>
+                      ) : (
+                        <div className="appointment-client">Available</div>
                       )}
                       {apt.staff_id && (
                         <div className="appointment-staff">
@@ -282,7 +290,7 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                       {staffAppointments.map(apt => (
                         <div
                           key={apt.id}
-                          className={`appointment-block ${apt.book_status || 'available'}`}
+                          className={`appointment-block ${apt.client_id ? (apt.book_status || 'booked') : 'available'}`}
                           draggable={apt.client_id}
                           onDragStart={(e) => handleDragStart(e, apt)}
                           onClick={(e) => {
@@ -290,14 +298,21 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                             onAppointmentClick && onAppointmentClick(apt)
                           }}
                           style={{
-                            backgroundColor: getStaffColor(staffMember.id),
-                            opacity: apt.book_status === 'booked' ? 1 : 
-                                   apt.book_status === 'completed' ? 0.8 :
-                                   apt.book_status === 'cancelled' ? 0.4 : 0.6
+                            backgroundColor: apt.client_id ? getStaffColor(staffMember.id) : '#e9ecef',
+                            opacity: apt.client_id ? (
+                              apt.book_status === 'booked' ? 1 : 
+                              apt.book_status === 'completed' ? 0.8 :
+                              apt.book_status === 'cancelled' ? 0.4 : 1
+                            ) : 0.7,
+                            color: apt.client_id ? 'white' : '#666'
                           }}
                         >
                           <div className="appointment-content">
-                            {apt.client && <div className="client-name">{apt.client.name}</div>}
+                            {apt.client ? (
+                              <div className="client-name">{apt.client.name}</div>
+                            ) : (
+                              <div className="client-name">Available</div>
+                            )}
                             <div className="appointment-day">
                               {new Date(apt.slotdate).toLocaleDateString('en', { weekday: 'short' })}
                             </div>
@@ -345,12 +360,11 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                     className="day-slot"
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, day, time)}
-                    onClick={() => onTimeSlotClick && onTimeSlotClick(day, time)}
                   >
                     {timeAppointments.map(apt => (
                       <div
                         key={apt.id}
-                        className={`appointment-block ${apt.book_status || 'available'}`}
+                        className={`appointment-block ${apt.client_id ? (apt.book_status || 'booked') : 'available'}`}
                         draggable={apt.client_id}
                         onDragStart={(e) => handleDragStart(e, apt)}
                         onClick={(e) => {
@@ -358,15 +372,22 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                           onAppointmentClick && onAppointmentClick(apt)
                         }}
                         style={{
-                          backgroundColor: apt.staff_id ? getStaffColor(apt.staff_id) : 
-                                         apt.book_status === 'booked' ? '#48c774' : 
-                                         apt.book_status === 'completed' ? '#3273dc' :
-                                         apt.book_status === 'cancelled' ? '#f14668' : '#dbdbdb',
-                          borderLeft: apt.staff_id ? `4px solid ${getStaffColor(apt.staff_id)}` : 'none'
+                          backgroundColor: apt.client_id ? (
+                            apt.staff_id ? getStaffColor(apt.staff_id) : 
+                            apt.book_status === 'booked' ? '#48c774' : 
+                            apt.book_status === 'completed' ? '#3273dc' :
+                            apt.book_status === 'cancelled' ? '#f14668' : '#48c774'
+                          ) : '#e9ecef',
+                          borderLeft: apt.staff_id ? `4px solid ${getStaffColor(apt.staff_id)}` : 'none',
+                          color: apt.client_id ? 'white' : '#666'
                         }}
                       >
                         <div className="appointment-content">
-                          {apt.client && <div className="client-name">{apt.client.name}</div>}
+                          {apt.client ? (
+                            <div className="client-name">{apt.client.name}</div>
+                          ) : (
+                            <div className="client-name">Available</div>
+                          )}
                           {apt.staff_id && (
                             <div className="staff-indicator">
                               {staff.find(s => s.id === apt.staff_id)?.name}
@@ -438,7 +459,11 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                 <div
                   key={dayIndex}
                   className={`month-day ${!day.isCurrentMonth ? 'other-month' : ''}`}
-                  onClick={() => onTimeSlotClick && onTimeSlotClick(day.date, '09:00')}
+                  onClick={() => {
+                    if (onDateChange) {
+                      onDateChange(day.date.toISOString().split('T')[0])
+                    }
+                  }}
                 >
                   <div className="day-number">{day.date.getDate()}</div>
                   <div className="day-appointments">
