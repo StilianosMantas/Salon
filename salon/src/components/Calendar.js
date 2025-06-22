@@ -75,6 +75,12 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
     return timeString.slice(0, 5)
   }
 
+  // Format ID for display
+  const formatId = (id) => {
+    if (!id) return 'N/A'
+    return String(id).slice(-6).toUpperCase()
+  }
+
   // Get appointments for a specific date
   const getAppointmentsForDate = (date) => {
     const dateStr = date.toISOString().split('T')[0]
@@ -231,7 +237,7 @@ export default function Calendar({ bid, appointments = [], staff = [], chairs = 
                         </div>
                       )}
                       <div className="appointment-reference">
-                        #{apt.id.slice(-6).toUpperCase()}
+                        #{formatId(apt.id)}
                       </div>
                     </div>
                   ))}

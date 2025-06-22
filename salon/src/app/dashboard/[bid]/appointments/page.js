@@ -91,7 +91,7 @@ export default function AppointmentManagementPage() {
                 return `
                   <div class="appointment">
                     <div class="time">${formatTime(apt.start_time)} – ${formatTime(apt.end_time)}</div>
-                    <div class="reference">Reference: #${apt.id.slice(-6).toUpperCase()}</div>
+                    <div class="reference">Reference: #${formatId(apt.id)}</div>
                     ${apt.client ? `<div class="client">Client: ${apt.client.name} (${apt.client.mobile})</div>` : ''}
                     ${staffMember ? `<div class="staff">Staff: ${staffMember.name}</div>` : ''}
                     ${apt.book_status ? `<span class="status status-${apt.book_status}">${apt.book_status.charAt(0).toUpperCase() + apt.book_status.slice(1)}</span>` : ''}
@@ -560,6 +560,11 @@ export default function AppointmentManagementPage() {
     return t.slice(0, 5)
   }
 
+  function formatId(id) {
+    if (!id) return 'N/A'
+    return String(id).slice(-6).toUpperCase()
+  }
+
   function staffColor(id) {
     const colors = [
       'has-text-primary',
@@ -834,7 +839,7 @@ export default function AppointmentManagementPage() {
                         {formatTime(s.start_time)} – {formatTime(s.end_time)}
                       </div>
                       <span className="tag is-small is-light" title="Booking Reference">
-                        #{s.id?.slice(-6).toUpperCase() || 'N/A'}
+                        #{formatId(s.id)}
                       </span>
                       {s.book_status && (
                         <span className={`tag is-small ${
