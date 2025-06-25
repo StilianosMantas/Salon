@@ -27,18 +27,14 @@ export default function SelectSlotPage() {
         setLoading(true)
         setError(null)
         
-        console.log('Fetching services for business_id:', bid)
-        
         const { data, error: fetchError } = await supabase
           .from('service')
           .select('*')
           .eq('business_id', bid)
 
-        console.log('Services fetch result:', { data, error: fetchError })
-
         if (fetchError) {
-          console.error('Supabase error:', fetchError)
-          throw new Error(`Failed to load services: ${fetchError.message}`)
+          console.error("Error fetching services:", fetchError)
+          throw new Error("We couldn't load the services for this salon. Please try again later.")
         }
         
         if (!data || data.length === 0) {
@@ -48,8 +44,7 @@ export default function SelectSlotPage() {
         
         setServices(data)
       } catch (err) {
-        console.error('Error fetching services:', err)
-        setError(`Unable to load services: ${err.message}`)
+        setError(err.message)
         setServices([])
       } finally {
         setLoading(false)
@@ -209,14 +204,7 @@ export default function SelectSlotPage() {
   }
 
   if (loading) {
-    return (
-      <div className="container">
-        <div className="has-text-centered py-6">
-          <progress className="progress is-primary" max="100">Loading...</progress>
-          <p className="mt-3">Loading services...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner fullScreen message="Loading services..." />
   }
 
   if (error) {
@@ -373,33 +361,25 @@ export default function SelectSlotPage() {
         </div>
       ) : selectedServices.length > 0 ? (
         <div className="notification is-warning">
-          <p>No available slots for the selected date and services. Please try a different date or fewer services.</p>
+          <p>No available time slots for the selected date and services. Please try a different date or select fewer services.</p>
         </div>
       ) : (
         <div className="notification is-info">
-          <p>Please select services to see available time slots.</p>
+          <p>Please select one or more services to see available time slots.</p>
         </div>
       )}
 
       <div className="field mt-4">
         <div className="control">
           <button
-            className={`button is-primary is-fullwidth ${(!selectedSlotId || selectedServices.length === 0) ? 'is-loading' : ''}`}
+            className={`button is-primary is-fullwidth`}
             onClick={handleNext}
             disabled={!selectedSlotId || selectedServices.length === 0}
+            title={!selectedSlotId || selectedServices.length === 0 ? 'Please select a service and a time slot to continue' : 'Continue to booking details'}
           >
-            {selectedServices.length === 0 ? 'Select Services to Continue' : 
-             !selectedSlotId ? 'Select a Time Slot to Continue' : 
-             'Continue to Booking Details'}
+            Continue to Booking Details
           </button>
         </div>
-        {(selectedServices.length === 0 || !selectedSlotId) && (
-          <p className="help has-text-grey">
-            {selectedServices.length === 0 ? 'Please select at least one service.' : 
-             'Please choose an available time slot.'}
-          </p>
-        )}
-      </div>
     </div>
   )
 }

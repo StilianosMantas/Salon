@@ -1,122 +1,70 @@
 'use client'
 
-import { useState } from 'react'
-import { validateSchema, clientSchema } from '@/lib/validations'
-import { useClientMutations } from '@/hooks/useSupabaseData'
-import { sanitizeFormData } from '@/lib/sanitization'
+import { useState, useEffect } from 'react'
+import { toast } from 'react-hot-toast'
 
-export default function ClientForm({ businessId, client = null, onSuccess, onCancel }) {
-  const [form, setForm] = useState({
-    name: client?.name || '',
-    email: client?.email || '',
-    mobile: client?.mobile || ''
-  })
-  const [errors, setErrors] = useState({})
-  
-  const { createClient, updateClient, loading } = useClientMutations(businessId)
+export default function ClientForm({ client, onSave, onCancel, mutationLoading }) {
+  const [form, setForm] = useState({ name: '', email: '', phone: '' })
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setErrors({})
-
-    // Sanitize form data first
-    const sanitizedForm = sanitizeFormData(form)
-
-    // Validate sanitized form data
-    const validation = validateSchema(clientSchema, sanitizedForm)
-    if (!validation.success) {
-      setErrors(validation.errors)
-      return
+  useEffect(() => {
+    if (client) {
+      setForm(client)
+    } else {
+      setForm({ name: '', email: '', phone: '' })
     }
+  }, [client])
 
-    try {
-      if (client) {
-        await updateClient({ id: client.id, ...validation.data })
-      } else {
-        await createClient(validation.data)
-      }
-      onSuccess?.()
-    } catch (error) {
-      console.error('Form submission error:', error)
-    }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleInputChange = (field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }))
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!form.name.trim()) {
+      toast.error('Name is required')
+      return
     }
+    onSave(form)
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="field">
-        <label className="label">Name *</label>
-        <div className="control">
-          <input
-            className={`input ${errors.name ? 'is-danger' : ''}`}
-            type="text"
-            placeholder="Client Name"
-            value={form.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        {errors.name && <p className="help is-danger">{errors.name}</p>}
-      </div>
-
-      <div className="field">
-        <label className="label">Email</label>
-        <div className="control">
-          <input
-            className={`input ${errors.email ? 'is-danger' : ''}`}
-            type="email"
-            placeholder="Email Address"
-            value={form.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        {errors.email && <p className="help is-danger">{errors.email}</p>}
-      </div>
-
-      <div className="field">
-        <label className="label">Mobile</label>
-        <div className="control">
-          <input
-            className={`input ${errors.mobile ? 'is-danger' : ''}`}
-            type="text"
-            placeholder="Mobile Number"
-            value={form.mobile}
-            onChange={(e) => handleInputChange('mobile', e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        {errors.mobile && <p className="help is-danger">{errors.mobile}</p>}
-      </div>
-
-      <div className="field is-grouped">
-        <div className="control">
-          <button 
-            className={`button is-primary ${loading ? 'is-loading' : ''}`}
-            type="submit"
-            disabled={loading}
-          >
-            {client ? 'Update' : 'Add'} Client
+    <div className="modal is-active">
+      <div className="modal-background" onClick={onCancel}></div>
+      <div className="modal-card">
+        <header className="modal-card-head">
+          <p className="modal-card-title">{client ? 'Edit' : 'Add'} Client</p>
+          <button className="delete" aria-label="close" onClick={onCancel}></button>
+        </header>
+        <section className="modal-card-body">
+          <form id="clientForm" onSubmit={handleSubmit}>
+            <div className="field">
+              <label className="label">Name</label>
+              <div className="control">
+                <input className="input" type="text" name="name" value={form.name} onChange={handleInputChange} required />
+              </div>
+            </div>
+            <div className="field">
+              <label className="label">Email</label>
+              <div className="control">
+                <input className="input" type="email" name="email" value={form.email} onChange={handleInputChange} />
+              </div>
+            </div>
+            <div className="field">
+              <label className="label">Phone</label>
+              <div className="control">
+                <input className="input" type="tel" name="phone" value={form.phone} onChange={handleInputChange} />
+              </div>
+            </div>
+          </form>
+        </section>
+        <footer className="modal-card-foot">
+          <button className={`button is-success ${mutationLoading ? 'is-loading' : ''}`} type="submit" form="clientForm">
+            {client ? 'Update' : 'Save'}
           </button>
-        </div>
-        <div className="control">
-          <button 
-            className="button is-light"
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-          >
-            Cancel
-          </button>
-        </div>
+          <button className="button" onClick={onCancel}>Cancel</button>
+        </footer>
       </div>
-    </form>
+    </div>
   )
 }
