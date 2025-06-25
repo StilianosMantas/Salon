@@ -1,5 +1,5 @@
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabaseServer'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { cookies } from 'next/headers'
@@ -24,7 +24,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 })
   }
 
-  const supabase = createServerClient()
+  const supabase = await createClient()
   const body = await request.json()
 
   const result = bookingSchema.safeParse(body)
