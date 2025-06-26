@@ -47,44 +47,71 @@ export default function ConfirmBookingPage() {
     setError(null)
     setFieldErrors({})
 
+    // Validate CSRF token
+    const currentToken = getCSRFToken()
+    if (!currentToken || currentToken !== csrfToken) {
+      setError('Security validation failed. Please refresh the page and try again.')
+      setLoading(false)
+      return
+    }
+
+    // Prepare form data
+    const formData = { name, email, phone }
+    
+    // Sanitize inputs
+    const sanitizedForm = sanitizeFormData(formData)
+    
+    // Validate form data
+    const validation = validateSchema(bookingSchema, sanitizedForm)
+    if (!validation.success) {
+      setFieldErrors(validation.errors)
+      setLoading(false)
+      return
+    }
+
     try {
-      const payload = {
-        name,
-        email,
-        phone,
-        bid,
-        slotId,
-        serviceIds,
-      }
+      const { data: client, error: clientError } = await supabase
+        .from('client')
+        .upsert({
+          name: sanitizedForm.name,
+          email: sanitizedForm.email,
+          mobile: sanitizedForm.phone,
+          business_id: bid
+        }, { onConflict: ['email', 'business_id'] })
+        .select('id')
+        .single()
+
+      if (clientError) throw clientError
+
+      const { error: slotError } = await supabase
+        .from('slot')
+        .update({ client_id: client.id, book_status: 'booked' })
+        .eq('id', slotId)
+
+      if (slotError) throw slotError
+
+      // Insert all selected services
+      const serviceLinks = serviceIds.map(serviceId => ({
+        slot_id: slotId,
+        service_id: serviceId
+      }))
       
-      const response = await fetch('/api/book', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken,
-        },
-        body: JSON.stringify(payload),
-      })
+      const { error: serviceLinkError } = await supabase
+        .from('slot_service')
+        .upsert(serviceLinks)
 
-      const data = await response.json()
+      if (serviceLinkError) throw serviceLinkError
 
-      if (!response.ok) {
-        if (data.details) {
-            const errors = {}
-            for (const field in data.details.fieldErrors) {
-                errors[field] = data.details.fieldErrors[field][0]
-            }
-            setFieldErrors(errors)
-            setError('Please correct the errors below.')
-        } else {
-            throw new Error(data.error || 'An unknown error occurred.')
-        }
-      } else {
-        const successUrl = new URL(`/book/${bid}/success`, window.location.origin)
-        successUrl.searchParams.set('appointmentId', data.appointmentId)
-        router.push(successUrl.pathname + successUrl.search)
-      }
-
+      // Generate booking reference
+      const bookingRef = `BK${Date.now().toString().slice(-8)}${Math.random().toString(36).substring(2, 5).toUpperCase()}`
+      
+      // Create URL with booking details
+      const successUrl = new URL(`/book/${bid}/success`, window.location.origin)
+      successUrl.searchParams.set('ref', bookingRef)
+      successUrl.searchParams.set('slot', slotId)
+      successUrl.searchParams.set('client', client.id)
+      
+      router.push(successUrl.pathname + successUrl.search)
     } catch (err) {
       setError(err.message)
     } finally {
