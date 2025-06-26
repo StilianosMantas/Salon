@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import dayjs from 'dayjs'
-import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function SelectSlotPage() {
   const { bid } = useParams()
@@ -381,7 +380,6 @@ export default function SelectSlotPage() {
             Continue to Booking Details
           </button>
         </div>
-      </div>
     </div>
   )
 }

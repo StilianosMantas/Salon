@@ -1,9 +1,4 @@
-'use client'
 import DashboardNav from '@/components/DashboardNav'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabaseClient'
-import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function DashboardLayout({ children, params }) {
   const [user, setUser] = useState(null)
@@ -66,4 +61,3 @@ export default function DashboardLayout({ children, params }) {
       </div>
     </div>
   )
-}
