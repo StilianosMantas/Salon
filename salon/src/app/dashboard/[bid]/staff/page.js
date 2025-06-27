@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { useStaff, useStaffMutations } from '@/hooks/useSupabaseData'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -17,9 +17,11 @@ export default function StaffPage() {
   const [initialForm, setInitialForm] = useState({ name: '', email: '', mobile: '', id: null, avatar_url: null })
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
+  const [showAvatarOptions, setShowAvatarOptions] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredStaff, setFilteredStaff] = useState([])
+  const avatarInputRef = useRef(null);
 
   // Format phone number for display (Greek format)
   function formatPhoneNumber(phone) {
@@ -193,6 +195,8 @@ export default function StaffPage() {
     
     try {
       await deleteStaffAvatar(form.id, form.avatar_url)
+      setForm(prev => ({ ...prev, avatar_url: null })) // Clear avatar in form state
+      setShowAvatarOptions(false) // Hide options on delete
     } catch (error) {
       // Error handled in hook
     }
@@ -295,6 +299,38 @@ export default function StaffPage() {
   return (
     <>
       <style jsx>{`
+                :global(.modal-card-body .salon-label) {
+          display: block;
+        }
+        .avatar-container {
+          position: relative;
+          width: 96px;
+          height: 96px;
+        }
+        .avatar-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 0.5rem;
+          border-radius: 9999px;
+        }
+        .avatar-overlay-persistent {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+        }
+        .avatar-overlay-persistent .button {
+          border-radius: 50%;
+        }
+        .is-hidden {
+          display: none;
+        }
         @keyframes slideInFromRight {
           from {
             transform: translateX(100%);
@@ -450,67 +486,72 @@ export default function StaffPage() {
                 </div>
                 <div className="salon-field">
                   <label className="salon-label">Avatar</label>
-                  <div className="is-flex is-align-items-center mb-3">
-                    {(avatarPreview || form.avatar_url) && (
-                      <figure className="image is-64x64 mr-3">
-                        <img 
-                          className="is-rounded" 
-                          src={avatarPreview || form.avatar_url} 
-                          alt="Avatar preview"
-                          style={{ objectFit: 'cover' }}
-                        />
+                  <div className="salon-control">
+                    <div 
+                      className="avatar-container is-clickable"
+                      onClick={() => {
+                        if (avatarPreview) return; // Don't open options if previewing
+                        if (form.avatar_url) {
+                          setShowAvatarOptions(!showAvatarOptions);
+                        } else {
+                          avatarInputRef.current.click();
+                        }
+                      }}
+                    >
+                      <input 
+                        ref={avatarInputRef} 
+                        className="is-hidden" 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleAvatarChange} 
+                      />
+                      <figure className="image is-96x96">
+                        {(avatarPreview || form.avatar_url) ? (
+                          <img 
+                            className="is-rounded" 
+                            src={avatarPreview || form.avatar_url} 
+                            alt="Avatar"
+                            style={{ objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div className="is-rounded has-background-grey-lighter" style={{ width: '96px', height: '96px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span className="icon is-large has-text-grey">
+                              <i className="fas fa-plus"></i>
+                            </span>
+                          </div>
+                        )}
                       </figure>
-                    )}
-                    <div className="file">
-                      <label className="file-label">
-                        <input 
-                          className="file-input" 
-                          type="file" 
-                          accept="image/*"
-                          onChange={handleAvatarChange}
-                          disabled={mutationLoading}
-                        />
-                        <span className="file-cta">
-                          <span className="file-icon">
-                            <i className="fas fa-upload"></i>
-                          </span>
-                          <span className="file-label">
-                            Choose avatar
-                          </span>
-                        </span>
-                      </label>
+
+                      {avatarPreview && (
+                        <div className="avatar-overlay-persistent">
+                          <button 
+                            className="button is-small is-dark" 
+                            type="button"
+                            title="Clear selection"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAvatarFile(null);
+                              setAvatarPreview(null);
+                              avatarInputRef.current.value = null;
+                            }}
+                          >
+                            <span className="icon"><i className="fas fa-times"></i></span>
+                          </button>
+                        </div>
+                      )}
+
+                      {showAvatarOptions && form.avatar_url && !avatarPreview && (
+                        <div className="avatar-overlay">
+                          <button className="button is-small is-light" title="Change" type="button" onClick={(e) => { e.stopPropagation(); avatarInputRef.current.click(); }}>
+                            <span className="icon"><i className="fas fa-upload"></i></span>
+                          </button>
+                          <button className="button is-small is-danger" title="Delete" type="button" onClick={(e) => { e.stopPropagation(); handleAvatarDelete(); }}>
+                            <span className="icon"><i className="fas fa-trash"></i></span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {editing && form.avatar_url && (
-                    <div className="control">
-                      <button 
-                        className="button is-small is-danger is-outlined" 
-                        type="button"
-                        onClick={handleAvatarDelete}
-                        disabled={mutationLoading}
-                      >
-                        <span className="icon">
-                          <i className="fas fa-trash"></i>
-                        </span>
-                        <span>Remove Avatar</span>
-                      </button>
-                    </div>
-                  )}
-                  {avatarFile && editing && (
-                    <div className="control mt-2">
-                      <button 
-                        className={`button is-small is-info ${mutationLoading ? 'is-loading' : ''}`} 
-                        type="button"
-                        onClick={handleAvatarUpload}
-                        disabled={mutationLoading}
-                      >
-                        <span className="icon">
-                          <i className="fas fa-upload"></i>
-                        </span>
-                        <span>Upload Avatar</span>
-                      </button>
-                    </div>
-                  )}
                 </div>
                 <div className="field">
                   <div className="control">

@@ -186,24 +186,24 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="field">
-          <label className="label">Avatar URL</label>
-          <div className="control">
+        <div className="salon-field">
+          <label className="salon-label">Avatar URL</label>
+          <div className="salon-control">
             <input
-              className="input"
+              className="salon-input"
               type="url"
               placeholder="Enter avatar image URL"
               value={profile.avatar_url}
               onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
             />
           </div>
-          <p className="help">Optional: Link to your profile picture</p>
+          <p className="salon-help">Optional: Link to your profile picture</p>
         </div>
 
-        <div className="field is-grouped">
-          <div className="control">
+        <div className="salon-field is-grouped">
+          <div className="salon-control">
             <button
-              className={`button is-success ${saving ? 'is-loading' : ''}`}
+              className={`salon-button is-success ${saving ? 'is-loading' : ''}`}
               onClick={saveProfile}
               disabled={saving || !isFormDirty()}
             >
@@ -211,9 +211,9 @@ export default function ProfilePage() {
             </button>
           </div>
           {isFormDirty() && (
-            <div className="control">
+            <div className="salon-control">
               <button
-                className="button"
+                className="salon-button"
                 onClick={resetForm}
                 disabled={saving}
               >
@@ -227,10 +227,10 @@ export default function ProfilePage() {
 
         <h2 className="title is-6 mb-3">Account Security</h2>
         
-        <div className="field">
-          <div className="control">
+        <div className="salon-field">
+          <div className="salon-control">
             <button
-              className="button is-info"
+              className="salon-button is-info"
               onClick={changePassword}
             >
               <span className="icon">
@@ -239,21 +239,21 @@ export default function ProfilePage() {
               <span>Change Password</span>
             </button>
           </div>
-          <p className="help mt-2">A password reset link will be sent to your email</p>
+          <p className="salon-help mt-2">A password reset link will be sent to your email</p>
         </div>
 
-        <div className="field">
-          <label className="label">User ID</label>
-          <div className="control">
+        <div className="salon-field">
+          <label className="salon-label">User ID</label>
+          <div className="salon-control">
             <input
-              className="input"
+              className="salon-input"
               type="text"
               value={user?.id || ''}
               disabled
               style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed', fontSize: '0.75rem' }}
             />
           </div>
-          <p className="help">For support purposes only</p>
+          <p className="salon-help">For support purposes only</p>
         </div>
       </div>
     </div>

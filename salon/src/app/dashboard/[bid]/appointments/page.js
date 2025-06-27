@@ -606,9 +606,9 @@ export default function AppointmentManagementPage() {
         .compact-header { padding: 0.75rem 1.25rem; }
       `}</style>
     <div className="container py-5 px-4 larger-font">
-
+ 
       {/* Date, Staff & Chair Filters */}
-      <div className="columns is-multiline mb-4">
+        <div className="columns is-multiline mb-4 is-hidden-mobile" style={{  paddingTop: '0.5rem',paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
         <div className="column is-one-third-tablet is-full-mobile">
           <label className="label">Select Date</label>
           <input

@@ -51,11 +51,11 @@ export default function ClientForm({ businessId, client = null, onSuccess, onCan
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="field">
-        <label className="label">Name *</label>
-        <div className="control">
+      <div className="salon-field">
+        <label className="salon-label">Name *</label>
+        <div className="salon-control">
           <input
-            className={`input ${errors.name ? 'is-danger' : ''}`}
+            className={`salon-input ${errors.name ? 'is-danger' : ''}`}
             type="text"
             placeholder="Client Name"
             value={form.name}
@@ -66,11 +66,11 @@ export default function ClientForm({ businessId, client = null, onSuccess, onCan
         {errors.name && <p className="help is-danger">{errors.name}</p>}
       </div>
 
-      <div className="field">
-        <label className="label">Email</label>
-        <div className="control">
+      <div className="salon-field">
+        <label className="salon-label">Email</label>
+        <div className="salon-control">
           <input
-            className={`input ${errors.email ? 'is-danger' : ''}`}
+            className={`salon-input ${errors.email ? 'is-danger' : ''}`}
             type="email"
             placeholder="Email Address"
             value={form.email}
@@ -81,11 +81,11 @@ export default function ClientForm({ businessId, client = null, onSuccess, onCan
         {errors.email && <p className="help is-danger">{errors.email}</p>}
       </div>
 
-      <div className="field">
-        <label className="label">Mobile</label>
-        <div className="control">
+      <div className="salon-field">
+        <label className="salon-label">Mobile</label>
+        <div className="salon-control">
           <input
-            className={`input ${errors.mobile ? 'is-danger' : ''}`}
+            className={`salon-input ${errors.mobile ? 'is-danger' : ''}`}
             type="text"
             placeholder="Mobile Number"
             value={form.mobile}
@@ -96,19 +96,19 @@ export default function ClientForm({ businessId, client = null, onSuccess, onCan
         {errors.mobile && <p className="help is-danger">{errors.mobile}</p>}
       </div>
 
-      <div className="field is-grouped">
-        <div className="control">
+      <div className="salon-field is-grouped">
+        <div className="salon-control">
           <button 
-            className={`button is-primary ${loading ? 'is-loading' : ''}`}
+            className={`salon-button is-primary ${loading ? 'is-loading' : ''}`}
             type="submit"
             disabled={loading}
           >
             {client ? 'Update' : 'Add'} Client
           </button>
         </div>
-        <div className="control">
+        <div className="salon-control">
           <button 
-            className="button is-light"
+            className="salon-button is-light"
             type="button"
             onClick={onCancel}
             disabled={loading}

@@ -177,11 +177,11 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <div className="field">
-                <label className="label">Email</label>
-                <div className="control">
+              <div className="salon-field">
+                <label className="salon-label">Email</label>
+                <div className="salon-control">
                   <input 
-                    className="input" 
+                    className="salon-input" 
                     type="email" 
                     placeholder="Enter your email" 
                     value={email} 
@@ -193,11 +193,11 @@ export default function LoginPage() {
               </div>
 
               {mode === 'password' && (
-                <div className="field">
-                  <label className="label">Password</label>
-                  <div className="control">
+                <div className="salon-field">
+                  <label className="salon-label">Password</label>
+                  <div className="salon-control">
                     <input 
-                      className="input" 
+                      className="salon-input" 
                       type="password" 
                       placeholder="Enter your password" 
                       value={password} 
@@ -209,8 +209,8 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <div className="field">
-                <div className="control">
+              <div className="salon-field">
+                <div className="salon-control">
                   <label className="radio">
                     <input 
                       type="radio" 
@@ -236,10 +236,10 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="field">
-                <div className="control">
+              <div className="salon-field">
+                <div className="salon-control">
                   <button 
-                    className={`button is-primary is-fullwidth ${loading ? 'is-loading' : ''}`} 
+                    className={`salon-button is-primary is-fullwidth ${loading ? 'is-loading' : ''}`} 
                     type="submit"
                     disabled={loading}
                   >

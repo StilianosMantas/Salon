@@ -301,9 +301,11 @@ export default function ShiftsPage() {
         }
       `}</style>
       
-      <div className="container py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem' }}>
+
+      
+      <div className="container  py-2 px-2" style={{ fontSize: '1.1em', paddingTop: '0.5rem'}}>
         {/* Filters */}
-        <div className="columns is-multiline mb-4 is-hidden-mobile">
+        <div className="columns is-multiline mb-4 is-hidden-mobile" style={{ fontSize: '1.1em', paddingTop: '0.5rem',paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
           <div className="column is-half">
             <label className="salon-label">Filter by Staff</label>
             <div className="salon-select">

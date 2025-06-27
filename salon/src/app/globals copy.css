@@ -406,7 +406,7 @@ body {
 }
 
 .salon-label {
-    display: block;
+    display: inline-block;
     font-size: var(--font-size-base);
     font-weight: 600;
     color: var(--color-text);
@@ -416,8 +416,7 @@ body {
 
 .salon-control {
     position: relative;
-    display: flex; /* Use flexbox for alignment */
-    align-items: center; /* Vertically center items */
+    display: inline-block;
 }
 
 /* Ensure salon-control aligns with salon-button in flex containers */
@@ -426,33 +425,20 @@ body {
     flex-grow: 1;
 }
 
-/* Icon positioning for salon inputs */
-.salon-control.has-icons-left .salon-input {
-    padding-left: 2.5rem;
+/* Icon positioning for salon inputs - works with Bulma control */
+.control.has-icons-left .salon-input {
+    text-indent: 2rem;
+    padding-left: 1rem !important;
 }
 
-.salon-control.has-icons-right .salon-input {
-    padding-right: 2.5rem;
+.control.has-icons-right .salon-input {
+    padding-right: 2.75rem !important;
 }
 
-.salon-control .icon {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    height: var(--input-height);
-    width: 2.5rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-}
-
-.salon-control .icon.is-left {
-    left: 0;
-}
-
-.salon-control .icon.is-right {
-    right: 0.5rem;
+.control.has-icons-left.has-icons-right .salon-input {
+    text-indent: 2rem;
+    padding-left: 1rem !important;
+    padding-right: 2.75rem !important;
 }
 
 /* Help text */

@@ -241,10 +241,10 @@ export default function ServicesPage() {
                     <input className="salon-input" type="text" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} />
                   </div>
                 </div>
-                <div className="field">
-                  <div className="control">
+                <div className="salon-field">
+                  <div className="salon-control">
                     <button 
-                      className={`button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
+                      className={`salon-button is-success is-fullwidth ${mutationLoading ? 'is-loading' : ''}`} 
                       type="submit"
                       disabled={mutationLoading || (editing && !isFormDirty(form, initialForm))}
                     >
@@ -252,10 +252,10 @@ export default function ServicesPage() {
                     </button>
                   </div>
                 </div>
-                <div className="field">
-                  <div className="control">
+                <div className="salon-field">
+                  <div className="salon-control">
                     <button 
-                      className="button is-fullwidth" 
+                      className="salon-button is-fullwidth" 
                       type="button" 
                       onClick={() => closeForm()}
                       disabled={mutationLoading}
@@ -265,10 +265,10 @@ export default function ServicesPage() {
                   </div>
                 </div>
                 {editing && (
-                  <div className="field">
-                    <div className="control">
+                  <div className="salon-field">
+                    <div className="salon-control">
                       <button 
-                        className="button is-danger is-fullwidth" 
+                        className="salon-button is-danger is-fullwidth" 
                         type="button" 
                         onClick={() => handleDelete(form.id)}
                         disabled={mutationLoading}

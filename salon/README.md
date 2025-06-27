@@ -34,3 +34,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+review all code except from node_modules and prepare a list of new features excluding security/privacy and  reporting. focus on features that bring business value . also evaluate the replacement of the current css system with tailwind. also validate for consistency across pages. if you need start subtasks to run the  process. in the end prepare a session report explaining what needs to be done, what was completed and if something is pending. at the end of each set of feature, build the solution and evaluate that nothing is broken. if there are errors fix them and then continue to the next feature 
